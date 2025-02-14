@@ -14,8 +14,9 @@ namespace rocRoller
         class FuseLoops : public GraphTransform
         {
         public:
-            KernelGraph apply(KernelGraph const& original) override;
-            std::string name() const override
+            KernelGraph                          apply(KernelGraph const& original) override;
+            virtual std::vector<GraphConstraint> postConstraints() const override;
+            std::string                          name() const override
             {
                 return "FuseLoops";
             }

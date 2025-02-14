@@ -34,6 +34,8 @@ struct GEMMProblem
     std::string transB = "T";
 
     // Unroll Sizes
+    unsigned int unrollM = 0;
+    unsigned int unrollN = 0;
     unsigned int unrollK = 0;
 
     bool loadLDSA    = true;

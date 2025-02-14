@@ -7,6 +7,7 @@ namespace rocRoller
 {
     namespace KernelGraph
     {
+
         std::string KernelGraph::toDOT(bool drawMappings, std::string title) const
         {
             std::stringstream ss;
@@ -19,7 +20,26 @@ namespace rocRoller
             ss << coordinates.toDOT("coord", false);
             ss << "subgraph clusterCF {";
             ss << "label = \"Control Graph\";" << std::endl;
-            ss << control.toDOT("cntrl", false);
+
+            auto setCoordRename = [&](ControlGraph::Operation& op, int index) {
+                std::visit(
+                    rocRoller::overloaded{[&](ControlGraph::SetCoordinate& setCoord) {
+                                              auto connected = only(mapper.getConnections(index));
+                                              if(!connected)
+                                                  return;
+                                              auto connectedIndex = (*connected).coordinate;
+                                              if(connectedIndex < 0)
+                                                  return;
+                                              std::stringstream coordss;
+                                              coordss << name(coordinates.getNode(connectedIndex))
+                                                      << "(" << connectedIndex << ")";
+                                              setCoord.coordName = coordss.str();
+                                          },
+                                          [](auto&) {}},
+                    op);
+            };
+
+            ss << control.toDOT("cntrl", false, setCoordRename);
             ss << "}" << std::endl;
             if(drawMappings)
             {

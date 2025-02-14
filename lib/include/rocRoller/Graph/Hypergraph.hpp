@@ -301,13 +301,20 @@ namespace rocRoller
 
             std::string toDOT(std::string const& prefix = "", bool standalone = true) const;
 
-            static bool identity(Edge const&)
+            static bool edgeIdentity(Edge const&)
             {
                 return true;
             }
 
+            static inline void nodeIdentity(Node&, int) {}
+
+            template <std::invocable<Node&, int> Transform>
+            std::string toDOT(std::string const& prefix        = "",
+                              bool               standalone    = true,
+                              Transform          nodeTransform = nodeIdentity) const;
+
             template <std::predicate<Edge const&> Predicate>
-            std::string toDOT(Predicate edgePredicate = identity) const;
+            std::string toDOT(Predicate edgePredicate = edgeIdentity) const;
 
             template <typename T>
             requires(std::constructible_from<Node, T> || std::constructible_from<Edge, T>)

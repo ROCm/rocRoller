@@ -885,6 +885,15 @@ namespace rocRoller
         std::string Hypergraph<Node, Edge, Hyper>::toDOT(std::string const& prefix,
                                                          bool               standalone) const
         {
+            return toDOT(prefix, standalone, nodeIdentity);
+        }
+
+        template <typename Node, typename Edge, bool Hyper>
+        template <std::invocable<Node&, int> Transform>
+        std::string Hypergraph<Node, Edge, Hyper>::toDOT(std::string const& prefix,
+                                                         bool               standalone,
+                                                         Transform          nodeTransform) const
+        {
             std::ostringstream msg;
 
             if(standalone)
@@ -896,6 +905,7 @@ namespace rocRoller
                 if(getElementType(pair.second) == ElementType::Node)
                 {
                     auto x = std::get<Node>(pair.second);
+                    nodeTransform(x, pair.first);
                     msg << toString(x) << "(" << pair.first << ")\"";
                 }
                 else

@@ -95,20 +95,26 @@ namespace GEMMDriverTest
             float alpha = gemm.alpha;
             float beta  = gemm.beta;
 
-            AssertFatal(M % gemm.macM == 0,
-                        "MacroTile size mismatch (M)",
-                        ShowValue(M),
-                        ShowValue(gemm.macM));
-            AssertFatal(N % gemm.macN == 0,
-                        "MacroTile size mismatch (N)",
-                        ShowValue(N),
-                        ShowValue(gemm.macN));
+#define AssertMacroTileMatch(D)                                \
+    if(gemm.unroll##D > 0 && !gemm.tailLoops)                  \
+    {                                                          \
+        AssertFatal(D % (gemm.mac##D * gemm.unroll##D) == 0,   \
+                    "MacroTile size mismatch (" #D " unroll)", \
+                    ShowValue(D),                              \
+                    ShowValue(gemm.mac##D),                    \
+                    ShowValue(gemm.unroll##D));                \
+    }                                                          \
+    else                                                       \
+    {                                                          \
+        AssertFatal(D % gemm.mac##D == 0,                      \
+                    "MacroTile size mismatch (" #D ")",        \
+                    ShowValue(D),                              \
+                    ShowValue(gemm.mac##D));                   \
+    }
 
-            if(gemm.unrollK > 0 && !gemm.tailLoops)
-            {
-                AssertFatal(K % (gemm.macK * gemm.unrollK) == 0,
-                            "MacroTile size mismatch (K unroll)");
-            }
+            AssertMacroTileMatch(M);
+            AssertMacroTileMatch(N);
+            AssertMacroTileMatch(K);
 
             auto bpeA = DataTypeInfo::Get(dataTypeA).elementBytes;
             auto bpeB = DataTypeInfo::Get(dataTypeB).elementBytes;
@@ -352,6 +358,8 @@ namespace GEMMDriverTest
             params->fuseLoops                     = gemm.fuseLoops;
             params->tailLoops                     = gemm.tailLoops;
             params->allowAmbiguousMemoryNodes     = gemm.allowAmbiguousMemoryNodes;
+            params->unrollX                       = gemm.unrollM;
+            params->unrollY                       = gemm.unrollN;
             params->unrollK                       = gemm.unrollK;
             params->packMultipleElementsInto1VGPR = gemm.packMultipleElementsInto1VGPR;
             params->prefetch                      = gemm.prefetch;
@@ -2272,7 +2280,7 @@ namespace GEMMDriverTest
         basicGEMM<FP8, FP8, float>(gemm);
     }
 
-    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2X2)
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x2)
     {
         GEMMProblem gemm;
 
@@ -2296,7 +2304,7 @@ namespace GEMMDriverTest
         basicGEMM<Half>(gemm);
     }
 
-    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2X1)
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x1)
     {
         GEMMProblem gemm;
 
@@ -2327,7 +2335,7 @@ namespace GEMMDriverTest
         EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
     }
 
-    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2X1UnrollK)
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x1UnrollK)
     {
         GEMMProblem gemm;
 
@@ -2339,7 +2347,9 @@ namespace GEMMDriverTest
         gemm.macN = 128;
         gemm.macK = 16;
 
-        gemm.unrollK = 2;
+        gemm.unrollK                   = 2;
+        gemm.tailLoops                 = true;
+        gemm.allowAmbiguousMemoryNodes = true;
 
         gemm.waveK = 8;
 
@@ -2353,12 +2363,12 @@ namespace GEMMDriverTest
 
         std::string generatedCode = m_context->instructions()->toString();
 
-        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 20);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 22);
         EXPECT_EQ(countSubstring(generatedCode, "ds_read_b128"), 8);
         EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
     }
 
-    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1X2)
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1x2)
     {
         GEMMProblem gemm;
 
@@ -2386,7 +2396,7 @@ namespace GEMMDriverTest
         EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
     }
 
-    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1X2UnrollK)
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1x2UnrollK)
     {
         GEMMProblem gemm;
 
@@ -2411,7 +2421,7 @@ namespace GEMMDriverTest
 
         std::string generatedCode = m_context->instructions()->toString();
 
-        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 24);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 26);
         EXPECT_EQ(countSubstring(generatedCode, "ds_read_b128"), 8);
         EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
     }
@@ -2517,7 +2527,7 @@ namespace GEMMDriverTest
 
         std::string generatedCode = m_context->instructions()->toString();
 
-        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 6);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 9);
     }
 
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed4x2)
@@ -2575,7 +2585,7 @@ namespace GEMMDriverTest
 
         std::string generatedCode = m_context->instructions()->toString();
 
-        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 12);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 15);
     }
 
     TEST_P(GEMMTestGPU, GPU_BasicGEMMLiteralStrides)

@@ -27,218 +27,312 @@ namespace rocRoller
         {
             using GD = rocRoller::Graph::Direction;
 
-            /**
-             * @brief Find a path from a node to a ForLoopOp using only Sequence edges
-             *
-             * Returns an empty vector if no path is found.
-             *
-             * @param graph
-             * @param start
-             * @return std::vector<int>
-             */
-            std::vector<int> pathToForLoop(KernelGraph& graph, int start)
+            std::vector<std::unordered_set<int>> gatherForLoops(KernelGraph& graph, int start)
             {
-                // Find the first ForLoop under the node
-                auto allForLoops
-                    = graph.control
-                          .findNodes(
-                              start,
-                              [&](int tag) -> bool {
-                                  return isOperation<ForLoopOp>(graph.control.getElement(tag));
-                              },
-                              GD::Downstream)
-                          .to<std::vector>();
+                auto bodies      = graph.control.getOutputNodeIndices<Body>(start).to<std::set>();
+                auto isForLoopOp = graph.control.isElemType<ForLoopOp>();
+                auto isSetCoordinate = graph.control.isElemType<SetCoordinate>();
+                auto isSequence      = graph.control.isElemType<Sequence>();
+                auto isBody          = graph.control.isElemType<Body>();
 
-                if(allForLoops.empty())
-                    return {};
+                auto maybeForLoops
+                    = graph.control.depthFirstVisit(bodies, isSequence, GD::Downstream)
+                          .filter([&](int tag) -> bool {
+                              if(isForLoopOp(tag))
+                              {
+                                  return true;
+                              }
+                              if(isSetCoordinate(tag))
+                              {
+                                  return graph.mapper.get<ForLoop>(tag) > 0;
+                              }
+                              return false;
+                          })
+                          .to<std::unordered_set>();
 
-                auto firstForLoop = allForLoops[0];
+                std::vector<int> forLoops;
+                for(auto const& maybeForLoop : maybeForLoops)
+                {
+                    if(isForLoopOp(maybeForLoop))
+                    {
+                        forLoops.insert(forLoops.begin(), maybeForLoop);
+                    }
+                    else
+                    {
+                        // The filter means that this is now a SetCoordinate connected to an Unroll dimension
+                        // Tail loops are always downstream of these
+                        std::optional<int> tag = maybeForLoop;
+                        while(tag && isSetCoordinate(*tag))
+                        {
+                            tag = only(graph.control.getOutputNodeIndices<Body>(*tag));
+                        }
+                        if(tag && isForLoopOp(*tag))
+                        {
+                            forLoops.push_back(*tag);
+                        }
+                    }
+                }
 
-                // Find all of the nodes in between the node and the first for loop
-                auto pathToLoopWithEdges = graph.control
-                                               .path<GD::Downstream>(std::vector<int>{start},
-                                                                     std::vector<int>{firstForLoop})
-                                               .to<std::vector>();
+                std::vector<std::unordered_set<int>> loopGroupsToFuse;
+                while(!forLoops.empty())
+                {
+                    std::unordered_set<int>   loopGroup;
+                    Expression::ExpressionPtr loopIncrement;
+                    Expression::ExpressionPtr loopLength;
+                    for(auto const& loop : forLoops)
+                    {
+                        if(loopGroup.count(loop) != 0)
+                            continue;
 
-                // Filter out only the nodes
-                std::vector<int> pathToLoop;
-                std::copy_if(pathToLoopWithEdges.begin(),
-                             pathToLoopWithEdges.end(),
-                             std::back_inserter(pathToLoop),
-                             [&](int tag) -> bool {
-                                 return graph.control.getElementType(tag)
-                                        == Graph::ElementType::Node;
-                             });
+                        auto loopDim = getSize(std::get<Dimension>(graph.coordinates.getElement(
+                            graph.mapper.get(loop, NaryArgument::DEST))));
 
-                return pathToLoop;
+                        // Loops to be fused must have the same length
+                        if(loopLength)
+                        {
+                            if(!identical(loopDim, loopLength))
+                                continue;
+                        }
+                        else
+                        {
+                            loopLength = loopDim;
+                        }
+
+                        // Loops to be fused must have the same increment value
+                        auto [dataTag, increment] = getForLoopIncrement(graph, loop);
+                        if(loopIncrement)
+                        {
+                            if(!identical(loopIncrement, increment))
+                                continue;
+                        }
+                        else
+                        {
+                            loopIncrement = increment;
+                        }
+                        loopGroup.insert(loop);
+                    }
+
+                    for(auto loop : loopGroup)
+                    {
+                        std::erase(forLoops, loop);
+                    }
+
+                    if(loopGroup.size() > 1)
+                    {
+                        loopGroupsToFuse.push_back(loopGroup);
+                    }
+                }
+
+                return loopGroupsToFuse;
+            }
+
+            void fuseNode(KernelGraph& graph, int fusedNodeTag, int nodeTag)
+            {
+                for(auto const& child :
+                    graph.control.getOutputNodeIndices<Sequence>(nodeTag).to<std::vector>())
+                {
+                    if(fusedNodeTag != child)
+                    {
+                        graph.control.addElement(Sequence(), {fusedNodeTag}, {child});
+                    }
+                    graph.control.deleteElement<Sequence>(std::vector<int>{nodeTag},
+                                                          std::vector<int>{child});
+                    std::unordered_set<int> toDelete;
+                    for(auto descSeqOfChild :
+                        filter(graph.control.isElemType<Sequence>(),
+                               graph.control.depthFirstVisit(child, GD::Downstream)))
+                    {
+                        if(graph.control.getNeighbours<GD::Downstream>(descSeqOfChild)
+                               .to<std::unordered_set>()
+                               .contains(fusedNodeTag))
+                        {
+                            toDelete.insert(descSeqOfChild);
+                        }
+                    }
+                    for(auto edge : toDelete)
+                    {
+                        graph.control.deleteElement(edge);
+                    }
+                }
+
+                for(auto const& child :
+                    graph.control.getOutputNodeIndices<Body>(nodeTag).to<std::vector>())
+                {
+                    graph.control.addElement(Body(), {fusedNodeTag}, {child});
+                    graph.control.deleteElement<Body>(std::vector<int>{nodeTag},
+                                                      std::vector<int>{child});
+                }
+
+                for(auto const& parent :
+                    graph.control.getInputNodeIndices<Sequence>(nodeTag).to<std::vector>())
+                {
+                    auto descOfFusedLoop
+                        = graph.control
+                              .depthFirstVisit(fusedNodeTag,
+                                               graph.control.isElemType<Sequence>(),
+                                               GD::Downstream)
+                              .to<std::unordered_set>();
+
+                    if(!descOfFusedLoop.contains(parent))
+                    {
+                        graph.control.addElement(Sequence(), {parent}, {fusedNodeTag});
+                    }
+                    graph.control.deleteElement<Sequence>(std::vector<int>{parent},
+                                                          std::vector<int>{nodeTag});
+                }
+
+                for(auto const& parent :
+                    graph.control.getInputNodeIndices<Body>(nodeTag).to<std::vector>())
+                {
+                    graph.control.addElement(Body(), {parent}, {fusedNodeTag});
+                    graph.control.deleteElement<Body>(std::vector<int>{parent},
+                                                      std::vector<int>{nodeTag});
+                }
+            }
+
+            struct IsSameOperationVisitor
+            {
+                template <CConcreteOperation OpA, CConcreteOperation OpB>
+                bool operator()(int, OpA const&, int, OpB const&)
+                {
+                    return false;
+                }
+
+                bool operator()(int tagA, SetCoordinate const& A, int tagB, SetCoordinate const& B)
+                {
+                    auto connA = graph.mapper.getConnections(tagA);
+                    auto connB = graph.mapper.getConnections(tagB);
+
+                    if(connA.size() != connB.size())
+                    {
+                        return false;
+                    }
+                    for(auto iterA = connA.begin(), iterB = connB.begin(); iterA != connA.end();
+                        iterA++, iterB++)
+                    {
+                        if(iterA->coordinate != iterB->coordinate)
+                            return false;
+                        if(iterA->connection != iterB->connection)
+                            return false;
+                    }
+                    return identical(A.value, B.value);
+                }
+
+                bool call(int tagA, int tagB)
+                {
+                    return std::visit(*this,
+                                      std::variant<int>(tagA),
+                                      graph.control.getNode(tagA),
+                                      std::variant<int>(tagB),
+                                      graph.control.getNode(tagB));
+                }
+
+                KernelGraph const& graph;
+            };
+
+            void fuseScopes(KernelGraph& graph, int tag)
+            {
+                auto parentsWithEdges
+                    = graph.control.getInputNodeIndices<Body>(tag).template to<std::vector>();
+                std::set<std::set<int>> nodeSetsToMerge;
+                IsSameOperationVisitor  visitor{graph};
+
+                for(auto const& A : parentsWithEdges)
+                {
+                    std::set<int> sameAsThis;
+                    for(auto const& B : parentsWithEdges)
+                    {
+                        if(A == B)
+                            continue;
+                        if(visitor.call(A, B))
+                        {
+                            sameAsThis.insert(B);
+                        }
+                    }
+                    if(!sameAsThis.empty())
+                    {
+                        sameAsThis.insert(A);
+                        nodeSetsToMerge.insert(sameAsThis);
+                    }
+                }
+
+                for(auto mergeSet : nodeSetsToMerge)
+                {
+                    auto mergedNodeTag = *mergeSet.begin();
+                    for(auto const& nodeTag : mergeSet)
+                    {
+                        if(nodeTag == mergedNodeTag)
+                            continue;
+                        fuseNode(graph, mergedNodeTag, nodeTag);
+
+                        graph.control.deleteElement(nodeTag);
+                        graph.mapper.purge(nodeTag);
+                    }
+                    fuseScopes(graph, mergedNodeTag);
+                }
             }
 
             void fuseLoops(KernelGraph& graph, int tag)
             {
                 rocRoller::Log::getLogger()->debug("KernelGraph::fuseLoops({})", tag);
 
-                auto dontWalkPastForLoop = [&](int tag) -> bool {
-                    for(auto neighbour : graph.control.getNeighbours(tag, GD::Downstream))
-                    {
-                        if(graph.control.get<ForLoopOp>(neighbour))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-
-                // Find all of the paths from the top of one of a body to a
-                // ForLoopOp.
-                auto bodies = graph.control.getOutputNodeIndices<Body>(tag).to<std::set>();
-                std::vector<std::vector<int>> paths;
-                for(auto const& body : bodies)
+                auto loopGroupsToFuse = gatherForLoops(graph, tag);
+                for(auto forLoopsToFuse : loopGroupsToFuse)
                 {
-                    auto path = pathToForLoop(graph, body);
-                    if(!path.empty())
-                        paths.push_back(path);
-                }
-
-                // See if any of the ForLoopOps that were found in paths
-                // should be fused together.
-                std::unordered_set<int>   forLoopsToFuse;
-                Expression::ExpressionPtr loopIncrement;
-                Expression::ExpressionPtr loopLength;
-                for(auto const& path : paths)
-                {
-                    auto forLoop = path.back();
-                    if(forLoopsToFuse.count(forLoop) != 0)
+                    if(forLoopsToFuse.size() <= 1)
                         return;
 
-                    // Check to see if loops are all the same length
-                    auto dimTag     = graph.mapper.get(forLoop, NaryArgument::DEST);
-                    auto forLoopDim = getSize(graph.coordinates.getNode(dimTag));
-                    if(loopLength)
-                    {
-                        if(!identical(forLoopDim, loopLength))
-                            return;
-                    }
-                    else
-                    {
-                        loopLength = forLoopDim;
-                    }
-
-                    // Check to see if loops are incremented by the same value
-                    auto [dataTag, increment] = getForLoopIncrement(graph, forLoop);
-                    if(loopIncrement)
-                    {
-                        if(!identical(loopIncrement, increment))
-                            return;
-                    }
-                    else
-                    {
-                        loopIncrement = increment;
-                    }
-
-                    forLoopsToFuse.insert(forLoop);
-                }
-
-                if(forLoopsToFuse.size() <= 1)
-                    return;
-
-                auto fusedLoopTag = *forLoopsToFuse.begin();
-
-                for(auto const& forLoopTag : forLoopsToFuse)
-                {
-                    if(forLoopTag == fusedLoopTag)
-                        continue;
-
-                    for(auto const& child :
-                        graph.control.getOutputNodeIndices<Sequence>(forLoopTag).to<std::vector>())
-                    {
-                        if(fusedLoopTag != child)
+                    auto dontWalkPastForLoop = [&](int tag) -> bool {
+                        for(auto neighbour : graph.control.getNeighbours(tag, GD::Downstream))
                         {
-                            graph.control.addElement(Sequence(), {fusedLoopTag}, {child});
-                        }
-                        graph.control.deleteElement<Sequence>(std::vector<int>{forLoopTag},
-                                                              std::vector<int>{child});
-                        std::unordered_set<int> toDelete;
-                        for(auto descSeqOfChild :
-                            filter(graph.control.isElemType<Sequence>(),
-                                   graph.control.depthFirstVisit(child, GD::Downstream)))
-                        {
-                            if(graph.control.getNeighbours<GD::Downstream>(descSeqOfChild)
-                                   .to<std::unordered_set>()
-                                   .contains(fusedLoopTag))
+                            if(graph.control.get<ForLoopOp>(neighbour))
                             {
-                                toDelete.insert(descSeqOfChild);
+                                return false;
                             }
                         }
-                        for(auto edge : toDelete)
-                        {
-                            graph.control.deleteElement(edge);
-                        }
-                    }
+                        return true;
+                    };
+                    auto fusedLoopTag = *forLoopsToFuse.begin();
 
-                    for(auto const& child :
-                        graph.control.getOutputNodeIndices<Body>(forLoopTag).to<std::vector>())
+                    for(auto const& forLoopTag : forLoopsToFuse)
                     {
-                        graph.control.addElement(Body(), {fusedLoopTag}, {child});
-                        graph.control.deleteElement<Body>(std::vector<int>{forLoopTag},
-                                                          std::vector<int>{child});
+                        if(forLoopTag == fusedLoopTag)
+                            continue;
+
+                        fuseNode(graph, fusedLoopTag, forLoopTag);
+                        purgeFor(graph, forLoopTag);
                     }
 
-                    for(auto const& parent :
-                        graph.control.getInputNodeIndices<Sequence>(forLoopTag).to<std::vector>())
-                    {
-                        auto descOfFusedLoop
-                            = graph.control
-                                  .depthFirstVisit(fusedLoopTag,
-                                                   graph.control.isElemType<Sequence>(),
-                                                   GD::Downstream)
-                                  .to<std::unordered_set>();
+                    fuseScopes(graph, fusedLoopTag);
 
-                        if(!descOfFusedLoop.contains(parent))
-                        {
-                            graph.control.addElement(Sequence(), {parent}, {fusedLoopTag});
-                        }
-                        graph.control.deleteElement<Sequence>(std::vector<int>{parent},
-                                                              std::vector<int>{forLoopTag});
-                    }
+                    auto children
+                        = graph.control.getOutputNodeIndices<Body>(fusedLoopTag).to<std::vector>();
 
-                    for(auto const& parent :
-                        graph.control.getInputNodeIndices<Body>(forLoopTag).to<std::vector>())
-                    {
-                        graph.control.addElement(Body(), {parent}, {fusedLoopTag});
-                        graph.control.deleteElement<Body>(std::vector<int>{parent},
-                                                          std::vector<int>{forLoopTag});
-                    }
-
-                    purgeFor(graph, forLoopTag);
-                }
-
-                auto children
-                    = graph.control.getOutputNodeIndices<Body>(fusedLoopTag).to<std::vector>();
-
-                auto loads = filter(graph.control.isElemType<LoadTiled>(),
-                                    graph.control.depthFirstVisit(
-                                        children, dontWalkPastForLoop, GD::Downstream))
-                                 .to<std::vector>();
-
-                auto ldsLoads = filter(graph.control.isElemType<LoadLDSTile>(),
-                                       graph.control.depthFirstVisit(
-                                           children, dontWalkPastForLoop, GD::Downstream))
-                                    .to<std::vector>();
-
-                auto stores = filter(graph.control.isElemType<StoreTiled>(),
-                                     graph.control.depthFirstVisit(
-                                         children, dontWalkPastForLoop, GD::Downstream))
-                                  .to<std::vector>();
-
-                auto ldsStores = filter(graph.control.isElemType<StoreLDSTile>(),
+                    auto loads = filter(graph.control.isElemType<LoadTiled>(),
                                         graph.control.depthFirstVisit(
                                             children, dontWalkPastForLoop, GD::Downstream))
                                      .to<std::vector>();
 
-                orderMemoryNodes(graph, loads, true);
-                orderMemoryNodes(graph, ldsLoads, true);
-                orderMemoryNodes(graph, stores, true);
-                orderMemoryNodes(graph, ldsStores, true);
+                    auto ldsLoads = filter(graph.control.isElemType<LoadLDSTile>(),
+                                           graph.control.depthFirstVisit(
+                                               children, dontWalkPastForLoop, GD::Downstream))
+                                        .to<std::vector>();
+
+                    auto stores = filter(graph.control.isElemType<StoreTiled>(),
+                                         graph.control.depthFirstVisit(
+                                             children, dontWalkPastForLoop, GD::Downstream))
+                                      .to<std::vector>();
+
+                    auto ldsStores = filter(graph.control.isElemType<StoreLDSTile>(),
+                                            graph.control.depthFirstVisit(
+                                                children, dontWalkPastForLoop, GD::Downstream))
+                                         .to<std::vector>();
+
+                    orderMemoryNodes(graph, loads, true);
+                    orderMemoryNodes(graph, ldsLoads, true);
+                    orderMemoryNodes(graph, stores, true);
+                    orderMemoryNodes(graph, ldsStores, true);
+                }
             }
         }
 
@@ -258,6 +352,37 @@ namespace rocRoller
             }
 
             return newGraph;
+        }
+
+        ConstraintStatus BodyOfOnlyOneNode(const KernelGraph& graph)
+        {
+            ConstraintStatus retval;
+            for(auto tag : graph.control.leaves().to<std::vector>())
+            {
+                auto containing = graph.control.nodesContaining(tag).to<std::unordered_set>();
+                for(auto contA : containing)
+                {
+                    for(auto contB : containing)
+                    {
+                        if(contA == contB)
+                        {
+                            continue;
+                        }
+                        auto order = graph.control.compareNodes(contA, contB);
+                        retval.combine(
+                            order == NodeOrdering::LeftInBodyOfRight
+                                || order == NodeOrdering::RightInBodyOfLeft,
+                            concatenate(
+                                "Nodes ", contA, " and ", contB, "have intersecting bodies."));
+                    }
+                }
+            }
+            return retval;
+        }
+
+        std::vector<GraphConstraint> FuseLoops::postConstraints() const
+        {
+            return {BodyOfOnlyOneNode};
         }
     }
 }

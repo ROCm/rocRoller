@@ -579,22 +579,6 @@ namespace rocRoller
                 }
             }
 
-            {
-                auto containingForLoops = graph.control.nodesContaining(loop).filter(
-                    graph.control.isElemType<ForLoopOp>());
-                for(auto containingLoop : containingForLoops)
-                {
-                    if(getUnrollAmount(graph, containingLoop, m_params) > 1)
-                    {
-                        Log::debug("Not adding tail loop for {} because it is contained by {} "
-                                   "which is also unrolled.",
-                                   loop,
-                                   containingLoop);
-                        return std::nullopt;
-                    }
-                }
-            }
-
             auto loopSizeType        = resultVariableType(loopSize);
             auto amount              = Expression::literal(unrollAmount, loopSizeType);
             auto loopSizeRoundedDown = (loopSize / amount) * amount;
