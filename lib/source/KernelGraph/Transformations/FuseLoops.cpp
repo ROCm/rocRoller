@@ -369,11 +369,14 @@ namespace rocRoller
                             continue;
                         }
                         auto order = graph.control.compareNodes(contA, contB);
-                        retval.combine(
-                            order == NodeOrdering::LeftInBodyOfRight
-                                || order == NodeOrdering::RightInBodyOfLeft,
-                            concatenate(
-                                "Nodes ", contA, " and ", contB, "have intersecting bodies."));
+                        if(!(order == NodeOrdering::LeftInBodyOfRight
+                             || order == NodeOrdering::RightInBodyOfLeft))
+                        {
+                            retval.combine(
+                                false,
+                                concatenate(
+                                    "Nodes ", contA, " and ", contB, "have intersecting bodies."));
+                        }
                     }
                 }
             }
