@@ -231,6 +231,7 @@ namespace rocRollerTest::Graphs
         return rocRoller::KernelGraph::translate(m_command);
     }
 
+#if 0
     /*
      * GEMM
      */
@@ -356,6 +357,7 @@ namespace rocRollerTest::Graphs
 
         return params;
     }
+#endif
 
     /*
      * TileDoubleAdd

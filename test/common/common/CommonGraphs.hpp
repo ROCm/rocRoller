@@ -14,6 +14,8 @@
 #include <rocRoller/Operations/Command_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>
 
+#include <common/GEMMProblem.hpp>
+
 namespace rocRollerTest
 {
     namespace Graphs
@@ -26,6 +28,7 @@ namespace rocRollerTest
         using ContextPtr                 = rocRoller::ContextPtr;
         using KernelArguments            = rocRoller::KernelArguments;
         using KernelGraph                = rocRoller::KernelGraph::KernelGraph;
+        using DataType                   = rocRoller::DataType;
 
         /**
          * @brief Graph for linear: alpha x + beta y.
@@ -152,11 +155,13 @@ namespace rocRollerTest
          * - Assign(D = alpha * AB + beta * C)
          * - StoreTiled(D)
          */
-        template <typename T>
         class GEMM
         {
         public:
-            GEMM();
+            GEMM(DataType ta);
+            GEMM(DataType ta, DataType tb);
+            GEMM(DataType ta, DataType tb, DataType tc);
+            GEMM(DataType ta, DataType tb, DataType tc, DataType td);
 
             CommandPtr  getCommand();
             KernelGraph getKernelGraph();
@@ -164,8 +169,20 @@ namespace rocRollerTest
             void setTileSize(int m, int n, int k);
             void setMFMA(int m, int n, int k, int b);
             void setUseLDS(bool a, bool b, bool d);
+            void setPrefetch(bool prefetch,
+                             int  prefetchInFlight,
+                             int  prefetchLDSFactor,
+                             bool prefetchMixMemOps);
+            void setProblem(GEMMProblem const& problem);
 
+            GEMMProblem const&   getProblem() const;
             CommandParametersPtr getCommandParameters() const;
+
+            rocRoller::Operations::OperationTag m_tagTensorA, m_tagTensorB, m_tagTensorC,
+                m_tagTensorD, m_tagScalarAlpha, m_tagScalarBeta, m_tagScalarSeed, m_tagScratch;
+            rocRoller::Operations::OperationTag m_tagNumWGs;
+
+            DataType m_ta, m_tb, m_tc, m_td;
 
         private:
             void createCommand();
@@ -176,7 +193,8 @@ namespace rocRollerTest
 
             rocRoller::Operations::OperationTag m_tagA, m_tagB, m_tagC, m_tagD;
 
-            CommandPtr m_command;
+            CommandPtr  m_command;
+            GEMMProblem m_problem;
         };
 
         /**

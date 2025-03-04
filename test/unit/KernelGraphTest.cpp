@@ -1060,7 +1060,7 @@ namespace KernelGraphTest
 
     TEST_F(KernelGraphTest, LowerTensor)
     {
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         int macK  = 16;
         int waveK = 8;
@@ -1152,7 +1152,7 @@ namespace KernelGraphTest
 
     TEST_F(KernelGraphTest, InlineIncrement)
     {
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         example.setTileSize(128, 256, 8);
         example.setMFMA(32, 32, 2, 1);
@@ -2704,7 +2704,7 @@ namespace KernelGraphTest
     {
         using GD = Graph::Direction;
 
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         example.setTileSize(128, 256, 8);
         example.setMFMA(32, 32, 2, 1);

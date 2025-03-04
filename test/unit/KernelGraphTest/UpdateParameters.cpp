@@ -62,7 +62,7 @@ namespace KernelGraphTest
     {
         using namespace rocRoller::KernelGraph;
 
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         int macK  = 16;
         int waveK = 8;
