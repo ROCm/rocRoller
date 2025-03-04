@@ -128,6 +128,7 @@ namespace rocRoller
          * @param args Vector of CommandArgument pointers that should be added as arguments.
          */
         void                      addCommandArguments(std::vector<CommandArgumentPtr> args);
+        void                      addNewCommandArguments(std::vector<CommandArgumentPtr> args);
         Expression::ExpressionPtr addCommandArgument(CommandArgumentPtr arg);
 
         std::string args_string();

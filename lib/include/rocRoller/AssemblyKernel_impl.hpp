@@ -202,6 +202,15 @@ namespace rocRoller
         }
     }
 
+    inline void AssemblyKernel::addNewCommandArguments(std::vector<CommandArgumentPtr> args)
+    {
+        for(auto arg : args)
+        {
+            if(m_argumentNames.find(arg->name()) == m_argumentNames.end())
+                addCommandArgument(arg);
+        }
+    }
+
     inline Expression::ExpressionPtr AssemblyKernel::addCommandArgument(CommandArgumentPtr arg)
     {
         return addArgument({arg->name(),
