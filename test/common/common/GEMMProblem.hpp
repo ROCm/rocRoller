@@ -66,4 +66,6 @@ struct GEMMProblem
 
     rocRoller::Operations::ScaleMode scaleAMode = rocRoller::Operations::ScaleMode::None;
     rocRoller::Operations::ScaleMode scaleBMode = rocRoller::Operations::ScaleMode::None;
+
+    auto operator<=>(GEMMProblem const& rhs) const = default;
 };
