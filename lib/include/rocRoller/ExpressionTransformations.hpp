@@ -135,5 +135,15 @@ namespace rocRoller
          * @return ExpressionPtr Transformed expression
          */
         ExpressionPtr lowerBitfieldValues(ExpressionPtr expr);
+
+        /**
+         * @brief Widen (u)int32 to (u)int64.
+         *
+         * Has many assumptions in input expr. See the implementation for details.
+         *
+         * @param expr Input expression
+         * @return ExpressionPtr Transformed expression
+         */
+        ExpressionPtr widenTo64bit(ExpressionPtr expr);
     }
 }

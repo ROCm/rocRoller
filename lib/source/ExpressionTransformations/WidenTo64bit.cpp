@@ -209,6 +209,13 @@ namespace rocRoller
                 return nullptr;
             }
 
+            ExpressionPtr operator()(Expression const& expr) const
+            {
+                AssertFatal(
+                    false, "No expectation to meet this type of Expression: ", ShowValue(expr));
+                return nullptr;
+            }
+
             template <typename T>
             ExpressionPtr widenTo64(DataType srcType, T const& expr) const
             {
