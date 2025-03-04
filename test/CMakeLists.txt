@@ -168,6 +168,7 @@ set(
     catch/CustomAssertions.cpp
     catch/TestKernels.cpp
 
+    catch/AddressCalculationTest.cpp
     catch/BinaryExpressionTest.cpp
     catch/CommandArgumentValueTest.cpp
     catch/CommandTest.cpp
