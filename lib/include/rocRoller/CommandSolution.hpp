@@ -168,6 +168,17 @@ namespace rocRoller
         void generateKernel();
 
         /**
+         * @brief Generates the kernel Graph by graph lowering and
+         * doesn't do code-generation.
+         */
+        void generateKernelGraphOnlyAfterTransforms();
+
+        /**
+         * @brief Lower command arguments to kernel arguments. 
+         */
+        void lowerToKernelArguments();
+
+        /**
          * @brief Assembles a generated kernel.  Does not try to load
          * it.
          */

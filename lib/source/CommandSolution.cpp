@@ -104,6 +104,8 @@ namespace rocRoller
 
         rv.reserve(m_context->kernel()->argumentSize(), argStructs.size());
 
+        Log::debug("== getKernelArguments ==");
+
         for(auto& arg : argStructs)
         {
             auto value = Expression::evaluate(arg.expression, args);
@@ -119,6 +121,8 @@ namespace rocRoller
                                                      ", name: ",
                                                      arg.name));
             }
+
+            Log::debug(" arg.name {} value {}", arg.name, toString(value));
 
             rv.append(arg.name, value);
         }
@@ -136,11 +140,21 @@ namespace rocRoller
 
         auto const& workitems = m_context->kernel()->workitemCount();
         if(workitems[0])
+        {
             rv.workitemCount[0] = getUnsignedInt(evaluate(workitems[0], args));
+            Log::debug("== getKernelInvocation ==");
+            Log::debug(" workitemCount[0] {}", rv.workitemCount[0]);
+        }
         if(workitems[1])
+        {
             rv.workitemCount[1] = getUnsignedInt(evaluate(workitems[1], args));
+            Log::debug(" workitemCount[1] {}", rv.workitemCount[1]);
+        }
         if(workitems[2])
+        {
             rv.workitemCount[2] = getUnsignedInt(evaluate(workitems[2], args));
+            Log::debug(" workitemCount[2] {}", rv.workitemCount[2]);
+        }
 
         auto const& sharedMem = m_context->kernel()->dynamicSharedMemBytes();
         if(sharedMem)
@@ -184,6 +198,15 @@ namespace rocRoller
     {
         co_yield Instruction::Comment(m_command->toString());
         co_yield Instruction::Comment(m_command->argInfo());
+    }
+
+    void CommandKernel::lowerToKernelArguments()
+    {
+        for(auto arg : m_command->getArguments())
+        {
+            Log::debug("command argument: {}, {}", arg->toString(), toString(arg->expression()));
+        }
+        m_context->kernel()->addNewCommandArguments(m_command->getArguments());
     }
 
     void CommandKernel::generateKernelGraph(std::string name)
@@ -360,6 +383,23 @@ namespace rocRoller
         {
             generateKernelGraph(m_name);
             generateKernelSource();
+        }
+        else
+        {
+            Log::debug("generateKernel() is doing nothing");
+            // Probably from a unit test.  The context should contain
+            // scheduled instructions already.
+        }
+    }
+
+    void CommandKernel::generateKernelGraphOnlyAfterTransforms()
+    {
+        TIMER(t, "CommandKernel::generateKernelGraphOnlyAfterTransforms()");
+
+        if(m_command)
+        {
+            // Only lower the KernelGraph and don't generate codes.
+            generateKernelGraph(m_name);
         }
         else
         {
