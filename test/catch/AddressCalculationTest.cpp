@@ -4,10 +4,10 @@
 #include <common/CommonGraphs.hpp>
 #include <common/GEMMProblem.hpp>
 #include <common/Utilities.hpp>
+#include <common/WidenTo64bit.hpp>
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
 #include <rocRoller/CodeGen/WaitCount.hpp>
-#include <rocRoller/ExpressionTransformations.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Transformer.hpp>
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/KernelGraph/Utils.hpp>
@@ -610,10 +610,6 @@ namespace AddressCalculationTest
 
             m_commandKernel->setLaunchParameters(launch);
 
-            // What is the right check here for GPU??
-            //if (isLocalDevice()) {
-            // addrTestCommandKernel reused original Command, for which OperationTags are stored
-            // in gemm, a GEMM object.
             CommandArguments commandArgs = m_commandKernel->getCommand()->createArguments();
             setTensorArguments(commandArgs, m_problem, m_gemmGraph, m_commandKernel);
 
@@ -750,7 +746,7 @@ namespace AddressCalculationTest
                 auto eptr = indexExprPtrs[i];
                 Log::debug("== Expr : {} ", toString(eptr));
 
-                widenedExprPtrs.push_back(Expression::widenTo64bit(eptr));
+                widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
                 Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
             }
 
@@ -792,7 +788,7 @@ namespace AddressCalculationTest
                 auto eptr = indexExprPtrs[i];
                 Log::debug("== Expr : {} ", toString(eptr));
 
-                widenedExprPtrs.push_back(Expression::widenTo64bit(eptr));
+                widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
                 Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
             }
 

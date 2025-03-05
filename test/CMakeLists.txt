@@ -28,7 +28,11 @@ target_include_directories(
 )
 
 add_library(
-    common_test_utilities OBJECT common/CommonGraphs.cpp common/Utilities.cpp common/mxDataGen.cpp
+	common_test_utilities OBJECT 
+	common/CommonGraphs.cpp 
+	common/Utilities.cpp 
+	common/mxDataGen.cpp 
+	common/WidenTo64bit.cpp
 )
 
 target_compile_options(

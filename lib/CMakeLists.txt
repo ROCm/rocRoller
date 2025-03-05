@@ -75,7 +75,6 @@ set(rocroller_src
     source/ExpressionTransformations/LowerPRNG.cpp
     source/ExpressionTransformations/RestoreCommandArguments.cpp
     source/ExpressionTransformations/Simplify.cpp
-    source/ExpressionTransformations/WidenTo64bit.cpp
 
     source/CodeGen/AddInstruction.cpp
     source/CodeGen/ArgumentLoader.cpp
