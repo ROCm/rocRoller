@@ -490,11 +490,11 @@ namespace AddressCalculationTest
         {
             // calling setArgument - needed
             TensorDescriptor descA(
-                gemm.m_ta, {size_t(problem.m), size_t(problem.k)}, problem.transA);
+                gemm.mTa, {size_t(problem.m), size_t(problem.k)}, problem.transA);
             TensorDescriptor descB(
-                gemm.m_tb, {size_t(problem.k), size_t(problem.n)}, problem.transB);
-            TensorDescriptor descC(gemm.m_td, {size_t(problem.m), size_t(problem.n)}, "N");
-            TensorDescriptor descD(gemm.m_td, {size_t(problem.m), size_t(problem.n)}, "N");
+                gemm.mTb, {size_t(problem.k), size_t(problem.n)}, problem.transB);
+            TensorDescriptor descC(gemm.mTd, {size_t(problem.m), size_t(problem.n)}, "N");
+            TensorDescriptor descD(gemm.mTd, {size_t(problem.m), size_t(problem.n)}, "N");
 
             // Note that actually large matrix hipMalloc is not needed.
             // But at the same time, larger malloc may incurr larger base address, which can lead to overflow.
@@ -506,13 +506,13 @@ namespace AddressCalculationTest
 
             // Note that gemm built the CommandGraph, and store OperationTags. We are reusing
             // that original Command, but getting away building KernelGraph and its lowering.
-            setCommandTensorArg(commandArgs, gemm.m_tagTensorA, descA, deviceA.get());
-            setCommandTensorArg(commandArgs, gemm.m_tagTensorB, descB, deviceB.get());
-            setCommandTensorArg(commandArgs, gemm.m_tagTensorC, descC, deviceC.get());
-            setCommandTensorArg(commandArgs, gemm.m_tagTensorD, descD, deviceD.get());
+            setCommandTensorArg(commandArgs, gemm.mTagTensorA, descA, deviceA.get());
+            setCommandTensorArg(commandArgs, gemm.mTagTensorB, descB, deviceB.get());
+            setCommandTensorArg(commandArgs, gemm.mTagTensorC, descC, deviceC.get());
+            setCommandTensorArg(commandArgs, gemm.mTagTensorD, descD, deviceD.get());
 
-            commandArgs.setArgument(gemm.m_tagScalarAlpha, ArgumentType::Value, problem.alpha);
-            commandArgs.setArgument(gemm.m_tagScalarBeta, ArgumentType::Value, problem.beta);
+            commandArgs.setArgument(gemm.mTagScalarAlpha, ArgumentType::Value, problem.alpha);
+            commandArgs.setArgument(gemm.mTagScalarBeta, ArgumentType::Value, problem.beta);
             // seed doesn't seem to be relevant currently.
             //if(seed.has_value())
             //    commandArgs.setArgument(gemm.m_tagScalarSeed, ArgumentType::Value, seed.value());
@@ -520,14 +520,14 @@ namespace AddressCalculationTest
             // Create scratch space
             if(problem.streamK)
             {
-                commandArgs.setArgument(gemm.m_tagNumWGs, ArgumentType::Value, problem.numWGs);
+                commandArgs.setArgument(gemm.mTagNumWGs, ArgumentType::Value, problem.numWGs);
             }
 
             // ?? Is it correct to use original commandKernel or addrTestCommandKernel
             auto scratchSpaceRequired
                 = commandKernelPtr->scratchSpaceRequired(commandArgs.runtimeArguments());
             auto deviceScratch = make_shared_device<uint8_t>(scratchSpaceRequired, 0);
-            commandArgs.setArgument(gemm.m_tagScratch, ArgumentType::Value, deviceScratch.get());
+            commandArgs.setArgument(gemm.mTagScratch, ArgumentType::Value, deviceScratch.get());
         }
 
         void generateOrigKernelByProlog()

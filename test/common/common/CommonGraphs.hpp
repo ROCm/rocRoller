@@ -178,11 +178,11 @@ namespace rocRollerTest
             GEMMProblem const&   getProblem() const;
             CommandParametersPtr getCommandParameters() const;
 
-            rocRoller::Operations::OperationTag m_tagTensorA, m_tagTensorB, m_tagTensorC,
-                m_tagTensorD, m_tagScalarAlpha, m_tagScalarBeta, m_tagScalarSeed, m_tagScratch;
-            rocRoller::Operations::OperationTag m_tagNumWGs;
+            rocRoller::Operations::OperationTag mTagTensorA, mTagTensorB, mTagTensorC, mTagTensorD,
+                mTagScalarAlpha, mTagScalarBeta, mTagScalarSeed, mTagScratch;
+            rocRoller::Operations::OperationTag mTagNumWGs;
 
-            DataType m_ta, m_tb, m_tc, m_td;
+            DataType mTa, mTb, mTc, mTd;
 
         private:
             void createCommand();

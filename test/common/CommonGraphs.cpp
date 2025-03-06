@@ -182,10 +182,10 @@ namespace rocRollerTest::Graphs
     {
     }
     GEMM::GEMM(DataType ta, DataType tb, DataType tc, DataType td)
-        : m_ta(ta)
-        , m_tb(tb)
-        , m_tc(tc)
-        , m_td(td)
+        : mTa(ta)
+        , mTb(tb)
+        , mTc(tc)
+        , mTd(td)
     {
     }
 
@@ -200,27 +200,27 @@ namespace rocRollerTest::Graphs
                                               ? std::vector<size_t>({(size_t)0, (size_t)1})
                                               : std::vector<size_t>({});
 
-        m_tagTensorA = m_command->addOperation(rocRoller::Operations::Tensor(
-            2, m_ta, m_problem.transA == "N" ? oneStridesN : oneStridesT)); // A
+        mTagTensorA = m_command->addOperation(rocRoller::Operations::Tensor(
+            2, mTa, m_problem.transA == "N" ? oneStridesN : oneStridesT)); // A
 
-        m_tagA = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(m_tagTensorA));
+        m_tagA = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorA));
 
-        m_tagTensorB = m_command->addOperation(rocRoller::Operations::Tensor(
-            2, m_tb, m_problem.transB == "N" ? oneStridesN : oneStridesT)); // B
-        m_tagB       = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(m_tagTensorB));
+        mTagTensorB = m_command->addOperation(rocRoller::Operations::Tensor(
+            2, mTb, m_problem.transB == "N" ? oneStridesN : oneStridesT)); // B
+        m_tagB      = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorB));
 
-        m_tagTensorC
-            = m_command->addOperation(rocRoller::Operations::Tensor(2, m_tc, oneStridesN)); // C
-        m_tagC = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(m_tagTensorC));
+        mTagTensorC
+            = m_command->addOperation(rocRoller::Operations::Tensor(2, mTc, oneStridesN)); // C
+        m_tagC = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorC));
 
-        m_tagScalarAlpha
+        mTagScalarAlpha
             = m_command->addOperation(rocRoller::Operations::Scalar(DataType::Float)); // alpha
         auto tagLoadAlpha
-            = m_command->addOperation(rocRoller::Operations::T_Load_Scalar(m_tagScalarAlpha));
+            = m_command->addOperation(rocRoller::Operations::T_Load_Scalar(mTagScalarAlpha));
 
-        m_tagScalarBeta  = m_command->addOperation(rocRoller::Operations::Scalar(m_tc)); // beta
-        auto tagLoadBeta = m_command->addOperation(
-            rocRoller::Operations::T_Load_Scalar(m_tagScalarBeta)); // beta
+        mTagScalarBeta = m_command->addOperation(rocRoller::Operations::Scalar(mTc)); // beta
+        auto tagLoadBeta
+            = m_command->addOperation(rocRoller::Operations::T_Load_Scalar(mTagScalarBeta)); // beta
 
         auto tagAB = m_command->addOperation(rocRoller::Operations::T_Mul(m_tagA, m_tagB)); // A * B
 
@@ -244,23 +244,23 @@ namespace rocRollerTest::Graphs
         }
         m_command->addOperation(std::move(execute));
 
-        m_tagTensorD
-            = m_command->addOperation(rocRoller::Operations::Tensor(2, m_td, oneStridesN)); // D
-        m_command->addOperation(rocRoller::Operations::T_Store_Tiled(m_tagD, m_tagTensorD)); // D
+        mTagTensorD
+            = m_command->addOperation(rocRoller::Operations::Tensor(2, mTd, oneStridesN)); // D
+        m_command->addOperation(rocRoller::Operations::T_Store_Tiled(m_tagD, mTagTensorD)); // D
 
         if(m_problem.streamK)
         {
-            m_tagNumWGs    = m_command->allocateTag();
+            mTagNumWGs     = m_command->allocateTag();
             auto numWGsArg = m_command->allocateArgument(DataType::UInt32,
-                                                         m_tagNumWGs,
+                                                         mTagNumWGs,
                                                          ArgumentType::Value,
                                                          DataDirection::ReadOnly,
                                                          rocRoller::NUMWGS);
         }
 
-        m_tagScratch = m_command->allocateTag();
+        mTagScratch = m_command->allocateTag();
         m_command->allocateArgument(VariableType(DataType::UInt32, PointerType::PointerGlobal),
-                                    m_tagScratch,
+                                    mTagScratch,
                                     ArgumentType::Value,
                                     DataDirection::ReadWrite,
                                     rocRoller::SCRATCH);
