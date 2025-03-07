@@ -3,6 +3,7 @@
 #include "TestContext.hpp"
 #include <common/CommonGraphs.hpp>
 #include <common/GEMMProblem.hpp>
+#include <common/TestValues.hpp>
 #include <common/Utilities.hpp>
 #include <common/WidenTo64bit.hpp>
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
@@ -361,85 +362,6 @@ namespace AddressCalculationTest
             };
         }
 
-        auto kb_equal(ContextPtr                                      context,
-                      const std::vector<Expression::ExpressionPtr>&   input,
-                      const std::vector<Expression::ExpressionPtr>&   widenedInput,
-                      std::array<Expression::ExpressionPtr, 3> const& workitemCount,
-                      std::array<unsigned int, 3> const&              workgroupSize)
-        {
-            auto allone_uint64
-                = std::make_shared<Expression::Expression>(static_cast<uint64_t>(0xFFFFFFFF));
-
-            return [context, input, widenedInput, workitemCount, workgroupSize, allone_uint64]()
-                       -> Generator<Instruction> {
-                // store base addr
-                Register::ValuePtr s_ptr;
-
-                co_yield context->argLoader()->getValue("rv_ptr", s_ptr);
-
-                Register::ValuePtr s_ptr2;
-
-                co_yield context->argLoader()->getValue("rv_ptr2", s_ptr2);
-
-                // 2-D
-                auto compare_res_pointer
-                    = get64BitVectorOffset(context, workitemCount, workgroupSize);
-                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
-
-                Register::ValuePtr v_offset = nullptr;
-                co_yield Expression::generate(
-                    v_offset, compare_res_pointer + s_ptr->expression(), context);
-
-                // may not be needed.
-                //co_yield_(Instruction::Wait(WaitCount::LGKMCnt(0, "extra waitcnt for debug")));
-
-                // boolean_diff was allocated to s[0:1]
-                // diff should be computed per lane,
-                // but is_zero_diff is actually one-bit
-                auto               boolean_true = Register::Value::WavefrontPlaceholder(context);
-                Register::ValuePtr v_allone;
-                co_yield Expression::generate(v_allone, allone_uint64, context);
-
-                co_yield context->copier()->copy(
-                    boolean_true, v_allone, "set to true for all lanes");
-
-                Register::ValuePtr temp_res;
-                for(int i = 0, size = input.size(); i < size; i++)
-                {
-                    // Compute the value 1
-                    Register::ValuePtr v_value_1 = nullptr;
-                    co_yield Expression::generate(v_value_1, input[i], context);
-
-                    // Compute the value 2
-                    Register::ValuePtr v_value_2 = nullptr;
-                    co_yield Expression::generate(v_value_2, widenedInput[i], context);
-
-                    // Compute diff (value_1 - value_2)
-                    auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
-                    {
-                        auto boolType = resultVariableType(is_zero_diff).dataType;
-                        AssertFatal(
-                            boolType == DataType::Bool64, "is_zero type {}", toString(boolType));
-                    }
-
-                    // boolean_true = boolean_true | is_zero_diff
-                    auto accumRes = std::make_shared<Expression::Expression>(
-                        Expression::BitwiseAnd{boolean_true->expression(), is_zero_diff, "accum"});
-                    {
-                        auto accumType = resultVariableType(accumRes).dataType;
-                        AssertFatal(
-                            accumType == DataType::Bool64, "accum type {}", toString(accumType));
-                    }
-                    co_yield Expression::generate(boolean_true, accumRes, context);
-                }
-
-                auto v_value = Register::Value::Placeholder(
-                    context, Register::Type::Vector, DataType::UInt64, 1);
-                co_yield context->copier()->copy(v_value, boolean_true, "Move value");
-                co_yield context->mem()->storeGlobal(v_offset, v_value, 0, 8);
-            };
-        }
-
         // For now, mainly for debugging, directly copy the two results values.
         // workitemCount is passed as argument. Since it is 64-bit
         // different global_store_dwordx2 format should be used.
@@ -792,12 +714,86 @@ namespace AddressCalculationTest
                 Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
             }
 
-            m_context->schedule(kb_equal(
-                m_context,
-                indexExprPtrs,
-                widenedExprPtrs,
-                m_context->kernel()->workitemCount(),
-                (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value())());
+            auto allone_uint64
+                = std::make_shared<Expression::Expression>(static_cast<uint64_t>(0xFFFFFFFF));
+
+            auto kb = [&]()
+                // return [context, input, widenedInput, workitemCount, workgroupSize, allone_uint64]()
+                -> Generator<Instruction> {
+                    // store base addr
+                    Register::ValuePtr s_ptr;
+
+                    co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
+
+                    Register::ValuePtr s_ptr2;
+
+                    co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
+
+                    // 2-D
+                    auto compare_res_pointer = get64BitVectorOffset(
+                        m_context,
+                        m_context->kernel()->workitemCount(),
+                        (m_commandKernel->getCommandParameters()->getManualWorkgroupSize())
+                            .value());
+                    Log::debug("Offset in kb: {}", toString(compare_res_pointer));
+
+                    Register::ValuePtr v_offset = nullptr;
+                    co_yield Expression::generate(
+                        v_offset, compare_res_pointer + s_ptr->expression(), m_context);
+
+                    // may not be needed.
+                    //co_yield_(Instruction::Wait(WaitCount::LGKMCnt(0, "extra waitcnt for debug")));
+
+                    // boolean_diff was allocated to s[0:1]
+                    // diff should be computed per lane,
+                    // but is_zero_diff is actually one-bit
+                    auto boolean_true = Register::Value::WavefrontPlaceholder(m_context);
+                    Register::ValuePtr v_allone;
+                    co_yield Expression::generate(v_allone, allone_uint64, m_context);
+
+                    co_yield m_context->copier()->copy(
+                        boolean_true, v_allone, "set to true for all lanes");
+
+                    Register::ValuePtr temp_res;
+                    for(int i = 0, size = indexExprPtrs.size(); i < size; i++)
+                    {
+                        // Compute the value 1
+                        Register::ValuePtr v_value_1 = nullptr;
+                        co_yield Expression::generate(v_value_1, indexExprPtrs[i], m_context);
+
+                        // Compute the value 2
+                        Register::ValuePtr v_value_2 = nullptr;
+                        co_yield Expression::generate(v_value_2, widenedExprPtrs[i], m_context);
+
+                        // Compute diff (value_1 - value_2)
+                        auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
+                        {
+                            auto boolType = resultVariableType(is_zero_diff).dataType;
+                            AssertFatal(boolType == DataType::Bool64,
+                                        "is_zero type {}",
+                                        toString(boolType));
+                        }
+
+                        // boolean_true = boolean_true | is_zero_diff
+                        auto accumRes
+                            = std::make_shared<Expression::Expression>(Expression::BitwiseAnd{
+                                boolean_true->expression(), is_zero_diff, "accum"});
+                        {
+                            auto accumType = resultVariableType(accumRes).dataType;
+                            AssertFatal(accumType == DataType::Bool64,
+                                        "accum type {}",
+                                        toString(accumType));
+                        }
+                        co_yield Expression::generate(boolean_true, accumRes, m_context);
+                    }
+
+                    auto v_value = Register::Value::Placeholder(
+                        m_context, Register::Type::Vector, DataType::UInt64, 1);
+                    co_yield m_context->copier()->copy(v_value, boolean_true, "Move value");
+                    co_yield m_context->mem()->storeGlobal(v_offset, v_value, 0, 8);
+                };
+
+            m_context->schedule(kb());
 
             auto k = m_context->kernel();
             m_context->schedule(k->postamble());
@@ -834,33 +830,37 @@ namespace AddressCalculationTest
         std::vector<uint64_t>                    m_hostBuffer2;
     };
 
-    TEST_CASE("address calculation test", "[expression][gpu][equal][float][128_128]")
+    TEST_CASE("address calculation test generate and run", "[expression][gpu]")
     {
-        auto context = TestContext::ForTestDevice();
+        // Single here means applied to all three A, B, C matrices.
+        // TODO: Add more dataTypes
+        std::vector<DataType> singleDataTypes = {DataType::Float};
 
-        GEMMProblem                 problem{.m = 128, .n = 128};
-        rocRollerTest::Graphs::GEMM gemm(DataType::Float);
-        gemm.setProblem(problem);
+        for(auto dataType : singleDataTypes)
+        {
+            for(auto [m, n, macM, macN] : TestValues::gemmProblemSizes)
+            {
+                // Come up with a string from problem_size and data type, to be given to ForTestDevice();
+                auto suffixForKernelName = std::to_string(m) + "x" + std::to_string(n) + "_"
+                                           + std::to_string(macM) + "_" + std::to_string(macN);
+                auto context = TestContext::ForTestDevice({}, suffixForKernelName);
 
-        AddressCalculationTest kernel(context.get(), problem, gemm);
-        kernel.test_equal();
+                GEMMProblem                 problem{.m = m, .n = n, .macM = macM, .macN = macN};
+                rocRollerTest::Graphs::GEMM gemm(dataType);
+                gemm.setProblem(problem);
+                CAPTURE(dataType, m, n, macM, macN);
+
+                AddressCalculationTest kernel(context.get(), problem, gemm);
+                // Generate a kernel for testing address calculation and run.
+                // Verification of the result is done.
+                kernel.test_equal();
+            }
+        }
     }
 
-    TEST_CASE("address calculation test", "[expression][gpu][equal][float][512_512]")
+    TEST_CASE("address calculation test generate and run one pair", "[expression][gpu]")
     {
-        auto context = TestContext::ForTestDevice();
-
-        GEMMProblem                 problem{.m = 512, .n = 512};
-        rocRollerTest::Graphs::GEMM gemm(DataType::Float);
-        gemm.setProblem(problem);
-
-        AddressCalculationTest kernel(context.get(), problem, gemm);
-        kernel.test_equal();
-    }
-
-    TEST_CASE("address calculation test", "[expression][gpu][equal_one][float][128_128]")
-    {
-        auto context = TestContext::ForTestDevice({}, "equal_one_128x128");
+        auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
 
         GEMMProblem                 problem{.m = 128, .n = 128};
         rocRollerTest::Graphs::GEMM gemm(DataType::Float);
@@ -870,7 +870,7 @@ namespace AddressCalculationTest
         kernel.test_equal_one();
     }
 
-    TEST_CASE("address calculation test", "[expression][gpu][implicit_workitemcount]")
+    TEST_CASE("address calculation test implicit workitemcount", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "impl_workitemcnt");
 
@@ -882,9 +882,9 @@ namespace AddressCalculationTest
         kernel.test_implicit_workitemcount();
     }
 
-    TEST_CASE("address calculation test", "[expression][gpu][sanity_indices]")
+    TEST_CASE("address calculation test sanity check", "[expression][gpu]")
     {
-        auto context = TestContext::ForTestDevice({}, "sanity_indices");
+        auto context = TestContext::ForTestDevice({}, "128x128_sanity_indices");
 
         GEMMProblem                 problem{.m = 128, .n = 128};
         rocRollerTest::Graphs::GEMM gemm(DataType::Float);

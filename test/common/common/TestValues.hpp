@@ -112,6 +112,17 @@ namespace TestValues
                                                12981.0,
                                                42e5};
 
+    // Portions of GEMMProblem
+    struct gemmProblemSize
+    {
+        int m;
+        int n;
+        int macM;
+        int macN;
+    };
+
+    inline std::vector<gemmProblemSize> gemmProblemSizes = {{128, 128, 64, 64}, {512, 512, 64, 64}};
+
     template <typename T>
     struct ByType
     {
