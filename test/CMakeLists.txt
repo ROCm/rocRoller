@@ -149,6 +149,8 @@ set(
     unit/VectorAddBenchmark.cpp
     unit/WaitCountObserverTest.cpp
     unit/WaitCountTest.cpp
+    unit/WMMAHazardObserverTest.cpp
+    unit/WMMAUnitObserverTest.cpp
     unit/StreamTest.cpp
     unit/EnumToStringTest.cpp
 )
@@ -216,10 +218,10 @@ set(
     catch/HazardObserverTest.cpp
     catch/IdentifyParallelDimensionsTest.cpp
     catch/KernelArgumentsTest.cpp
+    catch/KernelGraphColouringTest.cpp
     catch/KernelGraphConstraintsTest.cpp
     catch/KernelGraphRemoveDuplicatesTest.cpp
     catch/KernelGraphSimplifyTest.cpp
-    catch/KernelGraphUtilsTest.cpp
     catch/LargerLDSTest.cpp
     catch/MultipleLDSAllocationTest.cpp
     catch/mxDataGeneratorTest.cpp
