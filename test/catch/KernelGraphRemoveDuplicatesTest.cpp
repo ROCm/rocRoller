@@ -42,7 +42,7 @@ TEST_CASE("Remove duplicates", "[kernel-graph]")
     using namespace rocRoller::KernelGraph::ControlGraph;
 
     auto ctx     = TestContext::ForDefaultTarget().get();
-    auto example = rocRollerTest::Graphs::GEMM<float>();
+    auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
     example.setTileSize(128, 128, 32);
     example.setMFMA(32, 32, 16, 1);
