@@ -448,7 +448,7 @@ function(_fetch_mxDataGenerator VERSION HASH)
     endif()
     FetchContent_Declare(
         mxDataGenerator
-        GIT_REPOSITORY git@github.com:ROCm/mxDataGenerator.git
+        GIT_REPOSITORY ${mxDataGenerator_url}
         GIT_TAG ${GIT_TAG}
     )
     FetchContent_MakeAvailable(mxDataGenerator)
