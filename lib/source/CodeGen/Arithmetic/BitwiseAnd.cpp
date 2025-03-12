@@ -84,7 +84,6 @@ namespace rocRoller
             {
                 if(lhs->regType() == Register::Type::Literal)
                 {
-
                     Register::ValuePtr lsb;
                     Register::ValuePtr msb;
                     Arithmetic::get2LiteralDwords(lsb, msb, lhs);
@@ -97,7 +96,6 @@ namespace rocRoller
                 }
                 else
                 {
-
                     co_yield_(Instruction("v_and_b32",
                                           {dest->subset({0})},
                                           {lhs->subset({0}), rhs->subset({0})},
