@@ -1090,7 +1090,7 @@ namespace KernelGraphTest
         int macK  = 16;
         int waveK = 8;
 
-        example.setTileSize(128, 256, macK);
+        example.setTileSize(128, 128, macK);
         example.setMFMA(32, 32, waveK, 1);
         example.setUseLDS(true, false, false);
 
