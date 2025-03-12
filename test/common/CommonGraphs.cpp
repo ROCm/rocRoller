@@ -356,12 +356,33 @@ namespace rocRollerTest::Graphs
 
         params->setManualKernelDimension(2);
 
+        AssertFatal(m_problem.m % m_problem.macM == 0,
+                    "MacroTile size mismatch (M)",
+                    ShowValue(m_problem.m),
+                    ShowValue(m_problem.macM));
+        AssertFatal(m_problem.n % m_problem.macN == 0,
+                    "MacroTile size mismatch (N)",
+                    ShowValue(m_problem.n),
+                    ShowValue(m_problem.macN));
+
         AssertFatal(m_problem.workgroupSizeX % m_problem.wavefrontSize == 0,
                     "Workgroup Size X must be multiply of wave front size");
 
+        AssertFatal(m_problem.macM % m_problem.waveM == 0,
+                    "Macrotile size must be a multiple of wavetile size");
+        AssertFatal(m_problem.macN % m_problem.waveN == 0,
+                    "Macrotile size must be a multiple of wavetile size");
+
+        // i.e. jammedM
         uint wavetilePerWavefrontM
             = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / m_problem.workgroupSizeX;
+        AssertFatal(wavetilePerWavefrontM > 0,
+                    "Wavetiles per wavefront in M should be positive integer");
+
+        // i.e. jammedN
         uint wavetilePerWavefrontN = m_problem.macN / m_problem.waveN / m_problem.workgroupSizeY;
+        AssertFatal(wavetilePerWavefrontN > 0,
+                    "Wavetiles per wavefront in N should be positive integer");
 
         AssertFatal(m_problem.macM % (m_problem.waveM * wavetilePerWavefrontM) == 0,
                     "WaveTile size mismatch (M)");
@@ -397,14 +418,10 @@ namespace rocRollerTest::Graphs
         params->setDimensionInfo(m_tagC, macTileC);
         params->setDimensionInfo(m_tagD, macTileD);
 
-        // uint jammedM
-        //     = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / workgroupSizeX;
-        // uint jammedN = m_problem.macN / m_problem.waveN / workgroupSizeY;
-
         Log::debug("GEMM workgroup sizes {} {} {}", workgroupSizeX, workgroupSizeY, 1);
-        // Log::debug("GEMM jamming {} {}", jammedM, jammedN);
-        // params->setWaveTilesPerWavefront(jammedM, jammedN);
+        Log::debug("GEMM jamming {} {}", wavetilePerWavefrontM, wavetilePerWavefrontN);
 
+        params->setWaveTilesPerWavefront(wavetilePerWavefrontM, wavetilePerWavefrontN);
         params->setManualWavefrontCount(
             {static_cast<uint>(m_problem.macM / m_problem.waveM / wavetilePerWavefrontM),
              static_cast<uint>(m_problem.macN / m_problem.waveN / wavetilePerWavefrontN)});

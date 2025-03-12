@@ -213,10 +213,6 @@ namespace rocRollerTest
         private:
             void createCommand();
 
-            int  m_macM, m_macN, m_macK;
-            int  m_waveM, m_waveN, m_waveK, m_waveB;
-            bool m_useLDSA = false, m_useLDSB = false, m_useLDSD = false;
-
             rocRoller::Operations::OperationTag m_tagA, m_tagB, m_tagC, m_tagD;
 
             CommandPtr  m_command;
