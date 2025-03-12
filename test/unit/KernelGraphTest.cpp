@@ -1085,7 +1085,7 @@ namespace KernelGraphTest
 
     TEST_F(KernelGraphTest, LowerTensor)
     {
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         int macK  = 16;
         int waveK = 8;
@@ -1135,7 +1135,7 @@ namespace KernelGraphTest
 
         // Verify that loops have been unrolled
         auto unrolledForLoops = kgraphUnrolled.control.getNodes<ForLoopOp>().to<std::vector>();
-        EXPECT_EQ(unrolledForLoops.size(), 10); // main: X (Y (K K)) (Y (K K)); epilogue:  X (Y Y)
+        EXPECT_EQ(unrolledForLoops.size(), 5); // main: X (Y (K K)) (Y (K K)); epilogue:  X (Y Y)
 
         auto kgraphFused = kgraphUnrolled.transform(fuseLoopsTransform);
         kgraphFused      = kgraphFused.transform(removeDuplicatesTransform);
@@ -1145,7 +1145,7 @@ namespace KernelGraphTest
         EXPECT_EQ(fusedForLoops.size(), 5);
 
         auto fusedLoads = kgraphFused.control.getNodes<LoadTiled>().to<std::vector>();
-        EXPECT_EQ(fusedLoads.size(), 9); // 1 for A, 4 for B, 4 for C
+        EXPECT_EQ(fusedLoads.size(), 4); // 1 for A, 4 for B, 4 for C
 
         // Verify that single iteration loops have been removed.
         auto kgraphClean     = kgraphFused.transform(cleanLoopsTransform);
@@ -1154,13 +1154,13 @@ namespace KernelGraphTest
 
         // Verify that there is only a single StoreLDSTile node per K loop
         auto unrolledStoreLDS = kgraphUnrolled.control.getNodes<StoreLDSTile>().to<std::vector>();
-        EXPECT_EQ(unrolledStoreLDS.size(), 4);
+        EXPECT_EQ(unrolledStoreLDS.size(), 1);
 
         // Verify number of ComputeIndexes: A loads; A LDS loads; B loads; C load; D
         // store: 3 + (2+2) + 3 + 3 + 3 = 12
         kgraph1             = kgraph1.transform(addComputeIndexTransform);
         auto computeIndexes = kgraph1.control.getNodes<ComputeIndex>().to<std::vector>();
-        EXPECT_EQ(computeIndexes.size(), 16);
+        EXPECT_EQ(computeIndexes.size(), 15);
 
         // Verify number of Deallocates
         auto addDeallocate  = std::make_shared<AddDeallocate>();
@@ -1169,7 +1169,7 @@ namespace KernelGraphTest
         EXPECT_EQ(addDeallocates.size(), 16);
 
         auto storeLDS = kgraphUnrolled.control.getNodes<StoreLDSTile>().to<std::vector>();
-        EXPECT_EQ(storeLDS.size(), 4);
+        EXPECT_EQ(storeLDS.size(), 1);
 
         auto fusedStoreLDS = kgraphFused.control.getNodes<StoreLDSTile>().to<std::vector>();
         EXPECT_EQ(fusedStoreLDS.size(), 1);
@@ -1177,7 +1177,7 @@ namespace KernelGraphTest
 
     TEST_F(KernelGraphTest, InlineIncrement)
     {
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         example.setTileSize(128, 256, 8);
         example.setMFMA(32, 32, 2, 1);
@@ -2717,7 +2717,7 @@ namespace KernelGraphTest
     {
         using GD = Graph::Direction;
 
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         example.setTileSize(128, 256, 8);
         example.setMFMA(32, 32, 2, 1);

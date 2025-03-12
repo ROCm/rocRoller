@@ -193,4 +193,243 @@ namespace rocRollerTest::Graphs
         return params;
     }
 
+    GEMM::GEMM(DataType ta)
+        : GEMM(ta, ta)
+    {
+    }
+    GEMM::GEMM(DataType ta, DataType tb)
+        : GEMM(ta, tb, tb)
+    {
+    }
+    GEMM::GEMM(DataType ta, DataType tb, DataType tc)
+        : GEMM(ta, tb, tc, tc)
+    {
+    }
+    GEMM::GEMM(DataType ta, DataType tb, DataType tc, DataType td)
+        : mTa(ta)
+        , mTb(tb)
+        , mTc(tc)
+        , mTd(td)
+    {
+    }
+
+    void GEMM::createCommand()
+    {
+        m_command = std::make_shared<rocRoller::Command>();
+
+        std::vector<size_t> oneStridesN
+            = m_problem.literalStrides ? std::vector<size_t>({(size_t)1}) : std::vector<size_t>({});
+
+        std::vector<size_t> oneStridesT = m_problem.literalStrides
+                                              ? std::vector<size_t>({(size_t)0, (size_t)1})
+                                              : std::vector<size_t>({});
+
+        mTagTensorA = m_command->addOperation(rocRoller::Operations::Tensor(
+            2, mTa, m_problem.transA == "N" ? oneStridesN : oneStridesT)); // A
+
+        m_tagA = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorA));
+
+        mTagTensorB = m_command->addOperation(rocRoller::Operations::Tensor(
+            2, mTb, m_problem.transB == "N" ? oneStridesN : oneStridesT)); // B
+        m_tagB      = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorB));
+
+        mTagTensorC
+            = m_command->addOperation(rocRoller::Operations::Tensor(2, mTc, oneStridesN)); // C
+        m_tagC = m_command->addOperation(rocRoller::Operations::T_Load_Tiled(mTagTensorC));
+
+        mTagScalarAlpha
+            = m_command->addOperation(rocRoller::Operations::Scalar(DataType::Float)); // alpha
+        auto tagLoadAlpha
+            = m_command->addOperation(rocRoller::Operations::T_Load_Scalar(mTagScalarAlpha));
+
+        mTagScalarBeta = m_command->addOperation(rocRoller::Operations::Scalar(mTc)); // beta
+        auto tagLoadBeta
+            = m_command->addOperation(rocRoller::Operations::T_Load_Scalar(mTagScalarBeta)); // beta
+
+        auto tagAB = m_command->addOperation(rocRoller::Operations::T_Mul(m_tagA, m_tagB)); // A * B
+
+        rocRoller::Operations::T_Execute execute(m_command->getNextTag());
+
+        auto tagBetaC
+            = execute.addXOp(rocRoller::Operations::E_Mul(tagLoadBeta, m_tagC)); // beta * C
+
+        auto tagAlphaAB
+            = execute.addXOp(rocRoller::Operations::E_Mul(tagLoadAlpha, tagAB)); // alpha * (A * B)
+
+        if(m_problem.betaInFma)
+        {
+            m_tagD = execute.addXOp(rocRoller::Operations::E_Add(tagBetaC, tagAlphaAB));
+            // alpha * (A * B) + beta * C
+        }
+        else
+        {
+            m_tagD = execute.addXOp(rocRoller::Operations::E_Add(tagAlphaAB, tagBetaC));
+            // alpha * (A * B) + beta * C
+        }
+        m_command->addOperation(std::move(execute));
+
+        mTagTensorD
+            = m_command->addOperation(rocRoller::Operations::Tensor(2, mTd, oneStridesN)); // D
+        m_command->addOperation(rocRoller::Operations::T_Store_Tiled(m_tagD, mTagTensorD)); // D
+
+        if(m_problem.streamK)
+        {
+            mTagNumWGs     = m_command->allocateTag();
+            auto numWGsArg = m_command->allocateArgument(DataType::UInt32,
+                                                         mTagNumWGs,
+                                                         ArgumentType::Value,
+                                                         DataDirection::ReadOnly,
+                                                         rocRoller::NUMWGS);
+        }
+
+        mTagScratch = m_command->allocateTag();
+        m_command->allocateArgument(VariableType(DataType::UInt32, PointerType::PointerGlobal),
+                                    mTagScratch,
+                                    ArgumentType::Value,
+                                    DataDirection::ReadWrite,
+                                    rocRoller::SCRATCH);
+    }
+
+    CommandPtr GEMM::getCommand()
+    {
+        if(!m_command)
+            createCommand();
+
+        return m_command;
+    }
+
+    KernelGraph GEMM::getKernelGraph()
+    {
+        return rocRoller::KernelGraph::translate(getCommand());
+    }
+
+    void GEMM::setTileSize(int m, int n, int k)
+    {
+        m_problem.macM = m;
+        m_problem.macN = n;
+        m_problem.macK = k;
+    }
+
+    void GEMM::setMFMA(int m, int n, int k, int b)
+    {
+        m_problem.waveM = m;
+        m_problem.waveN = n;
+        m_problem.waveK = k;
+        m_problem.waveB = b;
+    }
+
+    void GEMM::setUseLDS(bool a, bool b, bool d)
+    {
+        m_problem.loadLDSA  = a;
+        m_problem.loadLDSB  = b;
+        m_problem.storeLDSD = d;
+    }
+
+    void GEMM::setPrefetch(bool prefetch,
+                           int  prefetchInFlight,
+                           int  prefetchLDSFactor,
+                           bool prefetchMixMemOps)
+    {
+        m_problem.prefetch          = prefetch;
+        m_problem.prefetchInFlight  = prefetchInFlight;
+        m_problem.prefetchLDSFactor = prefetchLDSFactor;
+        m_problem.prefetchMixMemOps = prefetchMixMemOps;
+
+        m_problem.unrollK = prefetchInFlight;
+    }
+
+    void GEMM::setProblem(GEMMProblem const& problem)
+    {
+        m_problem = problem;
+    }
+
+    GEMMProblem const& GEMM::getProblem() const
+    {
+        return m_problem;
+    }
+
+    CommandParametersPtr GEMM::getCommandParameters() const
+    {
+        using namespace rocRoller::KernelGraph::CoordinateGraph;
+
+        auto params = std::make_shared<CommandParameters>();
+
+        params->setManualKernelDimension(2);
+
+        AssertFatal(m_problem.workgroupSizeX % m_problem.wavefrontSize == 0,
+                    "Workgroup Size X must be multiply of wave front size");
+
+        uint wavetilePerWavefrontM
+            = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / m_problem.workgroupSizeX;
+        uint wavetilePerWavefrontN = m_problem.macN / m_problem.waveN / m_problem.workgroupSizeY;
+
+        AssertFatal(m_problem.macM % (m_problem.waveM * wavetilePerWavefrontM) == 0,
+                    "WaveTile size mismatch (M)");
+        AssertFatal(m_problem.macN % (m_problem.waveN * wavetilePerWavefrontN) == 0,
+                    "WaveTile size mismatch (N)");
+
+        uint workgroupSizeX = m_problem.workgroupSizeX * m_problem.workgroupSizeY;
+        uint workgroupSizeY = 1;
+        params->setManualWorkgroupSize({workgroupSizeX, workgroupSizeY, 1});
+
+        auto macTileA
+            = MacroTile({m_problem.macM, m_problem.macK},
+                        LayoutType::MATRIX_A,
+                        {m_problem.waveM, m_problem.waveN, m_problem.waveK, m_problem.waveB},
+                        m_problem.loadLDSA ? MemoryType::LDS : MemoryType::WAVE);
+        auto macTileB
+            = MacroTile({m_problem.macK, m_problem.macN},
+                        LayoutType::MATRIX_B,
+                        {m_problem.waveM, m_problem.waveN, m_problem.waveK, m_problem.waveB},
+                        m_problem.loadLDSB ? MemoryType::LDS : MemoryType::WAVE);
+        auto macTileC
+            = MacroTile({m_problem.macM, m_problem.macN},
+                        LayoutType::MATRIX_ACCUMULATOR,
+                        {m_problem.waveM, m_problem.waveN, m_problem.waveK, m_problem.waveB});
+        auto macTileD
+            = MacroTile({m_problem.macM, m_problem.macN},
+                        LayoutType::MATRIX_ACCUMULATOR,
+                        {m_problem.waveM, m_problem.waveN, m_problem.waveK, m_problem.waveB},
+                        m_problem.storeLDSD ? MemoryType::LDS : MemoryType::WAVE);
+
+        params->setDimensionInfo(m_tagA, macTileA);
+        params->setDimensionInfo(m_tagB, macTileB);
+        params->setDimensionInfo(m_tagC, macTileC);
+        params->setDimensionInfo(m_tagD, macTileD);
+
+        // uint jammedM
+        //     = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / workgroupSizeX;
+        // uint jammedN = m_problem.macN / m_problem.waveN / workgroupSizeY;
+
+        Log::debug("GEMM workgroup sizes {} {} {}", workgroupSizeX, workgroupSizeY, 1);
+        // Log::debug("GEMM jamming {} {}", jammedM, jammedN);
+        // params->setWaveTilesPerWavefront(jammedM, jammedN);
+
+        params->setManualWavefrontCount(
+            {static_cast<uint>(m_problem.macM / m_problem.waveM / wavetilePerWavefrontM),
+             static_cast<uint>(m_problem.macN / m_problem.waveN / wavetilePerWavefrontN)});
+
+        params->fuseLoops                     = m_problem.fuseLoops;
+        params->tailLoops                     = m_problem.tailLoops;
+        params->allowAmbiguousMemoryNodes     = m_problem.allowAmbiguousMemoryNodes;
+        params->unrollK                       = m_problem.unrollK;
+        params->packMultipleElementsInto1VGPR = m_problem.packMultipleElementsInto1VGPR;
+        params->prefetch                      = m_problem.prefetch;
+        params->prefetchInFlight              = m_problem.prefetchInFlight;
+        params->prefetchLDSFactor             = m_problem.prefetchLDSFactor;
+        params->prefetchMixMemOps             = m_problem.prefetchMixMemOps;
+        params->transposeMemoryAccess[LayoutType::MATRIX_A] = m_problem.transA == "T";
+        params->transposeMemoryAccess[LayoutType::MATRIX_B] = m_problem.transB == "T";
+        params->transposeMemoryAccess[LayoutType::None]     = true;
+
+        if(m_problem.streamK)
+        {
+            params->loopOverOutputTilesDimensions = {0, 1};
+            params->streamK                       = true;
+            params->streamKTwoTile                = m_problem.streamKTwoTile;
+        }
+
+        return params;
+    }
+
 }

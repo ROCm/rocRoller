@@ -88,7 +88,7 @@ namespace KernelGraphTest
     {
         using namespace rocRoller::KernelGraph;
 
-        auto example = rocRollerTest::Graphs::GEMM<float>();
+        auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
         int macK  = 16;
         int waveK = 8;
@@ -118,16 +118,16 @@ namespace KernelGraphTest
         // Now apply SetWorkitemCount and try again
         kgraph = kgraph.transform(std::make_shared<SetWorkitemCount>(m_context));
 
-        CommandArgumentPtr tensorDsizeX;
+        CommandArgumentPtr tensorAsizeX;
         {
             auto arguments = command->getArguments();
             for(auto argument : arguments)
             {
-                if(argument->name() == "Tensor_4_size_0")
-                    tensorDsizeX = argument;
+                if(argument->name() == "Tensor_0_size_0")
+                    tensorAsizeX = argument;
             }
         }
-        ASSERT_NE(tensorDsizeX, nullptr) << "D size not found";
+        ASSERT_NE(tensorAsizeX, nullptr) << "A size not found";
 
         workitemCount = m_context->kernel()->workitemCount();
 
@@ -135,7 +135,7 @@ namespace KernelGraphTest
         auto workgroupSizeX = Expression::literal(128u);
 
         auto expected
-            = (((tensorDsizeX->expression() + workgroupSizeX) - one) / workgroupSizeX) * one;
+            = (((tensorAsizeX->expression() + workgroupSizeX) - one) / workgroupSizeX) * one;
 
         EXPECT_TRUE(Expression::identical(expected, workitemCount[0]));
     }

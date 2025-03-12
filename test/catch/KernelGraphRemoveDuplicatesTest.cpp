@@ -42,7 +42,7 @@ TEST_CASE("Remove duplicates", "[kernel-graph]")
     using namespace rocRoller::KernelGraph::ControlGraph;
 
     auto ctx     = TestContext::ForDefaultTarget().get();
-    auto example = rocRollerTest::Graphs::GEMM<float>();
+    auto example = rocRollerTest::Graphs::GEMM(DataType::Float);
 
     example.setTileSize(128, 128, 32);
     example.setMFMA(32, 32, 16, 1);
@@ -72,16 +72,16 @@ TEST_CASE("Remove duplicates", "[kernel-graph]")
 
     // LoadTiled: A A, B B, C C
     // After removing 2x1 jamming: A, B, C C
-    CHECK(graph0.control.getElements<LoadTiled>().to<std::vector>().size() == 6);
-    CHECK(graph1.control.getElements<LoadTiled>().to<std::vector>().size() == 4);
+    CHECK(graph0.control.getElements<LoadTiled>().to<std::vector>().size() == 3);
+    CHECK(graph1.control.getElements<LoadTiled>().to<std::vector>().size() == 3);
 
     // StoreLDSTile: A A, B B
     // After removing 2x1 jamming: A, B
-    CHECK(graph0.control.getElements<StoreLDSTile>().to<std::vector>().size() == 4);
+    CHECK(graph0.control.getElements<StoreLDSTile>().to<std::vector>().size() == 2);
     CHECK(graph1.control.getElements<StoreLDSTile>().to<std::vector>().size() == 2);
 
     // LoadLDSTile: A A A A, B B B B
     // After removing 2x1 jamming: A A A A, B B
-    CHECK(graph0.control.getElements<LoadLDSTile>().to<std::vector>().size() == 8);
-    CHECK(graph1.control.getElements<LoadLDSTile>().to<std::vector>().size() == 6);
+    CHECK(graph0.control.getElements<LoadLDSTile>().to<std::vector>().size() == 4);
+    CHECK(graph1.control.getElements<LoadLDSTile>().to<std::vector>().size() == 4);
 }
