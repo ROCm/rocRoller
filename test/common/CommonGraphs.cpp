@@ -359,9 +359,16 @@ namespace rocRollerTest::Graphs
         AssertFatal(m_problem.workgroupSizeX % m_problem.wavefrontSize == 0,
                     "Workgroup Size X must be multiply of wave front size");
 
+        // i.e. jammedM
         uint wavetilePerWavefrontM
             = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / m_problem.workgroupSizeX;
+        AssertFatal(wavetilePerWavefrontM != 0,
+                    "Wavetiles per wavefront in M should be positive integer");
+
+        // i.e. jammedN
         uint wavetilePerWavefrontN = m_problem.macN / m_problem.waveN / m_problem.workgroupSizeY;
+        AssertFatal(wavetilePerWavefrontN != 0,
+                    "Wavetiles per wavefront in N should be positive integer");
 
         AssertFatal(m_problem.macM % (m_problem.waveM * wavetilePerWavefrontM) == 0,
                     "WaveTile size mismatch (M)");
@@ -397,14 +404,19 @@ namespace rocRollerTest::Graphs
         params->setDimensionInfo(m_tagC, macTileC);
         params->setDimensionInfo(m_tagD, macTileD);
 
-        // uint jammedM
-        //     = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / workgroupSizeX;
-        // uint jammedN = m_problem.macN / m_problem.waveN / workgroupSizeY;
+#if 0
+        uint jammedM
+             = m_problem.wavefrontSize * m_problem.macM / m_problem.waveM / workgroupSizeX;
+        uint jammedN = m_problem.macN / m_problem.waveN / workgroupSizeY;
 
         Log::debug("GEMM workgroup sizes {} {} {}", workgroupSizeX, workgroupSizeY, 1);
-        // Log::debug("GEMM jamming {} {}", jammedM, jammedN);
-        // params->setWaveTilesPerWavefront(jammedM, jammedN);
+        Log::debug("GEMM jamming {} {}", jammedM, jammedN);
+        params->setWaveTilesPerWavefront(jammedM, jammedN);
+#endif
+        Log::debug("GEMM workgroup sizes {} {} {}", workgroupSizeX, workgroupSizeY, 1);
+        Log::debug("GEMM jamming {} {}", wavetilePerWavefrontM, wavetilePerWavefrontN);
 
+        params->setWaveTilesPerWavefront(wavetilePerWavefrontM, wavetilePerWavefrontN);
         params->setManualWavefrontCount(
             {static_cast<uint>(m_problem.macM / m_problem.waveM / wavetilePerWavefrontM),
              static_cast<uint>(m_problem.macN / m_problem.waveN / wavetilePerWavefrontN)});
