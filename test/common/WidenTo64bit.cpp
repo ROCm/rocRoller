@@ -70,6 +70,7 @@ namespace rocRollerTest
         {
             // TODO: Add check that divisor is a CValue within (u)int32-bit
             Log::debug("Divisor: {} ", toString(expr.rhs));
+	    AssertFatal(isExpectedLeafType(expr.rhs));
 
             Expression::Divide cpy = expr;
             if(expr.lhs)
@@ -82,6 +83,7 @@ namespace rocRollerTest
         {
             // TODO: Add check that divisor is a CValue within (u)int32-bit
             Log::debug("Modulo: {} ", toString(expr.rhs));
+	    AssertFatal(isExpectedLeafType(expr.rhs));
 
             Expression::Modulo cpy = expr;
             if(expr.lhs)
@@ -243,6 +245,14 @@ namespace rocRollerTest
                         "workgroup/item indices ",
                         showValue);
         }
+
+	bool isExpectedLeafType(Expression::ExpressionPtr const& expr) const {
+            return std::holds_alternative<CommandArgumentValue>(*expr) ||
+                   std::holds_alternative<CommandArgumentPtr>(*expr) ||
+                   std::holds_alternative<Register::ValuePtr>(*expr) ||
+                   std::holds_alternative<AssemblyKernelArgumentPtr>(*expr);
+        }
+	
     };
 
     Expression::ExpressionPtr widenTo64bit(Expression::ExpressionPtr expr)
