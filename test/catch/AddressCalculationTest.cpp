@@ -25,15 +25,19 @@
  *******************************************************************************/
 
 #include "CustomMatchers.hpp"
+#include "CustomSections.hpp"
 #include "TestContext.hpp"
+
 #include <common/CommonGraphs.hpp>
 #include <common/GEMMProblem.hpp>
 #include <common/TestValues.hpp>
 #include <common/Utilities.hpp>
 #include <common/WidenTo64bit.hpp>
+
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
 #include <rocRoller/CodeGen/WaitCount.hpp>
+#include <rocRoller/ExpressionTransformations.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Transformer.hpp>
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/KernelGraph/Utils.hpp>
@@ -423,6 +427,7 @@ namespace AddressCalculationTest
 
                 // Compute the value 2
                 Register::ValuePtr v_value_2 = nullptr;
+
                 co_yield Expression::generate(v_value_2, widenedInput, context);
 
                 co_yield context->mem()->storeGlobal(v_offset_1, v_value_1, 0, 8);
@@ -445,7 +450,11 @@ namespace AddressCalculationTest
 
             // Note that actually large matrix hipMalloc is not needed.
             // But at the same time, larger malloc may incurr larger base address, which can lead to overflow.
-            // ?? how to get float from m_dt? gemm.m_ta?
+            //
+            // TODO: How to get "float" from DataType of gemm.tA ? DataType::Float --> "float"
+            //       (An opposite way is TypeInfo<float>::Var.dataType).
+            //       Might be alright to use float everytime. In the end, we never uses the allocated values.
+            //
             auto deviceA = make_shared_device<float /* came from DataType::Float for now.*/>();
             auto deviceB = make_shared_device<float /* came from DataType::Float for now.*/>();
             auto deviceC = make_shared_device<float /* came from DataType::Float for now.*/>();
@@ -688,14 +697,16 @@ namespace AddressCalculationTest
             indexExprPtrs = AddressTrace(m_commandKernel->getKernelGraph(), m_context)
                                 .traceComputeIndexWithBuffer();
             std::vector<Expression::ExpressionPtr> widenedExprPtrs;
-            for(int i = 0, size = indexExprPtrs.size(); i < size; i++)
-            {
-                auto eptr = indexExprPtrs[i];
-                Log::debug("== Expr : {} ", toString(eptr));
 
-                widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
-                Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
-            }
+            // Test only one pair of expressions (the first pair.)
+            auto eptr = indexExprPtrs[0];
+            Log::debug("== Expr : {} ", toString(eptr));
+
+            widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
+            Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
+
+            auto fast = Expression::FastArithmetic(m_context);
+            Log::debug("** fast : {} ", toString(fast(widenedExprPtrs.back())));
 
             auto k = m_context->kernel();
             m_context->schedule(kb_equal_one(
@@ -766,9 +777,6 @@ namespace AddressCalculationTest
                     co_yield Expression::generate(
                         v_offset, compare_res_pointer + s_ptr->expression(), m_context);
 
-                    // may not be needed.
-                    //co_yield_(Instruction::Wait(WaitCount::LGKMCnt(0, "extra waitcnt for debug")));
-
                     // boolean_diff was allocated to s[0:1]
                     // diff should be computed per lane,
                     // but is_zero_diff is actually one-bit
@@ -799,7 +807,7 @@ namespace AddressCalculationTest
                                         toString(boolType));
                         }
 
-                        // boolean_true = boolean_true | is_zero_diff
+                        // boolean_true = boolean_true & is_zero_diff
                         auto accumRes
                             = std::make_shared<Expression::Expression>(Expression::BitwiseAnd{
                                 boolean_true->expression(), is_zero_diff, "accum"});
@@ -857,28 +865,73 @@ namespace AddressCalculationTest
 
     TEST_CASE("address calculation test generate and run", "[expression][gpu]")
     {
-        // Single here means applied to all three A, B, C matrices.
-        // TODO: Add more dataTypes
-        std::vector<DataType> singleDataTypes = {DataType::Float};
+        // Noticed that for "float" type, all different combinations of
+        // problem sizes (m, n, k) by macro tile sizes (macM, macN)
+        // will generate the same kernel instructions.
+        // This is because address calculation expressions use the same arithmetic
+        // over the same command arguments and workgroup indices, workitem indices.
+        // Only the vales of the command arguments and workgroup, workitem indices change.
 
-        for(auto dataType : singleDataTypes)
+        // Also noticed that current expressions obtained from generation of computeIndex's
+        // VGPR base part of buffer_ instructions uses only following command arguments.
+        // Tensor_15_stride_1_14 (D's m or n)
+        // Tensor_4_stride_1_13 (C's m or n)
+        // Tensor_0_stride_1_10 (A's m )
+        // Tensor_2_stride_0_11 (B's n)
+        // No problem size "k" is involved in the expression.
+        // This can be because current expressions are only base VGPR address of buffer_
+        // instructions. The "k" part might be applied as increment.
+        // Or, it could be simply a bug.
+
+        // Called single as the one data type is applied to all A, B, C and D matrices.
+        // TODO: Add more dataTypes. Also notice other TODO in the function "setTensorArguments()",
+        //       where device pointer for matrices are allocated. Currently, only "float" is used.
+        // TODO: Debug. With DataType::Double, the test fails.
+        //       The bug is from generating a widened expression.
+        //       When it was generated, fast modulo introduces BitwiseAnd operations.
+        //       Those bitwiseand expressions may contain 64bit lhs, 32bit rhs vice versa.
+        //       Bitwise expression generator doesn't promote operands' datatype whereas
+        //       other binary arithmetic operations, e.g. Add, do the regType/dataType promotion.
+        auto singleDataType = GENERATE(DataType::Float);
+        //CAPTURE(singleDataType);
+        //INFO("s" << singleDataType);
+        std::cout << "singleType: " << singleDataType << "\n";
+        DYNAMIC_SECTION(singleDataType)
         {
-            for(auto [m, n, macM, macN] : TestValues::gemmProblemSizes)
+            auto [m, n, k]
+                = GENERATE(values<TestValues::GemmProblemSize>(TestValues::gemmProblemSizes));
+
+            std::cout << "problemSize m: " << m << "\n";
+            std::cout << "problemSize n: " << n << "\n";
+            std::cout << "problemSize k: " << k << "\n";
+            DYNAMIC_SECTION("ps_" << m << "x" << n << "x" << k)
             {
-                // Come up with a string from problem_size and data type, to be given to ForTestDevice();
-                auto suffixForKernelName = std::to_string(m) + "x" + std::to_string(n) + "_"
-                                           + std::to_string(macM) + "_" + std::to_string(macN);
-                auto context = TestContext::ForTestDevice({}, suffixForKernelName);
+                auto [macM, macN] = GENERATE(values(TestValues::macroTileSizes));
+                DYNAMIC_SECTION("mc_" << macM << "x" << macN)
+                {
+                    //CAPTURE(problemSize);
+                    //INFO("p " << problemSize);
+                    std::cout << "macM: " << macM << "\n";
+                    std::cout << "macN: " << macN << "\n";
 
-                GEMMProblem                 problem{.m = m, .n = n, .macM = macM, .macN = macN};
-                rocRollerTest::Graphs::GEMM gemm(dataType);
-                gemm.setProblem(problem);
-                CAPTURE(dataType, m, n, macM, macN);
+                    // Come up with a string from problem_size and data type, to be given to ForTestDevice();
+                    auto probSizeString
+                        = std::to_string(m) + "x" + std::to_string(n) + "x" + std::to_string(k);
+                    auto macroTileString = std::to_string(macM) + "x" + std::to_string(macN);
+                    auto suffixForKernelName
+                        = toString(singleDataType) + "_" + probSizeString + "_" + macroTileString;
+                    auto context = TestContext::ForTestDevice({}, suffixForKernelName);
 
-                AddressCalculationTest kernel(context.get(), problem, gemm);
-                // Generate a kernel for testing address calculation and run.
-                // Verification of the result is done.
-                kernel.test_equal();
+                    GEMMProblem problem{.m = m, .n = n, .k = k, .macM = macM, .macN = macN};
+                    rocRollerTest::Graphs::GEMM gemm(singleDataType);
+                    gemm.setProblem(problem);
+
+                    AddressCalculationTest kernel(context.get(), problem, gemm);
+
+                    // Generate a kernel for testing address calculation and run.
+                    // Verification of the result is done.
+                    kernel.test_equal();
+                }
             }
         }
     }

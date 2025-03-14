@@ -27,10 +27,12 @@
 #pragma once
 
 //
-// Value "suites" for arithemtic and expression tests
+// Value "suites" for arithmetic and expression tests
 //
 
 #include <cstdint>
+#include <initializer_list>
+#include <utility>
 #include <vector>
 
 #include <rocRoller/Expression.hpp>
@@ -139,15 +141,20 @@ namespace TestValues
                                                42e5};
 
     // Portions of GEMMProblem
-    struct gemmProblemSize
+    struct GemmProblemSize
     {
         int m;
         int n;
-        int macM;
-        int macN;
+        int k;
     };
 
-    inline std::vector<gemmProblemSize> gemmProblemSizes = {{128, 128, 64, 64}, {512, 512, 64, 64}};
+    inline std::initializer_list<GemmProblemSize> gemmProblemSizes
+        = {{128, 128, 128}, {512, 512, 128}, {1024, 1024, 256}};
+
+    inline std::initializer_list<std::pair<int, int>> macroTileSizes = {{64, 64}};
+    // Looks like {128, 128} fails
+    // {{64, 64}, {128, 128}};
+    // Also with the current set up - datatype "double" fails.
 
     template <typename T>
     struct ByType
