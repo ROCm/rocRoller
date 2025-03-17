@@ -129,10 +129,8 @@ namespace AddressCalculationTest
             // fastArithmetic is being used eventually when the expressions are generated.
             auto identity_transducer = [&](auto expr) { return expr; };
             auto coords              = CoordG::Transformer(
-                std::make_shared<rocRoller::KernelGraph::CoordinateGraph::CoordinateGraph>(
-                    m_kGraph.coordinates),
-                m_context,
-                identity_transducer);
+
+                &(m_kGraph.coordinates), identity_transducer);
 
             auto fullStop  = [&](int tag) { return tag == increment; };
             auto direction = ci.forward ? Graph::Direction::Upstream : Graph::Direction::Downstream;
@@ -153,7 +151,7 @@ namespace AddressCalculationTest
             // Compute an offset address if we don't have an
             // associated base address to inherit from
             {
-                // base < 0 by the time control reacheds here.
+                // base < 0 by the time control reached here.
                 auto indexExpr
                     = ci.forward ? coords.forward({target})[0] : coords.reverse({target})[0];
 
@@ -802,9 +800,8 @@ namespace AddressCalculationTest
                         auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
                         {
                             auto boolType = resultVariableType(is_zero_diff).dataType;
-                            AssertFatal(boolType == DataType::Bool64,
-                                        "is_zero type {}",
-                                        toString(boolType));
+                            AssertFatal(
+                                boolType == DataType::Bool64, "is_zero type: ", toString(boolType));
                         }
 
                         // boolean_true = boolean_true & is_zero_diff
@@ -863,7 +860,7 @@ namespace AddressCalculationTest
         std::vector<uint64_t>                    m_hostBuffer2;
     };
 
-#if 0
+#if 1
     TEST_CASE("address calculation test generate and run", "[expression][gpu]")
     {
         // Noticed that for "float" type, all different combinations of
@@ -941,7 +938,7 @@ namespace AddressCalculationTest
         }
     }
 #endif
-#if 1
+#if 0
     TEST_CASE("address calculation test generate and run one pair", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
