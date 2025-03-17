@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2021-2025 Advanced Micro Devices, Inc.
+ * Copyright 2021-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -301,7 +301,7 @@ namespace rocRoller
         {
             AssertFatal(!vt.isPointer(), "Convert to pointer type not supported.", ShowValue(vt));
 
-            return convert(vt, a);
+            return convert(vt.dataType, a);
         }
 
         template <DataType DATATYPE>

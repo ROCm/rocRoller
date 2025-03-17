@@ -29,6 +29,7 @@
 #include <set>
 #include <variant>
 
+#include <rocRoller/CodeGen/Annotate.hpp>
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/BranchGenerator.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
@@ -77,11 +78,7 @@ namespace rocRoller
             {
                 m_kernel->startCodeGeneration();
 
-                auto coords = Transformer(
-                    std::make_shared<rocRoller::KernelGraph::CoordinateGraph::CoordinateGraph>(
-                        m_graph->coordinates),
-                    m_context,
-                    m_fastArith);
+                auto coords = Transformer(&m_graph->coordinates, m_fastArith);
 
                 co_yield Instruction::Comment("CodeGeneratorVisitor::generate() begin");
                 auto candidates = m_graph->control.roots().to<std::set>();
@@ -257,8 +254,21 @@ namespace rocRoller
                             ShowValue(operation),
                             ShowValue(tag));
 
-                co_yield std::visit(
-                    *this, std::variant<int>(tag), operation, std::variant<Transformer>(coords));
+                try
+                {
+                    for(auto inst : std::visit(*this,
+                                               std::variant<int>(tag),
+                                               operation,
+                                               std::variant<Transformer>(coords))
+                                        .map(AddControlOp(tag)))
+                        co_yield inst;
+                }
+                catch(rocRoller::Error& exc)
+                {
+                    auto newMsg = fmt::format("(from node {})", tag, exc.what());
+                    exc.annotate(newMsg);
+                    throw;
+                }
 
                 co_yield Instruction::Comment(concatenate(opName, "(", tag, ") END"));
 
@@ -267,10 +277,12 @@ namespace rocRoller
 
             Generator<Instruction> operator()(int tag, Kernel const& edge, Transformer coords)
             {
-                auto scope = std::make_shared<ScopeManager>(m_context);
+                auto scope = std::make_shared<ScopeManager>(m_context, m_graph);
                 m_context->setScopeManager(scope);
 
                 scope->pushNewScope();
+                coords.fillExecutionCoordinates(m_context);
+
                 auto init = m_graph->control.getOutputNodeIndices<Initialize>(tag).to<std::set>();
                 co_yield generate(init, coords);
                 auto body = m_graph->control.getOutputNodeIndices<Body>(tag).to<std::set>();
@@ -304,8 +316,10 @@ namespace rocRoller
 
             Generator<Instruction> operator()(int tag, ConditionalOp const& op, Transformer coords)
             {
-                auto falseLabel = m_context->labelAllocator()->label("ConditionalFalse");
-                auto botLabel   = m_context->labelAllocator()->label("ConditionalBottom");
+                auto falseLabel = m_context->labelAllocator()->label(
+                    fmt::format("ConditionalFalse_{}_{}", op.conditionName, tag));
+                auto botLabel = m_context->labelAllocator()->label(
+                    fmt::format("ConditionalBottom_{}_{}", op.conditionName, tag));
 
                 co_yield Instruction::Lock(Scheduling::Dependency::Branch, "Lock for Conditional");
 
@@ -354,7 +368,10 @@ namespace rocRoller
                     {
                         co_yield Instruction::Lock(Scheduling::Dependency::Branch,
                                                    concatenate("Lock for Assert ", op.assertName));
-                        auto passedLabel = m_context->labelAllocator()->label("AssertPassed");
+                        auto passedLabel = m_context->labelAllocator()->label(
+                            fmt::format("AssertPassed_{}_{}", op.assertName, tag));
+                        auto failedLabel = m_context->labelAllocator()->label(
+                            fmt::format("AssertFailed_{}_{}", op.assertName, tag));
 
                         auto expr            = m_fastArith(op.condition);
                         auto conditionResult = m_context->brancher()->resultRegister(expr);
@@ -369,7 +386,6 @@ namespace rocRoller
                                         ": Passed, jump to ",
                                         passedLabel->toString()));
 
-                        auto failedLabel = m_context->labelAllocator()->label("AssertFailed");
                         co_yield Instruction::Label(failedLabel,
                                                     concatenate("For ", op.assertName));
                         co_yield m_context->crasher()->generateCrashSequence(assertOpKind);
@@ -384,7 +400,8 @@ namespace rocRoller
 
             Generator<Instruction> operator()(int tag, DoWhileOp const& op, Transformer coords)
             {
-                auto topLabel = m_context->labelAllocator()->label("DoWhileTop");
+                auto topLabel = m_context->labelAllocator()->label(
+                    fmt::format("DoWhileTop_{}_{}", op.loopName, tag));
 
                 co_yield Instruction::Comment("Initialize DoWhileLoop");
 
@@ -422,8 +439,10 @@ namespace rocRoller
 
             Generator<Instruction> operator()(int tag, ForLoopOp const& op, Transformer coords)
             {
-                auto topLabel = m_context->labelAllocator()->label("ForLoopTop");
-                auto botLabel = m_context->labelAllocator()->label("ForLoopBottom");
+                auto topLabel = m_context->labelAllocator()->label(
+                    fmt::format("ForLoopTop_{}_{}", op.loopName, tag));
+                auto botLabel = m_context->labelAllocator()->label(
+                    fmt::format("ForLoopBottom_{}_{}", op.loopName, tag));
 
                 co_yield Instruction::Comment("Initialize For Loop");
                 auto init = m_graph->control.getOutputNodeIndices<Initialize>(tag).to<std::set>();
@@ -582,10 +601,10 @@ namespace rocRoller
                         auto tmp   = m_context->registerTagManager()->getRegister(dimTag);
                         valueCount = tmp->valueCount();
                     }
-                    Log::debug("  immediate: count {}", valueCount);
-                    if(assign.regType == Register::Type::Accumulator)
+                    Log::debug("  immediate: count {}", assign.valueCount);
+                    if(assign.regType == Register::Type::Accumulator
+                       || assign.regType == Register::Type::Vector)
                     {
-                        // ACCVGPR should always be contiguous
                         dest = m_context->registerTagManager()->getRegister(
                             dimTag,
                             assign.regType,
@@ -619,7 +638,8 @@ namespace rocRoller
                 operator()(int tag, Deallocate const& deallocate, Transformer coords)
             {
                 auto dimTag = m_graph->mapper.get<Dimension>(tag);
-                rocRoller::Log::getLogger()->debug("  deallocate dimension: {}", dimTag);
+                rocRoller::Log::getLogger()->debug(
+                    "  deallocate dimension: {} tag {}", dimTag, tag);
                 co_yield Instruction::Comment(concatenate("Deallocate ", dimTag));
                 m_context->registerTagManager()->deleteTag(dimTag);
             }
@@ -806,7 +826,12 @@ namespace rocRoller
 
             Generator<Instruction> operator()(int tag, Multiply const& mult, Transformer coords)
             {
-                auto getWaveTile = [&](NaryArgument arg) {
+                auto getWaveTile = [&](NaryArgument arg) -> std::shared_ptr<WaveTile> {
+                    auto hasWave
+                        = m_graph->mapper.get(tag, Connections::typeArgument<WaveTile>(arg)) != -1;
+                    if(!hasWave)
+                        return nullptr;
+
                     auto [waveTag, wave] = m_graph->getDimension<WaveTile>(
                         tag, Connections::typeArgument<WaveTile>(arg));
                     auto [macTag, mac] = m_graph->getDimension<MacroTile>(
@@ -820,26 +845,43 @@ namespace rocRoller
                 auto waveA = getWaveTile(NaryArgument::LHS);
                 auto waveB = getWaveTile(NaryArgument::RHS);
 
-                AssertFatal(
-                    mult.scaleA == mult.scaleB, ShowValue(mult.scaleA), ShowValue(mult.scaleB));
+                AssertFatal(waveA && waveB, "Wavetile for LHS and/or RHS not found");
+
                 AssertFatal(mult.scaleA == Operations::ScaleMode::None
+                                || mult.scaleA == Operations::ScaleMode::SingleScale
                                 || mult.scaleA == Operations::ScaleMode::Separate,
                             ShowValue(mult.scaleA));
+                AssertFatal(mult.scaleB == Operations::ScaleMode::None
+                                || mult.scaleB == Operations::ScaleMode::SingleScale
+                                || mult.scaleB == Operations::ScaleMode::Separate,
+                            ShowValue(mult.scaleB));
 
-                bool scaled = mult.scaleA != Operations::ScaleMode::None;
+                AssertFatal((mult.scaleA == Operations::ScaleMode::None
+                             && mult.scaleB == Operations::ScaleMode::None)
+                                || (mult.scaleA != Operations::ScaleMode::None
+                                    && mult.scaleB != Operations::ScaleMode::None),
+                            "Both A and B must be scaled, or neither.");
+
+                bool scaled = mult.scaleA != Operations::ScaleMode::None
+                              || mult.scaleB != Operations::ScaleMode::None;
 
                 uint numElements = waveA->sizes[0] * waveB->sizes[1];
                 uint wfs         = m_context->kernel()->wavefront_size();
-                uint numAGPR     = numElements / wfs;
+                uint numGPR      = numElements / wfs;
 
                 auto [DTag, _D] = m_graph->getDimension<MacroTile>(
                     tag, Connections::typeArgument<MacroTile>(NaryArgument::DEST));
 
+                const auto& arch    = m_context->targetArchitecture();
+                const auto  regType = arch.HasCapability(GPUCapability::HasAccCD)
+                                          ? Register::Type::Accumulator
+                                          : Register::Type::Vector;
+
                 auto D = m_context->registerTagManager()->getRegister(
                     DTag,
-                    Register::Type::Accumulator,
+                    regType,
                     DataType::Float,
-                    numAGPR,
+                    numGPR,
                     Register::AllocationOptions{.contiguousChunkWidth
                                                 = Register::FULLY_CONTIGUOUS});
 
@@ -859,8 +901,34 @@ namespace rocRoller
                     auto waveScaleA = getWaveTile(NaryArgument::LHS_SCALE);
                     auto waveScaleB = getWaveTile(NaryArgument::RHS_SCALE);
 
-                    auto scaleA = std::make_shared<Expression::Expression>(waveScaleA);
-                    auto scaleB = std::make_shared<Expression::Expression>(waveScaleB);
+                    ExpressionPtr scaleA;
+                    if(waveScaleA)
+                    {
+                        scaleA = std::make_shared<Expression::Expression>(waveScaleA);
+                    }
+                    else
+                    {
+                        auto vgprTag = m_graph->mapper.get(tag, NaryArgument::LHS_SCALE);
+                        AssertFatal(vgprTag != -1);
+                        scaleA
+                            = m_context->registerTagManager()->getRegister(vgprTag)->expression();
+                    }
+
+                    ExpressionPtr scaleB;
+                    if(waveScaleB)
+                    {
+                        scaleB = std::make_shared<Expression::Expression>(waveScaleB);
+                    }
+                    else
+                    {
+                        auto vgprTag = m_graph->mapper.get(tag, NaryArgument::RHS_SCALE);
+                        AssertFatal(vgprTag != -1);
+                        scaleB
+                            = m_context->registerTagManager()->getRegister(vgprTag)->expression();
+                    }
+
+                    AssertFatal(scaleA);
+                    AssertFatal(scaleB);
 
                     expr = std::make_shared<Expression::Expression>(
                         Expression::ScaledMatrixMultiply(A, B, D->expression(), scaleA, scaleB));
@@ -1065,10 +1133,9 @@ namespace rocRoller
 
                 auto vgpr = m_context->registerTagManager()->getRegister(macTileTag);
 
-                auto unsegmentedVariableType
-                    = DataTypeInfo::Get(exchange.varType).unsegmentedVariableType();
+                auto packedVariableType = DataTypeInfo::Get(exchange.varType).packedVariableType();
 
-                if(unsegmentedVariableType)
+                if(packedVariableType)
                 {
                     auto allocOptions = Register::AllocationOptions::FullyContiguous();
                     auto temp         = Register::Value::Placeholder(
