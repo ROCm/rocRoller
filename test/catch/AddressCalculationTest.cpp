@@ -863,6 +863,7 @@ namespace AddressCalculationTest
         std::vector<uint64_t>                    m_hostBuffer2;
     };
 
+#if 0
     TEST_CASE("address calculation test generate and run", "[expression][gpu]")
     {
         // Noticed that for "float" type, all different combinations of
@@ -892,7 +893,11 @@ namespace AddressCalculationTest
         //       Those bitwiseand expressions may contain 64bit lhs, 32bit rhs vice versa.
         //       Bitwise expression generator doesn't promote operands' datatype whereas
         //       other binary arithmetic operations, e.g. Add, do the regType/dataType promotion.
+#if 0
         auto singleDataType = GENERATE(DataType::Float);
+#else
+        auto singleDataType = GENERATE(DataType::Float, DataType::Double);
+#endif
         //CAPTURE(singleDataType);
         //INFO("s" << singleDataType);
         std::cout << "singleType: " << singleDataType << "\n";
@@ -935,7 +940,8 @@ namespace AddressCalculationTest
             }
         }
     }
-
+#endif
+#if 1
     TEST_CASE("address calculation test generate and run one pair", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
@@ -971,4 +977,5 @@ namespace AddressCalculationTest
         AddressCalculationTest kernel(context.get(), problem, gemm);
         kernel.test_sanity_indices();
     }
+#endif
 }

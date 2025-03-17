@@ -52,9 +52,26 @@ namespace rocRoller
         AssertFatal(lhs != nullptr);
         AssertFatal(rhs != nullptr);
 
-        auto elementBits = std::max({DataTypeInfo::Get(dest->variableType()).elementBits,
-                                     DataTypeInfo::Get(lhs->variableType()).elementBits,
-                                     DataTypeInfo::Get(rhs->variableType()).elementBits});
+        auto destNumBits = DataTypeInfo::Get(dest->variableType()).elementBits;
+        auto lhsNumBits = DataTypeInfo::Get(lhs->variableType()).elementBits;
+        auto rhsNumBits = DataTypeInfo::Get(rhs->variableType()).elementBits;
+
+        auto elementBits = std::max({destNumBits, lhsNumBits, rhsNumBits});
+
+        // Assertions on number of bits.
+        if(elementBits <= 32u)
+        {
+            // We don't support BitwiseAnd of less than 32-bit, 
+            // gfx9 doesn't have s_and or v_and less than b32.
+            AssertFatal (lhsNumBits == rhsNumBits && lhsNumBits == 32, 
+                "For 32-bit BitwiseAnd, both operands should be 32-bit wide.");
+        } else if (elementBits == 64u) {
+            // I am not aware a path that can lead to destNumbBits being smaller than 64-bit when the control reached here.
+            AssertFatal (destNumBits == 64u);   
+        } else {
+            Throw<FatalError>("Unsupported elementBits for bitwiseAnd operation:: ",
+                ShowValue(elementBits));
+        }
 
         if(dest->regType() == Register::Type::Scalar)
         {
@@ -82,6 +99,20 @@ namespace rocRoller
             }
             else if(elementBits == 64u)
             {
+                Register::ValuePtr l0, l1, r0, r1;
+                if (lhs->regType() == Register::Type::Scalar) {
+                    co_yield get2DwordsScalar(l0, l1, lhs);
+                } else {
+                    co_yield get2DwordsVector(l0, l1, lhs);
+                }
+                co_yield get2DwordsVector(r0, r1, rhs);
+
+                co_yield_(Instruction(
+                    "v_and_b32", {dest->subset({0})}, {l0, r0}, {}, ""));
+                co_yield_(Instruction(
+                    "v_and_b32", {dest->subset({1})}, {l1, r1}, {}, ""));
+                
+#if 0
                 if(lhs->regType() == Register::Type::Literal)
                 {
                     Register::ValuePtr lsb;
@@ -107,6 +138,7 @@ namespace rocRoller
                                           {},
                                           ""));
                 }
+#endif
             }
             else
             {
