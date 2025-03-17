@@ -26,19 +26,11 @@
 
 #pragma once
 
-#include <cmath>
 #include <cstdlib>
-#include <memory>
 #include <random>
-
-#ifdef ROCROLLER_USE_HIP
-#include <hip/hip_fp16.h>
-#include <hip/hip_runtime.h>
-#endif /* ROCROLLER_USE_HIP */
+#include <vector>
 
 #include <rocRoller/DataTypes/DataTypes_Utils.hpp>
-#include <rocRoller/Utilities/Logging.hpp>
-#include <rocRoller/Utilities/Settings.hpp>
 
 /*
  * Random vector generator.
@@ -59,7 +51,7 @@ namespace rocRoller
     class RandomGenerator
     {
     public:
-        RandomGenerator(int seedNumber);
+        explicit RandomGenerator(int seedNumber);
 
         /**
          * Set a new seed.

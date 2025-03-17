@@ -129,6 +129,7 @@ set(
     unit/WaitCountTest.cpp
     unit/WMMAHazardObserverTest.cpp
     unit/WMMAUnitObserverTest.cpp
+    unit/OperationTagTest.cpp
     unit/StreamTest.cpp
     unit/EnumToStringTest.cpp
 )
@@ -177,6 +178,7 @@ set(
     catch/TestKernels.cpp
 
     catch/AddressCalculationTest.cpp
+    catch/AnnotateInstructionsTest.cpp
     catch/BinaryExpressionTest.cpp
     catch/BranchGeneratorTest.cpp
     catch/CommandArgumentValueTest.cpp
@@ -200,8 +202,8 @@ set(
     catch/KernelGraphRemoveDuplicatesTest.cpp
     catch/KernelGraphSimplifyTest.cpp
     catch/LargerLDSTest.cpp
+    catch/LoadPackedTest.cpp
     catch/MultipleLDSAllocationTest.cpp
-    catch/mxDataGeneratorTest.cpp
     catch/RandomNumberExpressionTest.cpp
     catch/RandomNumberGenerationTest.cpp
     catch/ScalarExpressionTest.cpp
@@ -211,6 +213,7 @@ set(
     catch/TestContextTest.cpp
     catch/UnrollLoopsTest.cpp
     catch/UtilsTest.cpp
+    catch/mxDataGeneratorTest.cpp
 )
 
 add_executable(rocRollerTests_catch ${rocRollerTests_catch_SOURCES})

@@ -343,9 +343,13 @@ namespace rocRoller
             void operator()(Operations::T_Store_Tiled const& tstore)
             {
                 rocRoller::Log::getLogger()->debug("KernelGraph::TranslateVisitor::T_Store_Tiled");
+                std::ostringstream msg;
+                for(auto const& [a, b] : m_op)
+                    msg << a << "->" << b << std::endl;
                 AssertFatal(m_op.count(tstore.getSrcTag()) > 0,
                             "Unknown command tag",
-                            ShowValue(tstore.getSrcTag()));
+                            ShowValue(tstore.getSrcTag()),
+                            msg.str());
 
                 auto tensor = m_command->getOperation<Operations::Tensor>(tstore.getDstTag());
 
@@ -662,7 +666,7 @@ namespace rocRoller
                                              NaryArgument                  valueArg,
                                              NaryArgument                  scaleArg) {
                     auto mode = op.scaleMode();
-                    AssertFatal(mode == Operations::ScaleMode::Separate, ShowValue(mode));
+                    AssertFatal(mode != Operations::ScaleMode::Inline, ShowValue(mode));
 
                     auto X      = m_dim.at(op.data());
                     auto XScale = m_dim.at(*op.scale());
@@ -724,8 +728,8 @@ namespace rocRoller
 
             void operator()(Operations::BlockScale const& t)
             {
-                AssertFatal(t.scaleMode() == Operations::ScaleMode::Separate,
-                            "Only Separate mode is supported for now.");
+                AssertFatal(t.scaleMode() != Operations::ScaleMode::Inline,
+                            "ScaleMode::Inline not supported yet.");
             }
 
             void operator()(Operations::Literal const& literal)
