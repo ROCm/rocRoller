@@ -795,8 +795,13 @@ namespace AddressCalculationTest
                         // Compute the value 2
                         Register::ValuePtr v_value_2 = nullptr;
                         co_yield Expression::generate(v_value_2, widenedExprPtrs[i], m_context);
-
-                        // Compute diff (value_1 - value_2)
+#if 1
+                        std::cout << "v_value_1 resultType: " << rocRoller::Expression::resultVariableType(v_value_1) << "\n";
+                        std::cout << (v_value_1->toString()) << " " << (v_value_1->description()) <<  "\n";
+                        std::cout << "v_value_2 resultType: " << rocRoller::Expression::resultVariableType(v_value_2) << "\n";
+                        std::cout << (v_value_2->toString()) << " " << (v_value_2->description()) <<  "\n";
+#endif
+                        // Compute diff (value_1 == value_2)
                         auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
                         {
                             auto boolType = resultVariableType(is_zero_diff).dataType;
