@@ -131,6 +131,7 @@ namespace AddressCalculationTest
             auto coords              = CoordG::Transformer(
 
                 &(m_kGraph.coordinates), identity_transducer);
+            coords.fillExecutionCoordinates(m_context);
 
             auto fullStop  = [&](int tag) { return tag == increment; };
             auto direction = ci.forward ? Graph::Direction::Upstream : Graph::Direction::Downstream;
@@ -795,12 +796,7 @@ namespace AddressCalculationTest
                         // Compute the value 2
                         Register::ValuePtr v_value_2 = nullptr;
                         co_yield Expression::generate(v_value_2, widenedExprPtrs[i], m_context);
-#if 1
-                        std::cout << "v_value_1 resultType: " << rocRoller::Expression::resultVariableType(v_value_1) << "\n";
-                        std::cout << (v_value_1->toString()) << " " << (v_value_1->description()) <<  "\n";
-                        std::cout << "v_value_2 resultType: " << rocRoller::Expression::resultVariableType(v_value_2) << "\n";
-                        std::cout << (v_value_2->toString()) << " " << (v_value_2->description()) <<  "\n";
-#endif
+
                         // Compute diff (value_1 == value_2)
                         auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
                         {
@@ -865,7 +861,6 @@ namespace AddressCalculationTest
         std::vector<uint64_t>                    m_hostBuffer2;
     };
 
-#if 1
     TEST_CASE("address calculation test generate and run", "[expression][gpu]")
     {
         // Noticed that for "float" type, all different combinations of
@@ -895,11 +890,9 @@ namespace AddressCalculationTest
         //       Those bitwiseand expressions may contain 64bit lhs, 32bit rhs vice versa.
         //       Bitwise expression generator doesn't promote operands' datatype whereas
         //       other binary arithmetic operations, e.g. Add, do the regType/dataType promotion.
-#if 0
-        auto singleDataType = GENERATE(DataType::Float);
-#else
+
         auto singleDataType = GENERATE(DataType::Float, DataType::Double);
-#endif
+
         //CAPTURE(singleDataType);
         //INFO("s" << singleDataType);
         std::cout << "singleType: " << singleDataType << "\n";
@@ -942,8 +935,7 @@ namespace AddressCalculationTest
             }
         }
     }
-#endif
-#if 0
+
     TEST_CASE("address calculation test generate and run one pair", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
@@ -979,5 +971,4 @@ namespace AddressCalculationTest
         AddressCalculationTest kernel(context.get(), problem, gemm);
         kernel.test_sanity_indices();
     }
-#endif
 }
