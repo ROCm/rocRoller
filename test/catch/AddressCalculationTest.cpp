@@ -622,16 +622,12 @@ namespace AddressCalculationTest
 
             for(int i = 0, size = m_hostBuffer.size(); i < m_totalWorkitemCount; i++)
             {
-                // For 128 by 128 output matrix, workgroupCount computed is {512, 2, 1}
-                if(toString(m_hostBuffer[i]) != host_x || toString(m_hostBuffer2[i]) != host_y)
-                {
-                    std::cout
-                        << "workitemCount.x and workitemCount.y in kernel for global workitem " << i
-                        << ": " << m_hostBuffer[i] << ", " << m_hostBuffer2[i] << "\n";
-                    std::cout << "workitemCount.x and workitemCount.y in host for global workitem "
-                              << i << ": " << host_x << ", " << host_y << "\n";
-                }
+                // workitemCount.x in device and host.
+                CAPTURE(toString(m_hostBuffer[i]), host_x, i);
                 CHECK(toString(m_hostBuffer[i]) == host_x);
+
+                // workitemCount.y in device and host.
+                CAPTURE(toString(m_hostBuffer2[i]), host_y, i);
                 CHECK(toString(m_hostBuffer2[i]) == host_y);
             }
         }
@@ -752,77 +748,74 @@ namespace AddressCalculationTest
             auto allone_uint64
                 = std::make_shared<Expression::Expression>(static_cast<uint64_t>(0xFFFFFFFF));
 
-            auto kb = [&]()
-                // return [context, input, widenedInput, workitemCount, workgroupSize, allone_uint64]()
-                -> Generator<Instruction> {
-                    // store base addr
-                    Register::ValuePtr s_ptr;
+            // context, input, widenedInput, workitemCount, workgroupSize, allone_uint64 are used
+            // inside the kb.
+            auto kb = [&]() -> Generator<Instruction> {
+                // store base addr
+                Register::ValuePtr s_ptr;
 
-                    co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
+                co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
 
-                    Register::ValuePtr s_ptr2;
+                Register::ValuePtr s_ptr2;
 
-                    co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
+                co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
 
-                    // 2-D
-                    auto compare_res_pointer = get64BitVectorOffset(
-                        m_context,
-                        m_context->kernel()->workitemCount(),
-                        (m_commandKernel->getCommandParameters()->getManualWorkgroupSize())
-                            .value());
-                    Log::debug("Offset in kb: {}", toString(compare_res_pointer));
+                // 2-D
+                auto compare_res_pointer = get64BitVectorOffset(
+                    m_context,
+                    m_context->kernel()->workitemCount(),
+                    (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value());
+                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
 
-                    Register::ValuePtr v_offset = nullptr;
-                    co_yield Expression::generate(
-                        v_offset, compare_res_pointer + s_ptr->expression(), m_context);
+                Register::ValuePtr v_offset = nullptr;
+                co_yield Expression::generate(
+                    v_offset, compare_res_pointer + s_ptr->expression(), m_context);
 
-                    // boolean_diff was allocated to s[0:1]
-                    // diff should be computed per lane,
-                    // but is_zero_diff is actually one-bit
-                    auto boolean_true = Register::Value::WavefrontPlaceholder(m_context);
-                    Register::ValuePtr v_allone;
-                    co_yield Expression::generate(v_allone, allone_uint64, m_context);
+                // boolean_diff was allocated to s[0:1]
+                // diff should be computed per lane,
+                // but is_zero_diff is actually one-bit
+                auto               boolean_true = Register::Value::WavefrontPlaceholder(m_context);
+                Register::ValuePtr v_allone;
+                co_yield Expression::generate(v_allone, allone_uint64, m_context);
 
-                    co_yield m_context->copier()->copy(
-                        boolean_true, v_allone, "set to true for all lanes");
+                co_yield m_context->copier()->copy(
+                    boolean_true, v_allone, "set to true for all lanes");
 
-                    Register::ValuePtr temp_res;
-                    for(int i = 0, size = indexExprPtrs.size(); i < size; i++)
+                Register::ValuePtr temp_res;
+                for(int i = 0, size = indexExprPtrs.size(); i < size; i++)
+                {
+                    // Compute the value 1
+                    Register::ValuePtr v_value_1 = nullptr;
+                    co_yield Expression::generate(v_value_1, indexExprPtrs[i], m_context);
+
+                    // Compute the value 2
+                    Register::ValuePtr v_value_2 = nullptr;
+                    co_yield Expression::generate(v_value_2, widenedExprPtrs[i], m_context);
+
+                    // Compute diff (value_1 == value_2)
+                    auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
                     {
-                        // Compute the value 1
-                        Register::ValuePtr v_value_1 = nullptr;
-                        co_yield Expression::generate(v_value_1, indexExprPtrs[i], m_context);
-
-                        // Compute the value 2
-                        Register::ValuePtr v_value_2 = nullptr;
-                        co_yield Expression::generate(v_value_2, widenedExprPtrs[i], m_context);
-
-                        // Compute diff (value_1 == value_2)
-                        auto is_zero_diff = v_value_1->expression() == v_value_2->expression();
-                        {
-                            auto boolType = resultVariableType(is_zero_diff).dataType;
-                            AssertFatal(
-                                boolType == DataType::Bool64, "is_zero type: ", toString(boolType));
-                        }
-
-                        // boolean_true = boolean_true & is_zero_diff
-                        auto accumRes
-                            = std::make_shared<Expression::Expression>(Expression::BitwiseAnd{
-                                boolean_true->expression(), is_zero_diff, "accum"});
-                        {
-                            auto accumType = resultVariableType(accumRes).dataType;
-                            AssertFatal(accumType == DataType::Bool64,
-                                        "accum type {}",
-                                        toString(accumType));
-                        }
-                        co_yield Expression::generate(boolean_true, accumRes, m_context);
+                        auto boolType = resultVariableType(is_zero_diff).dataType;
+                        AssertFatal(
+                            boolType == DataType::Bool64, "is_zero type: ", toString(boolType));
                     }
 
-                    auto v_value = Register::Value::Placeholder(
-                        m_context, Register::Type::Vector, DataType::UInt64, 1);
-                    co_yield m_context->copier()->copy(v_value, boolean_true, "Move value");
-                    co_yield m_context->mem()->storeGlobal(v_offset, v_value, 0, 8);
-                };
+                    // boolean_true = boolean_true & is_zero_diff
+                    auto accumRes = std::make_shared<Expression::Expression>(
+                        Expression::BitwiseAnd{boolean_true->expression(), is_zero_diff, "accum"});
+                    {
+                        auto accumType = resultVariableType(accumRes).dataType;
+                        AssertFatal(
+                            accumType == DataType::Bool64, "accum type {}", toString(accumType));
+                    }
+                    co_yield Expression::generate(boolean_true, accumRes, m_context);
+                }
+
+                auto v_value = Register::Value::Placeholder(
+                    m_context, Register::Type::Vector, DataType::UInt64, 1);
+                co_yield m_context->copier()->copy(v_value, boolean_true, "Move value");
+                co_yield m_context->mem()->storeGlobal(v_offset, v_value, 0, 8);
+            };
 
             m_context->schedule(kb());
 
@@ -834,11 +827,8 @@ namespace AddressCalculationTest
 
             for(int i = 0, size = m_hostBuffer.size(); i < size; i++)
             {
-                if(m_hostBuffer[i] != 0xFFFFFFFF)
-                {
-                    std::cout << "The addresses are not same at " << i << " " << m_hostBuffer[i]
-                              << "\n";
-                }
+                // The two addresses are not same at i.
+                CAPTURE(i, m_hostBuffer[i]);
                 CHECK(m_hostBuffer[i] == 0xFFFFFFFF);
             }
 
@@ -882,19 +872,10 @@ namespace AddressCalculationTest
         // Or, it could be simply a bug.
 
         // Called single as the one data type is applied to all A, B, C and D matrices.
-        // TODO: Add more dataTypes. Also notice other TODO in the function "setTensorArguments()",
-        //       where device pointer for matrices are allocated. Currently, only "float" is used.
-        // TODO: Debug. With DataType::Double, the test fails.
-        //       The bug is from generating a widened expression.
-        //       When it was generated, fast modulo introduces BitwiseAnd operations.
-        //       Those bitwiseand expressions may contain 64bit lhs, 32bit rhs vice versa.
-        //       Bitwise expression generator doesn't promote operands' datatype whereas
-        //       other binary arithmetic operations, e.g. Add, do the regType/dataType promotion.
+        // TODO: check transpose
 
         auto singleDataType = GENERATE(DataType::Float, DataType::Double);
 
-        //CAPTURE(singleDataType);
-        //INFO("s" << singleDataType);
         std::cout << "singleType: " << singleDataType << "\n";
         DYNAMIC_SECTION(singleDataType)
         {
@@ -909,8 +890,6 @@ namespace AddressCalculationTest
                 auto [macM, macN] = GENERATE(values(TestValues::macroTileSizes));
                 DYNAMIC_SECTION("mc_" << macM << "x" << macN)
                 {
-                    //CAPTURE(problemSize);
-                    //INFO("p " << problemSize);
                     std::cout << "macM: " << macM << "\n";
                     std::cout << "macN: " << macN << "\n";
 
