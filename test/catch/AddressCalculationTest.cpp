@@ -32,7 +32,7 @@
 #include <common/GEMMProblem.hpp>
 #include <common/TestValues.hpp>
 #include <common/Utilities.hpp>
-#include <common/WidenTo64bit.hpp>
+#include <common/WidenAddrExprTo64bit.hpp>
 
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
@@ -697,7 +697,7 @@ namespace AddressCalculationTest
             auto eptr = indexExprPtrs[0];
             Log::debug("== Expr : {} ", toString(eptr));
 
-            widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
+            widenedExprPtrs.push_back(rocRollerTest::widenAddrExprTo64bit(eptr));
             Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
 
             auto fast = Expression::FastArithmetic(m_context);
@@ -741,7 +741,7 @@ namespace AddressCalculationTest
                 auto eptr = indexExprPtrs[i];
                 Log::debug("== Expr : {} ", toString(eptr));
 
-                widenedExprPtrs.push_back(rocRollerTest::widenTo64bit(eptr));
+                widenedExprPtrs.push_back(rocRollerTest::widenAddrExprTo64bit(eptr));
                 Log::debug("++ Widen : {} ", toString(widenedExprPtrs.back()));
             }
 
