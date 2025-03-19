@@ -305,135 +305,6 @@ namespace AddressCalculationTest
             return compare_res_pointer;
         }
 
-        // This is for printing out workgroup index and thread index.
-        auto kb_sanity_indices(ContextPtr                                      context,
-                               std::array<Expression::ExpressionPtr, 3> const& workitemCount,
-                               std::array<unsigned int, 3> const&              workgroupSize)
-        {
-            return [context, workitemCount, workgroupSize]() -> Generator<Instruction> {
-                // store base addr
-                Register::ValuePtr s_ptr;
-                co_yield context->argLoader()->getValue("rv_ptr", s_ptr);
-
-                Register::ValuePtr s_ptr2;
-                co_yield context->argLoader()->getValue("rv_ptr2", s_ptr2);
-
-                auto compare_res_pointer
-                    = get64BitVectorOffset(context, workitemCount, workgroupSize);
-                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
-
-                Register::ValuePtr v_offset_1 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_1, compare_res_pointer + s_ptr->expression(), context);
-
-                Register::ValuePtr v_offset_2 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_2, compare_res_pointer + s_ptr2->expression(), context);
-
-                // workgroupIndex x
-                auto v_wg_x = Register::Value::Placeholder(
-                    context, Register::Type::Vector, DataType::UInt32, 1);
-                co_yield context->copier()->copy(
-                    v_wg_x, context->kernel()->workgroupIndex()[0], "copy wgi.x to v");
-                co_yield context->mem()->storeGlobal(v_offset_1, v_wg_x, 0, 4);
-
-                co_yield context->mem()->storeGlobal(
-                    v_offset_2, (context->kernel()->workitemIndex())[0], 0, 4);
-            };
-        }
-
-        // Just print out passed expressions to device memory.
-        // If passed expressions are workitemCounts, the expectation is that
-        // the generated expressions' values are the same with the host-side computed values.
-        auto kb_implicit_workitemcount(ContextPtr                         context,
-                                       Expression::ExpressionPtr const&   workitemcount_X,
-                                       Expression::ExpressionPtr const&   workitemcount_Y,
-                                       std::array<unsigned int, 3> const& workgroupSize)
-        {
-            return [context,
-                    workitemcount_X,
-                    workitemcount_Y,
-                    workgroupSize]() -> Generator<Instruction> {
-                // store base addrs
-                Register::ValuePtr s_ptr;
-                co_yield context->argLoader()->getValue("rv_ptr", s_ptr);
-                Register::ValuePtr s_ptr2;
-                co_yield context->argLoader()->getValue("rv_ptr2", s_ptr2);
-                auto compare_res_pointer = get64BitVectorOffset(
-                    context, {workitemcount_X, workitemcount_Y}, workgroupSize);
-                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
-
-                Register::ValuePtr v_offset_1 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_1, compare_res_pointer + s_ptr->expression(), context);
-
-                Register::ValuePtr v_offset_2 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_2, compare_res_pointer + s_ptr2->expression(), context);
-
-                // Compute the value 1
-                Register::ValuePtr s_value_1 = nullptr;
-                co_yield Expression::generate(s_value_1, workitemcount_X, context);
-                auto v_value_11 = Register::Value::Placeholder(
-                    context, Register::Type::Vector, DataType::Int64, 1);
-                co_yield context->copier()->copy(v_value_11, s_value_1, "copy to v1");
-
-                // Compute the value 2
-                Register::ValuePtr s_value_2 = nullptr;
-                co_yield Expression::generate(s_value_2, workitemcount_Y, context);
-                auto v_value_22 = Register::Value::Placeholder(
-                    context, Register::Type::Vector, DataType::Int64, 1);
-                co_yield context->copier()->copy(v_value_22, s_value_2, "copy to v2");
-
-                co_yield context->mem()->storeGlobal(v_offset_1, v_value_11, 0, 8);
-                co_yield context->mem()->storeGlobal(v_offset_2, v_value_22, 0, 8);
-            };
-        }
-
-        // For now, mainly for debugging, directly copy the two results values.
-        // workitemCount is passed as argument. Since it is 64-bit
-        // different global_store_dwordx2 format should be used.
-        auto kb_equal_one(ContextPtr                                      context,
-                          Expression::ExpressionPtr const&                input,
-                          Expression::ExpressionPtr const&                widenedInput,
-                          std::array<Expression::ExpressionPtr, 3> const& workitemCount,
-                          std::array<unsigned int, 3> const&              workgroupSize)
-        {
-            return [context, input, widenedInput, workitemCount, workgroupSize]()
-                       -> Generator<Instruction> {
-                // store base addr
-                Register::ValuePtr s_ptr;
-                co_yield context->argLoader()->getValue("rv_ptr", s_ptr);
-
-                Register::ValuePtr s_ptr2;
-                co_yield context->argLoader()->getValue("rv_ptr2", s_ptr2);
-
-                auto compare_res_pointer
-                    = get64BitVectorOffset(context, workitemCount, workgroupSize);
-                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
-
-                Register::ValuePtr v_offset_1 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_1, compare_res_pointer + s_ptr->expression(), context);
-
-                Register::ValuePtr v_offset_2 = nullptr;
-                co_yield Expression::generate(
-                    v_offset_2, compare_res_pointer + s_ptr2->expression(), context);
-
-                // Compute the value 1
-                Register::ValuePtr v_value_1 = nullptr;
-                co_yield Expression::generate(v_value_1, input, context);
-
-                // Compute the value 2
-                Register::ValuePtr v_value_2 = nullptr;
-
-                co_yield Expression::generate(v_value_2, widenedInput, context);
-
-                co_yield context->mem()->storeGlobal(v_offset_1, v_value_1, 0, 8);
-                co_yield context->mem()->storeGlobal(v_offset_2, v_value_2, 0, 8);
-            };
-        }
-
         void setTensorArguments(CommandArguments&                  commandArgs,
                                 GEMMProblem const&                 problem,
                                 rocRollerTest::Graphs::GEMM const& gemm,
@@ -600,11 +471,50 @@ namespace AddressCalculationTest
             generateOrigKernelByProlog();
 
             auto k = m_context->kernel();
-            m_context->schedule(kb_implicit_workitemcount(
-                m_context,
-                k->workitemCount()[0],
-                k->workitemCount()[1],
-                (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value())());
+
+            // [context, workitemcount_X, workitemcount_Y, workgroupSize] are used.
+            // Just print out passed expressions to device memory.
+            // If passed expressions are workitemCounts, the expectation is that
+            // the generated expressions' values are the same with the host-side computed values.
+            auto kb = [&]() -> Generator<Instruction> {
+                // store base addrs
+                Register::ValuePtr s_ptr;
+                co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
+                Register::ValuePtr s_ptr2;
+                co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
+                auto compare_res_pointer = get64BitVectorOffset(
+                    m_context,
+                    k->workitemCount(),
+                    (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value());
+                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
+
+                Register::ValuePtr v_offset_1 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_1, compare_res_pointer + s_ptr->expression(), m_context);
+
+                Register::ValuePtr v_offset_2 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_2, compare_res_pointer + s_ptr2->expression(), m_context);
+
+                // Compute the value 1
+                Register::ValuePtr s_value_1 = nullptr;
+                co_yield Expression::generate(s_value_1, k->workitemCount()[0], m_context);
+                auto v_value_11 = Register::Value::Placeholder(
+                    m_context, Register::Type::Vector, DataType::Int64, 1);
+                co_yield m_context->copier()->copy(v_value_11, s_value_1, "copy to v1");
+
+                // Compute the value 2
+                Register::ValuePtr s_value_2 = nullptr;
+                co_yield Expression::generate(s_value_2, k->workitemCount()[1], m_context);
+                auto v_value_22 = Register::Value::Placeholder(
+                    m_context, Register::Type::Vector, DataType::Int64, 1);
+                co_yield m_context->copier()->copy(v_value_22, s_value_2, "copy to v2");
+
+                co_yield m_context->mem()->storeGlobal(v_offset_1, v_value_11, 0, 8);
+                co_yield m_context->mem()->storeGlobal(v_offset_2, v_value_22, 0, 8);
+            };
+
+            m_context->schedule(kb());
 
             m_context->schedule(k->postamble());
             m_context->schedule(k->amdgpu_metadata());
@@ -632,16 +542,47 @@ namespace AddressCalculationTest
             }
         }
 
-        void test_sanity_indices()
+        void test_wg_thr_indices()
         {
             generateOrigKernelByProlog();
 
             auto k = m_context->kernel();
 
-            m_context->schedule(kb_sanity_indices(
-                m_context,
-                k->workitemCount(),
-                (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value())());
+            // This is for printing out workgroup index and thread index
+            // [context, workitemCount, workgroupSize] are used.
+            auto kb = [&]() -> Generator<Instruction> {
+                // store base addr
+                Register::ValuePtr s_ptr;
+                co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
+
+                Register::ValuePtr s_ptr2;
+                co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
+
+                auto compare_res_pointer = get64BitVectorOffset(
+                    m_context,
+                    k->workitemCount(),
+                    (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value());
+                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
+
+                Register::ValuePtr v_offset_1 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_1, compare_res_pointer + s_ptr->expression(), m_context);
+
+                Register::ValuePtr v_offset_2 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_2, compare_res_pointer + s_ptr2->expression(), m_context);
+
+                // workgroupIndex x
+                auto v_wg_x = Register::Value::Placeholder(
+                    m_context, Register::Type::Vector, DataType::UInt32, 1);
+                co_yield m_context->copier()->copy(
+                    v_wg_x, k->workgroupIndex()[0], "copy wgi.x to v");
+                co_yield m_context->mem()->storeGlobal(v_offset_1, v_wg_x, 0, 4);
+
+                co_yield m_context->mem()->storeGlobal(v_offset_2, (k->workitemIndex())[0], 0, 4);
+            };
+
+            m_context->schedule(kb());
 
             m_context->schedule(k->postamble());
             m_context->schedule(k->amdgpu_metadata());
@@ -683,7 +624,7 @@ namespace AddressCalculationTest
             }
         }
 
-        void test_equal_one()
+        void test_equal_one_pair()
         {
             generateOrigKernelByProlog();
 
@@ -704,12 +645,45 @@ namespace AddressCalculationTest
             Log::debug("** fast : {} ", toString(fast(widenedExprPtrs.back())));
 
             auto k = m_context->kernel();
-            m_context->schedule(kb_equal_one(
-                m_context,
-                indexExprPtrs[0],
-                widenedExprPtrs[0],
-                k->workitemCount(),
-                (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value())());
+
+            // context, input, widenedInput, workitemCount, workgroupSize, are used
+            // inside the kb.
+            auto kb = [&]() -> Generator<Instruction> {
+                // store base addr
+                Register::ValuePtr s_ptr;
+                co_yield m_context->argLoader()->getValue("rv_ptr", s_ptr);
+
+                Register::ValuePtr s_ptr2;
+                co_yield m_context->argLoader()->getValue("rv_ptr2", s_ptr2);
+
+                auto compare_res_pointer = get64BitVectorOffset(
+                    m_context,
+                    k->workitemCount(),
+                    (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value());
+                Log::debug("Offset in kb: {}", toString(compare_res_pointer));
+
+                Register::ValuePtr v_offset_1 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_1, compare_res_pointer + s_ptr->expression(), m_context);
+
+                Register::ValuePtr v_offset_2 = nullptr;
+                co_yield Expression::generate(
+                    v_offset_2, compare_res_pointer + s_ptr2->expression(), m_context);
+
+                // Compute the value 1
+                Register::ValuePtr v_value_1 = nullptr;
+                co_yield Expression::generate(v_value_1, indexExprPtrs[0], m_context);
+
+                // Compute the value 2
+                Register::ValuePtr v_value_2 = nullptr;
+
+                co_yield Expression::generate(v_value_2, widenedExprPtrs[0], m_context);
+
+                co_yield m_context->mem()->storeGlobal(v_offset_1, v_value_1, 0, 8);
+                co_yield m_context->mem()->storeGlobal(v_offset_2, v_value_2, 0, 8);
+            };
+
+            m_context->schedule(kb());
 
             m_context->schedule(k->postamble());
             m_context->schedule(k->amdgpu_metadata());
@@ -727,7 +701,7 @@ namespace AddressCalculationTest
             }
         }
 
-        void test_equal()
+        void test_equal_all_pairs()
         {
             generateOrigKernelByProlog();
 
@@ -748,6 +722,8 @@ namespace AddressCalculationTest
             auto allone_uint64
                 = std::make_shared<Expression::Expression>(static_cast<uint64_t>(0xFFFFFFFF));
 
+            auto k = m_context->kernel();
+
             // context, input, widenedInput, workitemCount, workgroupSize, allone_uint64 are used
             // inside the kb.
             auto kb = [&]() -> Generator<Instruction> {
@@ -763,7 +739,7 @@ namespace AddressCalculationTest
                 // 2-D
                 auto compare_res_pointer = get64BitVectorOffset(
                     m_context,
-                    m_context->kernel()->workitemCount(),
+                    k->workitemCount(),
                     (m_commandKernel->getCommandParameters()->getManualWorkgroupSize()).value());
                 Log::debug("Offset in kb: {}", toString(compare_res_pointer));
 
@@ -819,7 +795,6 @@ namespace AddressCalculationTest
 
             m_context->schedule(kb());
 
-            auto k = m_context->kernel();
             m_context->schedule(k->postamble());
             m_context->schedule(k->amdgpu_metadata());
 
@@ -909,12 +884,13 @@ namespace AddressCalculationTest
 
                     // Generate a kernel for testing address calculation and run.
                     // Verification of the result is done.
-                    kernel.test_equal();
+                    kernel.test_equal_all_pairs();
                 }
             }
         }
     }
 
+    // Following test checks only one-pair, simpler version of above.
     TEST_CASE("address calculation test generate and run one pair", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
@@ -924,9 +900,10 @@ namespace AddressCalculationTest
         gemm.setProblem(problem);
 
         AddressCalculationTest kernel(context.get(), problem, gemm);
-        kernel.test_equal_one();
+        kernel.test_equal_one_pair();
     }
 
+    // Sanity check 1
     TEST_CASE("address calculation test implicit workitemcount", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "impl_workitemcnt");
@@ -939,7 +916,8 @@ namespace AddressCalculationTest
         kernel.test_implicit_workitemcount();
     }
 
-    TEST_CASE("address calculation test sanity check", "[expression][gpu]")
+    // Sanity check 2
+    TEST_CASE("address calculation test workgroup thread index", "[expression][gpu]")
     {
         auto context = TestContext::ForTestDevice({}, "128x128_sanity_indices");
 
@@ -948,6 +926,6 @@ namespace AddressCalculationTest
         gemm.setProblem(problem);
 
         AddressCalculationTest kernel(context.get(), problem, gemm);
-        kernel.test_sanity_indices();
+        kernel.test_wg_thr_indices();
     }
 }
