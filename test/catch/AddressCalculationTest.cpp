@@ -76,6 +76,14 @@ namespace AddressCalculationTest
         std::vector<Expression::ExpressionPtr> rv;
         auto                                   root  = m_kGraph.control.roots().only();
         int                                    count = 0;
+
+        // Note that identity_transduer is intentionally being used here in place of FastArithmetic.
+        // It is alright to use FastArithmetic here but
+        // fastArithmetic is being used eventually when the expressions are generated.
+        auto identity_transducer = [&](auto expr) { return expr; };
+        auto coords = CoordG::Transformer(&(m_kGraph.coordinates), identity_transducer);
+        coords.fillExecutionCoordinates(m_context);
+
         for(auto ciTag : filter(isComputeIndex, m_kGraph.control.depthFirstVisit(root.value())))
         {
 
@@ -123,15 +131,6 @@ namespace AddressCalculationTest
                 = m_kGraph.mapper.get(ciTag,
                                       KernelG::Connections::ComputeIndex{
                                           KernelG::Connections::ComputeIndexArgument::INCREMENT});
-
-            // Note that identity_transduer is intentionally being used here in place of FastArithmetic.
-            // It is alright to use FastArithmetic here but
-            // fastArithmetic is being used eventually when the expressions are generated.
-            auto identity_transducer = [&](auto expr) { return expr; };
-            auto coords              = CoordG::Transformer(
-
-                &(m_kGraph.coordinates), identity_transducer);
-            coords.fillExecutionCoordinates(m_context);
 
             auto fullStop  = [&](int tag) { return tag == increment; };
             auto direction = ci.forward ? Graph::Direction::Upstream : Graph::Direction::Downstream;

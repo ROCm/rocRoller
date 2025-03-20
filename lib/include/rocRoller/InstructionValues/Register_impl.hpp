@@ -840,9 +840,6 @@ namespace rocRoller
             std::vector<int> coords;
             for(auto i : indices)
             {
-                if (i < 0 || (size_t)i >= m_allocationCoord.size()) {
-                    Log::debug("FA i {}", i);
-                }
                 AssertFatal(i >= 0 && (size_t)i < m_allocationCoord.size(),
                             "Register subset out of bounds.",
                             ShowValue(m_allocationCoord.size()),
