@@ -894,7 +894,7 @@ namespace AddressCalculationTest
     {
         auto context = TestContext::ForTestDevice({}, "128x128_one_pair");
 
-        GEMMProblem                 problem{.m = 128, .n = 128};
+        GEMMProblem                 problem{.m = 128, .n = 128, .macM = 64, .macN = 64, .macK = 64};
         rocRollerTest::Graphs::GEMM gemm(DataType::Float);
         gemm.setProblem(problem);
 
@@ -907,7 +907,7 @@ namespace AddressCalculationTest
     {
         auto context = TestContext::ForTestDevice({}, "impl_workitemcnt");
 
-        GEMMProblem                 problem{.m = 128, .n = 128};
+        GEMMProblem                 problem{.m = 128, .n = 128, .macM = 64, .macN = 64, .macK = 64};
         rocRollerTest::Graphs::GEMM gemm(DataType::Float);
         gemm.setProblem(problem);
 
@@ -920,7 +920,7 @@ namespace AddressCalculationTest
     {
         auto context = TestContext::ForTestDevice({}, "128x128_sanity_indices");
 
-        GEMMProblem                 problem{.m = 128, .n = 128};
+        GEMMProblem                 problem{.m = 128, .n = 128, .macM = 64, .macN = 64, .macK = 64};
         rocRollerTest::Graphs::GEMM gemm(DataType::Float);
         gemm.setProblem(problem);
 

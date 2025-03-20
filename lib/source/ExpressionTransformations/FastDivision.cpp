@@ -329,9 +329,6 @@ namespace rocRoller
         {
             unsigned int mask    = rhs - 1u;
             auto         new_rhs = literal(mask);
-#if 1
-            Log::debug("Yoonseo - umodulo - name {} toString {} mask {}", name(new_rhs), toString(new_rhs), mask);
-#endif
             return lhs & new_rhs;
         }
 
@@ -345,9 +342,6 @@ namespace rocRoller
             int          mask               = ~(rhs - 1);
 
             auto maskExpr               = literal(mask);
-#if 1
-            Log::debug("Yoonseo - smodulo - name {} toString {} mask {}", name(maskExpr), toString(maskExpr), mask);
-#endif
             auto signBitsExpr           = literal(signBits);
             auto reverseShiftAmountExpr = literal(reverseShiftAmount);
 

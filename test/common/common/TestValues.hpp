@@ -152,9 +152,6 @@ namespace TestValues
         = {{128, 128, 128}, {512, 512, 128}, {1024, 1024, 256}};
 
     inline std::initializer_list<std::pair<int, int>> macroTileSizes = {{64, 64}, {128, 128}};
-    // Looks like {128, 128} fails
-    // {{64, 64}, {128, 128}};
-    // Also with the current set up - datatype "double" fails.
 
     template <typename T>
     struct ByType
