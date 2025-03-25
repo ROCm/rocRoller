@@ -59,7 +59,7 @@ namespace AddressCalculationTest
     public:
         AddressTrace(KernelGraphType const& graph, ContextPtr ctx)
             : m_kGraph(graph)
-            , m_context(ctx){};
+            , m_context(ctx) {};
         std::vector<Expression::ExpressionPtr> traceComputeIndexWithBuffer();
 
     private:
@@ -873,17 +873,28 @@ namespace AddressCalculationTest
                     auto macroTileString = std::to_string(macM) + "x" + std::to_string(macN);
                     auto suffixForKernelName
                         = toString(singleDataType) + "_" + probSizeString + "_" + macroTileString;
-                    auto context = TestContext::ForTestDevice({}, suffixForKernelName);
 
-                    GEMMProblem problem{.m = m, .n = n, .k = k, .macM = macM, .macN = macN};
-                    rocRollerTest::Graphs::GEMM gemm(singleDataType);
-                    gemm.setProblem(problem);
+                    auto [transA, transB]
+                        = GENERATE(values<std::pair<std::string, std::string>>({{"N", "T"}, {"N", "N"}, {"T", "N"}, {"T", "T"}}));
+                    DYNAMIC_SECTION(transA << transB)
+                    {
+                        std::cout << "transA: " << transA << "\n";
+                        std::cout << "transB: " << transB << "\n";
 
-                    AddressCalculationTest kernel(context.get(), problem, gemm);
+                        suffixForKernelName += "_" + transA + transB;
+                        auto context = TestContext::ForTestDevice({}, suffixForKernelName);
 
-                    // Generate a kernel for testing address calculation and run.
-                    // Verification of the result is done.
-                    kernel.test_equal_all_pairs();
+                        GEMMProblem problem{.m = m, .n = n, .k = k, .macM = macM, .macN = macN, 
+                                            .transA = transA, .transB = transB};
+                        rocRollerTest::Graphs::GEMM gemm(singleDataType);
+                        gemm.setProblem(problem);
+
+                        AddressCalculationTest kernel(context.get(), problem, gemm);
+
+                        // Generate a kernel for testing address calculation and run.
+                        // Verification of the result is done.
+                        kernel.test_equal_all_pairs();
+                    }
                 }
             }
         }
