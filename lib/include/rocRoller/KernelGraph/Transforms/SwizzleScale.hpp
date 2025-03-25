@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2024-2025 AMD ROCm(TM) Software
+ * Copyright 2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,42 +25,31 @@
  *******************************************************************************/
 
 #pragma once
-
-#include <rocRoller/Assemblers/Assembler.hpp>
-#include <rocRoller/GPUArchitecture/GPUArchitectureTarget.hpp>
-
-#include <functional>
-#include <vector>
+#include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
 
 namespace rocRoller
 {
-    class SubprocessAssembler : public Assembler
+    namespace KernelGraph
     {
-    public:
-        SubprocessAssembler();
-        ~SubprocessAssembler();
+        /**
+         * @brief Swizzle the scale loads.
+         */
+        class SwizzleScale : public GraphTransform
+        {
+        public:
+            SwizzleScale(ContextPtr context)
+                : m_context(context)
+            {
+            }
 
-        using Base = Assembler;
+            KernelGraph apply(KernelGraph const& original) override;
+            std::string name() const override
+            {
+                return "SwizzleScale";
+            }
 
-        static const std::string Name;
-
-        static bool Match(Argument arg);
-
-        static AssemblerPtr Build(Argument arg);
-
-        std::string name() const override;
-
-        std::vector<char> assembleMachineCode(const std::string&           machineCode,
-                                              const GPUArchitectureTarget& target,
-                                              const std::string&           kernelName) override;
-
-        std::vector<char> assembleMachineCode(const std::string&           machineCode,
-                                              const GPUArchitectureTarget& target) override;
-
-    private:
-        std::tuple<int, std::string> execute(std::string const& command);
-        void executeChecked(std::string const& command, std::function<void()> const& cleanupCall);
-
-        std::string makeTempFolder();
-    };
+        private:
+            ContextPtr m_context;
+        };
+    }
 }

@@ -149,9 +149,9 @@ namespace GEMMDriverTest
 
             auto bpeA = DataTypeInfo::Get(dataTypeA).elementBytes;
             auto bpeB = DataTypeInfo::Get(dataTypeB).elementBytes;
-            AssertFatal(gemm.macM * gemm.macK * bpeA > gemm.waveM * gemm.waveK,
+            AssertFatal(gemm.macM * gemm.macK * bpeA >= gemm.waveM * gemm.waveK,
                         "Not enough elements (A).");
-            AssertFatal(gemm.macN * gemm.macK * bpeB > gemm.waveN * gemm.waveK,
+            AssertFatal(gemm.macN * gemm.macK * bpeB >= gemm.waveN * gemm.waveK,
                         "Not enough elements (B).");
 
             AssertFatal(gemm.workgroupSizeX % gemm.wavefrontSize == 0,
@@ -413,6 +413,7 @@ namespace GEMMDriverTest
             params->setWaveTilesPerWavefront(wavetilePerWavefrontM, wavetilePerWavefrontN);
             params->setSplitStoreTileIntoWaveBlocks(gemm.splitStoreTileIntoWaveBlocks);
 
+            params->swizzleScale                  = gemm.swizzleScale;
             params->fuseLoops                     = gemm.fuseLoops;
             params->tailLoops                     = gemm.tailLoops;
             params->allowAmbiguousMemoryNodes     = gemm.allowAmbiguousMemoryNodes;
@@ -774,6 +775,13 @@ namespace GEMMDriverTest
     {
     };
 
+    // Params are: A & B type, M tile size, (transA, transB), DirectLDS A & B
+    class GEMMDirectLDSTestGPU
+        : public BaseGEMMContextFixture<
+              std::tuple<rocRoller::DataType, int, std::pair<std::string, std::string>, bool, bool>>
+    {
+    };
+
     // Params are: A & B type, K tile size, (transA, transB)
     class GEMMF8F6F4TestGPU
         : public BaseGEMMContextFixture<
@@ -878,235 +886,6 @@ namespace GEMMDriverTest
         GEMMProblem gemm;
         basicGEMM<float>(gemm);
     }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NN_MT128x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.macM        = 128;
-        gemm.transA      = "N";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TN_MT128x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.macM        = 128;
-        gemm.transA      = "T";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NT_MT128x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.macM        = 128;
-        gemm.transA      = "N";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TT_MT128x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.macM        = 128;
-        gemm.transA      = "T";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TN_MT64x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NN_MT64x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NT_MT64x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TT_MT64x64x64)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = true;
-        gemm.storeLDSD   = false;
-        basicGEMM<float>(gemm);
-        std::string const generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(generatedCode.find("ds_write_b32"), std::string::npos);
-        EXPECT_EQ(generatedCode.find("ds_write_b128"), std::string::npos);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TN_MT64x64x64_10)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = false;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TN_MT64x64x64_01)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = false;
-        gemm.direct2LDSB = true;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TT_MT64x64x64_10)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = false;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_TT_MT64x64x64_01)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "T";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = false;
-        gemm.direct2LDSB = true;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NT_MT64x64x64_10)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = false;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NT_MT64x64x64_01)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "T";
-        gemm.direct2LDSA = false;
-        gemm.direct2LDSB = true;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NN_MT64x64x64_10)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = true;
-        gemm.direct2LDSB = false;
-        basicGEMM<float>(gemm);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMM_Direct2LDS_NN_MT64x64x64_01)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
-        GEMMProblem gemm;
-        gemm.transA      = "N";
-        gemm.transB      = "N";
-        gemm.direct2LDSA = false;
-        gemm.direct2LDSB = true;
-        basicGEMM<float>(gemm);
-    }
-
-    // TODO: add tests that only 1 matrix uses direct-2-lds
 
     TEST_P(GEMMTestGPU, GPU_BasicGEMMLargerLDS)
     {
@@ -1469,7 +1248,7 @@ namespace GEMMDriverTest
         for(auto inflight : {1, 2})
         {
             gemm.prefetchInFlight = inflight;
-            for(auto ldsFactor : {0, 2})
+            for(auto ldsFactor : {0, 1, 2})
             {
                 gemm.prefetchLDSFactor = ldsFactor;
                 for(auto mixMemOps : {false, true})
@@ -1836,6 +1615,36 @@ namespace GEMMDriverTest
                      numTrLoads);
     }
 
+    TEST_P(GEMMDirectLDSTestGPU, GPU_BasicGEMMDirectLDS)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasDirectToLds);
+
+        auto [typeAB, tileSizeM, transOp, directLDSA, directLDSB] = std::get<1>(GetParam());
+
+        GEMMProblem gemm;
+        gemm.macM        = tileSizeM;
+        gemm.transA      = transOp.first;
+        gemm.transB      = transOp.second;
+        gemm.direct2LDSA = directLDSA;
+        gemm.direct2LDSB = directLDSB;
+        gemm.storeLDSD   = false;
+
+        if(typeAB == DataType::Float)
+        {
+            basicGEMM<float>(gemm);
+        }
+        else
+        {
+            Throw<FatalError>("Not implemented yet.");
+        }
+
+        if(directLDSA && directLDSB)
+        {
+            auto generatedCode = m_context->instructions()->toString();
+            EXPECT_EQ(generatedCode.find("ds_write"), std::string::npos);
+        }
+    }
+
     GEMMProblem setup_GEMMF8_NT()
     {
         GEMMProblem gemm;
@@ -1941,6 +1750,38 @@ namespace GEMMDriverTest
             EXPECT_NE(generatedCode.find("v_cvt_sr_bf8_f32"), std::string::npos);
             EXPECT_EQ(generatedCode.find("v_cvt_pk_bf8_f32"), std::string::npos);
         }
+    }
+
+    TEST_P(GEMMTestGPU, GPU_ScaledPrefetchGEMMMXF8TN)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
+        auto gemm = setup_GEMMF8F6F4(32, 32, 64);
+
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 128;
+
+        gemm.m = 2 * gemm.macM;
+        gemm.n = 3 * gemm.macN;
+        gemm.k = 4 * gemm.macK;
+
+        gemm.workgroupSizeX = 1 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 4;
+
+        gemm.loadLDSA      = true;
+        gemm.loadLDSB      = true;
+        gemm.loadLDSScaleA = false;
+        gemm.loadLDSScaleB = false;
+
+        gemm.unrollK           = 2;
+        gemm.prefetch          = true;
+        gemm.prefetchInFlight  = 2;
+        gemm.prefetchLDSFactor = 2;
+
+        gemm.scaleAMode = Operations::ScaleMode::Separate;
+        gemm.scaleBMode = Operations::ScaleMode::Separate;
+
+        basicGEMM<FP8, FP8, float>(gemm);
     }
 
     void checkGEMMF8F6F4(rocRoller::ContextPtr m_context,
@@ -2174,6 +2015,103 @@ namespace GEMMDriverTest
             EXPECT_EQ(mfma_count, f8f6f4_count);
             // All f8f6f4 instructions should use 0b100 (FP4) as input matrix format
             EXPECT_EQ(f8f6f4_count, modifier_count);
+        }
+    }
+
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledGEMMMXF8TN)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
+
+        for(auto waveK : {64, 128})
+        {
+            int waveM = (waveK == 128) ? 16 : 32;
+            int waveN = (waveK == 128) ? 16 : 32;
+
+            auto gemm = setup_GEMMF8F6F4(waveM, waveN, waveK);
+
+            gemm.macM = 128;
+            gemm.macN = 256;
+            gemm.macK = 128;
+            gemm.m    = 2 * gemm.macM;
+            gemm.n    = 3 * gemm.macN;
+            gemm.k    = 4 * gemm.macK;
+
+            gemm.workgroupSizeX = 1 * gemm.wavefrontSize;
+            gemm.workgroupSizeY = 4;
+
+            gemm.loadLDSA = false;
+            gemm.loadLDSB = false;
+
+            gemm.scaleAMode = Operations::ScaleMode::Separate;
+            gemm.scaleBMode = Operations::ScaleMode::Separate;
+
+            gemm.swizzleScale = true;
+
+            for(auto loadLDSScaleA : {false, true})
+            {
+                gemm.loadLDSScaleA = loadLDSScaleA;
+                for(auto loadLDSScaleB : {false, true})
+                {
+                    gemm.loadLDSScaleB = loadLDSScaleB;
+                    for(auto unrollK : {0, 2})
+                    {
+                        gemm.unrollK = unrollK;
+                        basicGEMM<FP8, FP8, float>(gemm);
+
+                        std::string generatedCode = m_context->instructions()->toString();
+                        // when both the scales are loaded directly from buffer into VGPRs
+                        if(!loadLDSScaleA && !loadLDSScaleB)
+                            EXPECT_EQ(countSubstring(generatedCode, "buffer_load_ubyte "), 0);
+                        // when either scale is loaded via LDS
+                        if(loadLDSScaleA || loadLDSScaleB)
+                            EXPECT_EQ(countSubstring(generatedCode, "ds_read_u8 "), 0);
+                    }
+                }
+            }
+        }
+    }
+
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledPrefetchGEMMMXF8TN)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
+
+        for(auto waveK : {64, 128})
+        {
+            int waveM = (waveK == 128) ? 16 : 32;
+            int waveN = (waveK == 128) ? 16 : 32;
+
+            auto gemm = setup_GEMMF8F6F4(waveM, waveN, waveK);
+
+            gemm.macM = 128;
+            gemm.macN = 256;
+            gemm.macK = 128;
+
+            gemm.m = 2 * gemm.macM;
+            gemm.n = 3 * gemm.macN;
+            gemm.k = 4 * gemm.macK;
+
+            gemm.workgroupSizeX = 1 * gemm.wavefrontSize;
+            gemm.workgroupSizeY = 4;
+
+            gemm.loadLDSA      = true;
+            gemm.loadLDSB      = true;
+            gemm.loadLDSScaleA = false;
+            gemm.loadLDSScaleB = false;
+
+            gemm.unrollK           = 2;
+            gemm.prefetch          = true;
+            gemm.prefetchInFlight  = 2;
+            gemm.prefetchLDSFactor = 2;
+
+            gemm.scaleAMode = Operations::ScaleMode::Separate;
+            gemm.scaleBMode = Operations::ScaleMode::Separate;
+
+            gemm.swizzleScale = true;
+
+            basicGEMM<FP8, FP8, float>(gemm);
+
+            std::string generatedCode = m_context->instructions()->toString();
+            EXPECT_EQ(countSubstring(generatedCode, "buffer_load_ubyte "), 0);
         }
     }
 
@@ -3271,6 +3209,20 @@ namespace GEMMDriverTest
                                                  std::pair<std::string, std::string>("N", "T"),
                                                  std::pair<std::string, std::string>("T", "N"),
                                                  std::pair<std::string, std::string>("T", "T")))));
+
+    INSTANTIATE_TEST_SUITE_P(
+        GEMMDirectLDSTest,
+        GEMMDirectLDSTestGPU,
+        ::testing::Combine(
+            currentGPUISA(),
+            ::testing::Combine(::testing::Values(rocRoller::DataType::Float),
+                               ::testing::Values(64, 128),
+                               ::testing::Values(std::pair<std::string, std::string>("N", "N"),
+                                                 std::pair<std::string, std::string>("N", "T"),
+                                                 std::pair<std::string, std::string>("T", "N"),
+                                                 std::pair<std::string, std::string>("T", "T")),
+                               ::testing::Values(true, false),
+                               ::testing::Values(true, false))));
 
     INSTANTIATE_TEST_SUITE_P(
         GEMMF8F6F4Test,
