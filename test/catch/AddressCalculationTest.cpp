@@ -59,7 +59,7 @@ namespace AddressCalculationTest
     public:
         AddressTrace(KernelGraphType const& graph, ContextPtr ctx)
             : m_kGraph(graph)
-            , m_context(ctx) {};
+            , m_context(ctx){};
         std::vector<Expression::ExpressionPtr> traceComputeIndexWithBuffer();
 
     private:
@@ -846,8 +846,8 @@ namespace AddressCalculationTest
         // Or, it could be simply a bug.
 
         // Called single as the one data type is applied to all A, B, C and D matrices.
-        // TODO: check transpose
 
+        // To cut down execution time further, consider running only large matrices.
         auto singleDataType = GENERATE(DataType::Float, DataType::Double);
 
         std::cout << "singleType: " << singleDataType << "\n";
@@ -874,8 +874,8 @@ namespace AddressCalculationTest
                     auto suffixForKernelName
                         = toString(singleDataType) + "_" + probSizeString + "_" + macroTileString;
 
-                    auto [transA, transB]
-                        = GENERATE(values<std::pair<std::string, std::string>>({{"N", "T"}, {"N", "N"}, {"T", "N"}, {"T", "T"}}));
+                    auto [transA, transB] = GENERATE(values<std::pair<std::string, std::string>>(
+                        {{"N", "T"}, {"N", "N"}, {"T", "N"}, {"T", "T"}}));
                     DYNAMIC_SECTION(transA << transB)
                     {
                         std::cout << "transA: " << transA << "\n";
@@ -884,8 +884,13 @@ namespace AddressCalculationTest
                         suffixForKernelName += "_" + transA + transB;
                         auto context = TestContext::ForTestDevice({}, suffixForKernelName);
 
-                        GEMMProblem problem{.m = m, .n = n, .k = k, .macM = macM, .macN = macN, 
-                                            .transA = transA, .transB = transB};
+                        GEMMProblem                 problem{.m      = m,
+                                            .n      = n,
+                                            .k      = k,
+                                            .macM   = macM,
+                                            .macN   = macN,
+                                            .transA = transA,
+                                            .transB = transB};
                         rocRollerTest::Graphs::GEMM gemm(singleDataType);
                         gemm.setProblem(problem);
 

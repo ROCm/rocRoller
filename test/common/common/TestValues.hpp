@@ -151,7 +151,9 @@ namespace TestValues
     inline std::initializer_list<GemmProblemSize> gemmProblemSizes
         = {{128, 128, 128}, {512, 512, 128}, {1024, 1024, 256}};
 
-    inline std::initializer_list<std::pair<int, int>> macroTileSizes = {{64, 64}, {128, 128}, {256, 256}};
+    // Notice that {256, 256} was intentionally avoided due to extremely prolonged time of
+    // code generation.
+    inline std::initializer_list<std::pair<int, int>> macroTileSizes = {{64, 64}, {128, 128}};
 
     template <typename T>
     struct ByType
