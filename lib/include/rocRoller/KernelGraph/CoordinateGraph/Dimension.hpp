@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#include <rocRoller/Expression.hpp>
+#include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/InstructionValues/Register_fwd.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Dimension_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>
