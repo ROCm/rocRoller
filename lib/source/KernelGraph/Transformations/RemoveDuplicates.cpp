@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/KernelGraph/Transforms/RemoveDuplicates.hpp>
@@ -279,7 +304,7 @@ namespace rocRoller
             /**
              * @brief Remove duplicates from the graph.
              *
-             * The operation (either the original operation, or it's
+             * The operation (either the original operation, or its
              * top-most SetCoordinate) is replaced by a NOP.
              *
              * References to duplicate tiles are updated to the
@@ -291,9 +316,9 @@ namespace rocRoller
 
                 GraphReindexer expressionReindexer;
 
-                for(auto [existingOp, duplicateOps] : duplicates)
+                for(auto [originalOp, duplicateOps] : duplicates)
                 {
-                    auto topExistingOp = getTopSetCoordinate(graph, existingOp);
+                    auto topOriginalOp = getTopSetCoordinate(graph, originalOp);
                     for(auto duplicateOp : duplicateOps)
                     {
                         auto topDuplicateOp = getTopSetCoordinate(graph, duplicateOp);
@@ -312,18 +337,19 @@ namespace rocRoller
                                    "{} (top of {}).  NOP is {}.",
                                    topDuplicateOp,
                                    duplicateOp,
-                                   topExistingOp,
-                                   existingOp,
+                                   topOriginalOp,
+                                   originalOp,
                                    nop);
 
                         // Mark for update: references to the
                         // duplicate tile need to be updated to the
-                        // existing tile.
-                        auto tileTag = original.mapper.get<MacroTile>(duplicateOp);
-                        if(tileTag != -1)
+                        // original tile.
+                        auto duplicateTileTag = original.mapper.get<MacroTile>(duplicateOp);
+                        if(duplicateTileTag != -1)
                         {
-                            auto existingTileTag = original.mapper.get<MacroTile>(existingOp);
-                            expressionReindexer.coordinates.emplace(tileTag, existingTileTag);
+                            auto originalTileTag = original.mapper.get<MacroTile>(originalOp);
+                            expressionReindexer.coordinates.emplace(duplicateTileTag,
+                                                                    originalTileTag);
                         }
                     }
                 }
@@ -332,9 +358,7 @@ namespace rocRoller
                 auto kernel = *graph.control.roots().begin();
                 reindexExpressions(graph, kernel, expressionReindexer);
 
-                // ZZZ Remove old tiles
-
-                // Update tile connections
+                // Update tile connections and remove old tiles
                 for(auto [oldTag, newTag] : expressionReindexer.coordinates)
                 {
                     auto connections = graph.mapper.getCoordinateConnections(oldTag);
@@ -343,6 +367,18 @@ namespace rocRoller
                     {
                         conn.coordinate = newTag;
                         graph.mapper.connect(conn);
+                    }
+
+                    AssertFatal(newTag == oldTag
+                                || graph.mapper.getCoordinateConnections(oldTag).empty());
+
+                    if(graph.mapper.getCoordinateConnections(oldTag).empty())
+                    {
+                        for(auto const& child : graph.coordinates.getLocation(oldTag).incoming)
+                            graph.coordinates.deleteElement(child);
+                        for(auto const& child : graph.coordinates.getLocation(oldTag).outgoing)
+                            graph.coordinates.deleteElement(child);
+                        graph.coordinates.deleteElement(oldTag);
                     }
                 }
                 return graph;

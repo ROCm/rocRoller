@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -15,18 +41,24 @@ const std::string HELP_MESSAGE
       "\n"
       "Options:\n"
       "  -Y               output YAML (msgpack by default)\n"
+      "  --split          split yaml file output into a file per architecture\n"
       "  --xml_dir        source directory for ISA xml files\n"
+      "  --yaml           one or more yaml files to convert to the desired output\n"
       "  -h, --help       display this help and exit";
 
 const std::string YAML_ARG    = "-Y";
 const std::string XML_DIR_ARG = "--xml_dir";
+const std::string YAML_IN_ARG = "--yaml";
+const std::string SPLIT_ARG   = "--split";
 
 struct ProgramArgs
 {
-    std::string outputFile;
-    std::string assembler = GPUArchitectureGenerator::DEFAULT_ASSEMBLER;
-    bool        useYAML   = false;
-    std::string xmlDir    = "";
+    std::string              outputFile;
+    std::string              assembler = GPUArchitectureGenerator::DEFAULT_ASSEMBLER;
+    bool                     useYAML   = false;
+    bool                     splitYAML = false;
+    std::string              xmlDir    = "";
+    std::vector<std::string> yamlIns;
 
     static ProgramArgs       ParseArgs(int argc, const char* argv[]);
     [[noreturn]] static void Help(bool error = false);
@@ -50,11 +82,24 @@ ProgramArgs ProgramArgs::ParseArgs(int argc, const char* argv[])
             iter       = args.erase(iter);
             iter--;
         }
+        if(*iter == SPLIT_ARG)
+        {
+            rv.splitYAML = true;
+            iter         = args.erase(iter);
+            iter--;
+        }
         if(*iter == XML_DIR_ARG)
         {
             iter      = args.erase(iter);
             rv.xmlDir = *iter;
             iter      = args.erase(iter);
+            iter--;
+        }
+        if(*iter == YAML_IN_ARG)
+        {
+            iter = args.erase(iter);
+            rv.yamlIns.push_back(*iter);
+            iter = args.erase(iter);
             iter--;
         }
     }
@@ -89,11 +134,18 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    GPUArchitectureGenerator::FillArchitectures(args.assembler, args.xmlDir);
+    if(args.yamlIns.size() > 0)
+    {
+        GPUArchitectureGenerator::LoadYamls(args.yamlIns);
+    }
+    else
+    {
+        GPUArchitectureGenerator::FillArchitectures(args.assembler, args.xmlDir);
+    }
 
     try
     {
-        GPUArchitectureGenerator::GenerateFile(args.outputFile, args.useYAML);
+        GPUArchitectureGenerator::GenerateFile(args.outputFile, args.useYAML, args.splitYAML);
     }
     catch(std::exception& e)
     {

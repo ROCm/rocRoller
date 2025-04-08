@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -23,7 +48,13 @@ namespace rocRoller
         enum Value : uint8_t
         {
             SupportedISA = 0,
-            HasExplicitCO,
+            HasExplicitScalarCO,
+            HasExplicitScalarCOCI,
+            HasExplicitVectorCO,
+            HasExplicitVectorCOCI,
+            HasExplicitVectorRevCO,
+            HasExplicitVectorRevCOCI,
+            HasExplicitVectorRevNC,
             HasExplicitNC,
 
             HasDirectToLds,
@@ -49,6 +80,9 @@ namespace rocRoller
             HasMFMA_32x32x16_f16,
             HasMFMA_16x16x32_bf16,
             HasMFMA_32x32x16_bf16,
+
+            HasWMMA,
+            HasWMMA_f8,
 
             HasAccumOffset,
             HasGlobalOffset,
@@ -76,15 +110,22 @@ namespace rocRoller
 
             v_mov_b64,
 
+            v_add3_u32,
+
+            s_barrier,
+            s_barrier_signal,
+
             HasAtomicAdd,
 
             MaxVmcnt,
             MaxLgkmcnt,
             MaxExpcnt,
+            HasExpcnt,
             SupportedSource,
 
             Waitcnt0Disabled,
             SeparateVscnt,
+            HasSplitWaitCounters,
             CMPXWritesSGPR,
             HasWave32,
             HasWave64,
@@ -111,6 +152,9 @@ namespace rocRoller
 
             HasPermLanes16,
             HasPermLanes32,
+
+            WorkgroupIdxViaTTMP,
+            HasBufferOutOfBoundsCheckOption,
 
             Count,
         };

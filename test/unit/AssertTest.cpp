@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include "gtest/gtest.h"
 
 #ifdef ROCROLLER_USE_HIP
@@ -21,41 +47,20 @@ using ::testing::HasSubstr;
 
 namespace AssertTest
 {
-    class GPU_AssertTest
-        : public CurrentGPUContextFixture,
-          public ::testing::WithParamInterface<std::tuple<AssertOpKind, std::string>>
+    class GPU_AssertTest : public GPUContextFixtureParam<std::tuple<AssertOpKind, std::string>>
     {
-
-    public:
-        Expression::FastArithmetic fastArith{m_context};
-
-        void SetUp() override
-        {
-            CurrentGPUContextFixture::SetUp();
-            Settings::getInstance()->set(Settings::SaveAssembly, true);
-
-            fastArith = Expression::FastArithmetic(m_context);
-        }
-
-        static std::string
-            getTestSuffix(const testing::TestParamInfo<GPU_AssertTest::ParamType>& info)
-        {
-            const auto [assertOpKind, _] = info.param;
-            return toString(assertOpKind);
-        }
     };
 
     TEST_P(GPU_AssertTest, GPU_Assert)
     {
-        if(!m_context->targetArchitecture().target().isCDNAGPU())
-        {
-            GTEST_SKIP() << "Skipping GPU assert tests for "
-                         << m_context->targetArchitecture().target().toString();
-        }
+        auto const& arch = m_context->targetArchitecture();
+        auto        gpu  = arch.target();
+        if(gpu.isCDNA1GPU())
+            GTEST_SKIP() << "Skipping GPU AssertTest for CDNA1GPU" << gpu.toString();
 
         AssertOpKind assertOpKind;
         std::string  outputMsg;
-        std::tie(assertOpKind, outputMsg) = GetParam();
+        std::tie(assertOpKind, outputMsg) = std::get<1>(GetParam());
 
         ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -109,36 +114,64 @@ namespace AssertTest
 
             m_context->schedule(k->postamble());
             m_context->schedule(k->amdgpu_metadata());
-            EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s3, 0"));
+            if(arch.HasCapability(GPUCapability::WorkgroupIdxViaTTMP))
+            {
+                EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s2, 0"));
+            }
+            else
+            {
+                EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s3, 0"));
+            }
             if(assertOpKind != AssertOpKind::NoOp)
             {
-                EXPECT_THAT(output(), testing::HasSubstr("s_cmp_eq_i32 s3, 1"));
+                if(arch.HasCapability(GPUCapability::WorkgroupIdxViaTTMP))
+                {
+                    EXPECT_THAT(output(), testing::HasSubstr("s_cmp_eq_i32 s2, 1"));
+                }
+                else
+                {
+                    EXPECT_THAT(output(), testing::HasSubstr("s_cmp_eq_i32 s3, 1"));
+                }
                 EXPECT_THAT(output(), testing::HasSubstr("s_cbranch_scc1"));
                 EXPECT_THAT(output(), testing::HasSubstr("AssertFailed"));
-                EXPECT_THAT(output(), testing::HasSubstr("// Lock for Assert Assert Test"));
-                EXPECT_THAT(output(), testing::HasSubstr("// Unlock for Assert Assert Test"));
+                EXPECT_THAT(output(),
+                            testing::HasSubstr(
+                                fmt::format("// (op {}) Lock for Assert Assert Test", assertOp)));
+                EXPECT_THAT(output(),
+                            testing::HasSubstr(
+                                fmt::format("// (op {}) Unlock for Assert Assert Test", assertOp)));
                 if(assertOpKind == AssertOpKind::STrap)
                 {
                     EXPECT_THAT(output(), testing::HasSubstr("s_trap 2"));
                 }
                 else
                 { // MEMORY_VIOLATION
-                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b64 s[4:5], 0"));
-                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s6, 42"));
-                    EXPECT_THAT(output(), testing::HasSubstr("s_store_dword s6, s[4:5], 0 glc"));
+                    auto const HasVMov64 = arch.HasCapability(GPUCapability::v_mov_b64);
+                    if(HasVMov64)
+                    {
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b64 v[2:3], 0"));
+                    }
+                    else
+                    {
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v2, 0"));
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v3, 0"));
+                    }
+                    EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v1, 42"));
+                    EXPECT_THAT(output(), testing::HasSubstr("global_store_dword v[2:3], v1 off"));
                 }
                 EXPECT_THAT(output(), testing::HasSubstr("AssertPassed"));
-                EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s4, 1"));
+                if(arch.HasCapability(GPUCapability::WorkgroupIdxViaTTMP))
+                {
+                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s3, 1"));
+                }
+                else
+                {
+                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s4, 1"));
+                }
             }
             else
             {
                 EXPECT_THAT(output(), testing::HasSubstr("AssertOpKind == NoOp"));
-
-                EXPECT_THAT(output(), Not(testing::HasSubstr("s_cmp_eq_i32 s3, 1")));
-                EXPECT_THAT(output(), Not(testing::HasSubstr("s_cbranch_scc1")));
-                EXPECT_THAT(output(), Not(testing::HasSubstr("AssertFailed")));
-                EXPECT_THAT(output(), Not(testing::HasSubstr("// Lock for Assert Assert Test")));
-                EXPECT_THAT(output(), Not(testing::HasSubstr("// Unlock for Assert Assert Test")));
             }
 
             if(isLocalDevice())
@@ -170,15 +203,14 @@ namespace AssertTest
 
     TEST_P(GPU_AssertTest, GPU_UnconditionalAssert)
     {
-        if(!m_context->targetArchitecture().target().isCDNAGPU())
-        {
-            GTEST_SKIP() << "Skipping GPU assert tests for "
-                         << m_context->targetArchitecture().target().toString();
-        }
+        auto const& arch = m_context->targetArchitecture();
+        auto        gpu  = arch.target();
+        if(gpu.isCDNA1GPU())
+            GTEST_SKIP() << "Skipping GPU AssertTest for CDNA1GPU" << gpu.toString();
 
         AssertOpKind assertOpKind;
         std::string  outputMsg;
-        std::tie(assertOpKind, outputMsg) = GetParam();
+        std::tie(assertOpKind, outputMsg) = std::get<1>(GetParam());
 
         ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -234,9 +266,19 @@ namespace AssertTest
                 }
                 else
                 { // MEMORY_VIOLATION
-                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b64 s[4:5], 0"));
-                    EXPECT_THAT(output(), testing::HasSubstr("s_mov_b32 s6, 42"));
-                    EXPECT_THAT(output(), testing::HasSubstr("s_store_dword s6, s[4:5], 0 glc"));
+                    auto const HasVMov64
+                        = m_context->targetArchitecture().HasCapability(GPUCapability::v_mov_b64);
+                    if(HasVMov64)
+                    {
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b64 v[2:3], 0"));
+                    }
+                    else
+                    {
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v2, 0"));
+                        EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v3, 0"));
+                    }
+                    EXPECT_THAT(output(), testing::HasSubstr("v_mov_b32 v1, 42"));
+                    EXPECT_THAT(output(), testing::HasSubstr("global_store_dword v[2:3], v1 off"));
                 }
             }
             else
@@ -274,9 +316,10 @@ namespace AssertTest
     INSTANTIATE_TEST_SUITE_P(
         AssertTest,
         GPU_AssertTest,
-        ::testing::Values(std::tuple(AssertOpKind::MemoryViolation, "Memory access fault"),
-                          std::tuple(AssertOpKind::STrap, "HSA_STATUS_ERROR_EXCEPTION"),
-                          std::tuple(AssertOpKind::NoOp, "AssertOpKind == NoOp"),
-                          std::tuple(AssertOpKind::Count, "Invalid AssertOpKind")),
-        GPU_AssertTest::getTestSuffix);
+        ::testing::Combine(
+            supportedISAValues(),
+            ::testing::Values(std::tuple(AssertOpKind::MemoryViolation, "Memory access fault"),
+                              std::tuple(AssertOpKind::STrap, "HSA_STATUS_ERROR_EXCEPTION"),
+                              std::tuple(AssertOpKind::NoOp, "AssertOpKind == NoOp"),
+                              std::tuple(AssertOpKind::Count, "Invalid AssertOpKind"))));
 }

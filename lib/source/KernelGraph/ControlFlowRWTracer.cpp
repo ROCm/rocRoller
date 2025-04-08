@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <rocRoller/KernelGraph/ControlGraph/ControlFlowRWTracer.hpp>
 #include <rocRoller/KernelGraph/Utils.hpp>
@@ -209,7 +234,7 @@ namespace rocRoller::KernelGraph
 
             // If there are none, we have a problem.
             AssertRecoverable(!nodes.empty(),
-                              "Invalid control graph!",
+                              "ControlFlowRWTracer:Invalid control graph!",
                               ShowValue(m_graph.control),
                               ShowValue(candidates),
                               ShowValue(m_completedControlNodes));
@@ -390,6 +415,8 @@ namespace rocRoller::KernelGraph
 
         dst = only(m_graph.coordinates.getInputNodeIndices(dst, CT::isEdge<CT::View>))
                   .value_or(dst);
+        lds = only(m_graph.coordinates.getOutputNodeIndices(lds, CT::isEdge<CT::View>))
+                  .value_or(lds);
 
         trackRegister(tag, lds, ReadWrite::READ);
         trackConnections(tag, {dst, lds}, ReadWrite::READ);
@@ -447,6 +474,14 @@ namespace rocRoller::KernelGraph
         {
             auto aScale = m_graph.mapper.get(
                 tag, Connections::typeArgument<MacroTile>(NaryArgument::LHS_SCALE));
+            aScale = only(m_graph.coordinates.getOutputNodeIndices(aScale, CT::isEdge<CT::Index>))
+                         .value_or(aScale);
+            trackRegister(tag, aScale, ReadWrite::READ);
+        }
+        else if(op.scaleA == Operations::ScaleMode::SingleScale)
+        {
+            auto aScale = m_graph.mapper.get(tag, NaryArgument::LHS_SCALE);
+            AssertFatal(aScale != -1);
             trackRegister(tag, aScale, ReadWrite::READ);
         }
 
@@ -457,6 +492,14 @@ namespace rocRoller::KernelGraph
         {
             auto bScale = m_graph.mapper.get(
                 tag, Connections::typeArgument<MacroTile>(NaryArgument::RHS_SCALE));
+            bScale = only(m_graph.coordinates.getOutputNodeIndices(bScale, CT::isEdge<CT::Index>))
+                         .value_or(bScale);
+            trackRegister(tag, bScale, ReadWrite::READ);
+        }
+        else if(op.scaleB == Operations::ScaleMode::SingleScale)
+        {
+            auto bScale = m_graph.mapper.get(tag, NaryArgument::RHS_SCALE);
+            AssertFatal(bScale != -1);
             trackRegister(tag, bScale, ReadWrite::READ);
         }
 
@@ -564,6 +607,14 @@ namespace rocRoller::KernelGraph
 
     void ControlFlowRWTracer::operator()(WaitZero const& op, int tag) {}
 
-    void ControlFlowRWTracer::operator()(Exchange const& op, int tag) {}
+    void ControlFlowRWTracer::operator()(Exchange const& op, int tag)
+    {
+        auto src = m_graph.mapper.get<MacroTile>(tag);
+        trackRegister(tag, src, ReadWrite::READ);
+
+        auto dst
+            = m_graph.mapper.get(tag, Connections::typeArgument<MacroTile>(NaryArgument::DEST));
+        trackRegister(tag, dst, ReadWrite::READWRITE);
+    }
 
 }

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 /*
  * Command to KernelGraph translator
  */
@@ -317,9 +343,13 @@ namespace rocRoller
             void operator()(Operations::T_Store_Tiled const& tstore)
             {
                 rocRoller::Log::getLogger()->debug("KernelGraph::TranslateVisitor::T_Store_Tiled");
+                std::ostringstream msg;
+                for(auto const& [a, b] : m_op)
+                    msg << a << "->" << b << std::endl;
                 AssertFatal(m_op.count(tstore.getSrcTag()) > 0,
                             "Unknown command tag",
-                            ShowValue(tstore.getSrcTag()));
+                            ShowValue(tstore.getSrcTag()),
+                            msg.str());
 
                 auto tensor = m_command->getOperation<Operations::Tensor>(tstore.getDstTag());
 
@@ -636,7 +666,7 @@ namespace rocRoller
                                              NaryArgument                  valueArg,
                                              NaryArgument                  scaleArg) {
                     auto mode = op.scaleMode();
-                    AssertFatal(mode == Operations::ScaleMode::Separate, ShowValue(mode));
+                    AssertFatal(mode != Operations::ScaleMode::Inline, ShowValue(mode));
 
                     auto X      = m_dim.at(op.data());
                     auto XScale = m_dim.at(*op.scale());
@@ -698,8 +728,8 @@ namespace rocRoller
 
             void operator()(Operations::BlockScale const& t)
             {
-                AssertFatal(t.scaleMode() == Operations::ScaleMode::Separate,
-                            "Only Separate mode is supported for now.");
+                AssertFatal(t.scaleMode() != Operations::ScaleMode::Inline,
+                            "ScaleMode::Inline not supported yet.");
             }
 
             void operator()(Operations::Literal const& literal)

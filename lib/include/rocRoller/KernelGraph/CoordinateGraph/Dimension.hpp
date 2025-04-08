@@ -1,10 +1,36 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <rocRoller/Expression.hpp>
+#include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/InstructionValues/Register_fwd.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Dimension_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>
@@ -73,7 +99,7 @@ namespace rocRoller
             /**
              * Create an Adhoc dimension with a specific name.
              */
-            Adhoc(std::string const& name);
+            explicit Adhoc(std::string const& name);
 
             std::string name() const override;
 
@@ -97,10 +123,10 @@ namespace rocRoller
                          Expression::ExpressionPtr size,
                          Expression::ExpressionPtr stride);
 
-            SubDimension(int const dim = 0);
+            explicit SubDimension(int const dim = 0);
 
-            virtual std::string toString() const;
-            virtual std::string name() const;
+            virtual std::string toString() const override;
+            virtual std::string name() const override;
         };
 
         /**
@@ -117,7 +143,7 @@ namespace rocRoller
 
             using BaseDimension::BaseDimension;
 
-            User(std::string const& name);
+            explicit User(std::string const& name);
             User(std::string const& name, Expression::ExpressionPtr size);
             User(Operations::OperationTag commandTag, std::string const& name);
             User(Operations::OperationTag  commandTag,
@@ -178,7 +204,7 @@ namespace rocRoller
         {
             static constexpr bool HasValue = false;
 
-            Workgroup(int const dim = 0);
+            explicit Workgroup(int const dim = 0);
             Workgroup(int const dim, Expression::ExpressionPtr size);
             std::string name() const override;
         };
@@ -194,7 +220,7 @@ namespace rocRoller
             static constexpr bool HasValue = false;
 
             Workitem();
-            Workitem(int const dim, Expression::ExpressionPtr size = nullptr);
+            explicit Workitem(int const dim, Expression::ExpressionPtr size = nullptr);
 
             std::string name() const override;
         };
@@ -245,7 +271,7 @@ namespace rocRoller
             bool holdsTransposedTile = false;
 
             LDS();
-            LDS(bool const isDirect2LDS, bool const holdsTransposedTile = false);
+            explicit LDS(bool const isDirect2LDS, bool const holdsTransposedTile = false);
 
             std::string name() const override;
         };
@@ -278,8 +304,8 @@ namespace rocRoller
             static constexpr bool HasValue = false;
 
             Unroll();
-            Unroll(uint const usize);
-            Unroll(Expression::ExpressionPtr usize);
+            explicit Unroll(uint const usize);
+            explicit Unroll(Expression::ExpressionPtr usize);
 
             std::string name() const override;
         };
@@ -351,7 +377,7 @@ namespace rocRoller
              * Construct MacroTile dimension with deferred sizes and
              * memory type.
              */
-            MacroTile(Operations::OperationTag commandTag);
+            explicit MacroTile(Operations::OperationTag commandTag);
             MacroTile(Operations::OperationTag commandTag, int rank);
 
             /**
@@ -415,7 +441,7 @@ namespace rocRoller
             static constexpr bool HasValue = false;
 
             ThreadTileIndex();
-            ThreadTileIndex(int const dim, Expression::ExpressionPtr size = nullptr);
+            explicit ThreadTileIndex(int const dim, Expression::ExpressionPtr size = nullptr);
 
             std::string name() const override;
         };
@@ -428,7 +454,7 @@ namespace rocRoller
             static constexpr bool HasValue = false;
 
             ThreadTileNumber();
-            ThreadTileNumber(int const dim, Expression::ExpressionPtr size = nullptr);
+            explicit ThreadTileNumber(int const dim, Expression::ExpressionPtr size = nullptr);
 
             std::string name() const override;
         };
@@ -452,7 +478,7 @@ namespace rocRoller
              * Construct ThreadTile dimension with fully specified sizes
              * and memory type (ie, LDS vs VGPR).
              */
-            ThreadTile(MacroTile const& mac_tile);
+            explicit ThreadTile(MacroTile const& mac_tile);
 
             std::string name() const override;
         };
@@ -505,7 +531,7 @@ namespace rocRoller
             /**
              * Construct WaveTile dimension with fully specified sizes.
              */
-            WaveTile(MacroTile const&);
+            explicit WaveTile(MacroTile const&);
 
             std::string name() const override;
 
@@ -549,7 +575,7 @@ namespace rocRoller
             static constexpr bool HasValue = false;
 
             ElementNumber();
-            ElementNumber(int const dim, Expression::ExpressionPtr size = nullptr);
+            explicit ElementNumber(int const dim, Expression::ExpressionPtr size = nullptr);
 
             std::string name() const override;
         };

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <map>
 #include <unordered_set>
 #include <vector>
@@ -149,6 +175,9 @@ namespace rocRoller::KernelGraph
         if(hasBody)
             return false;
 
+        //
+        // If the NOP has a single incoming Sequence edge, it's redundant.
+        //
         auto singleIncomingSequence = only(graph.control.getInputNodeIndices<Sequence>(nop));
         if(singleIncomingSequence)
         {
@@ -176,6 +205,40 @@ namespace rocRoller::KernelGraph
             return true;
         }
 
+        //
+        // If the NOP has a single outgoing Sequence edge, it's redundant.
+        //
+        auto singleOutgoingSequence = only(graph.control.getOutputNodeIndices<Sequence>(nop));
+        if(singleOutgoingSequence)
+        {
+            auto outNode = *singleOutgoingSequence;
+
+            auto outgoingEdge = only(graph.control.getNeighbours<GD::Downstream>(nop));
+            if(!outgoingEdge)
+                return false;
+
+            auto incomingEdges = graph.control.getNeighbours<GD::Upstream>(nop).to<std::vector>();
+
+            for(auto inEdge : incomingEdges)
+            {
+                auto edgeType = graph.control.getElement(inEdge);
+                auto inNode   = *only(graph.control.getNeighbours<GD::Upstream>(inEdge));
+                graph.control.addElement(edgeType, {inNode}, {outNode});
+            }
+
+            Log::debug("Deleting single-outgoing NOP: {}", nop);
+
+            graph.control.deleteElement(*outgoingEdge);
+            for(auto incomingEdge : incomingEdges)
+                graph.control.deleteElement(incomingEdge);
+            graph.control.deleteElement(nop);
+
+            return true;
+        }
+
+        //
+        // Can we reach all output nodes from each input node?
+        //
         auto inputs = graph.control.getInputNodeIndices(nop, [](ControlEdge) { return true; })
                           .to<std::vector>();
         auto outputs = graph.control.getOutputNodeIndices(nop, [](ControlEdge) { return true; })
@@ -198,13 +261,16 @@ namespace rocRoller::KernelGraph
             }
         }
 
-        // If we get here, you can get to all outputs from each input
+        // If we get here, we can reach all outputs from each input
         // without going through the NOP.  Delete it!
 
         auto incoming = only(graph.control.getNeighbours<GD::Upstream>(nop));
         auto outgoing = only(graph.control.getNeighbours<GD::Downstream>(nop));
         if((!incoming) || (!outgoing))
             return false;
+
+        Log::debug("Deleting redundant NOP: {}", nop);
+
         graph.control.deleteElement(*incoming);
         graph.control.deleteElement(*outgoing);
         graph.control.deleteElement(nop);

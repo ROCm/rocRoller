@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/KernelGraph/Transforms/AddDirect2LDS.hpp>
@@ -37,31 +63,23 @@ namespace rocRoller
                 auto internalMacroTile = kgraph.mapper.get<MacroTile>(loadGlobal);
                 auto macTile           = kgraph.coordinates.getNode<MacroTile>(internalMacroTile);
 
+                auto maybeDirect2LDS = kgraph.mapper.get<LDS>(loadGlobal);
+                if(maybeDirect2LDS == -1)
+                    continue;
+
                 for(auto storeLDS : storeLDSTileNodes)
                 {
 
                     bool sameMacroTile
                         = (kgraph.mapper.get<MacroTile>(storeLDS) == internalMacroTile);
-                    auto useSwappedAccess = params->transposeMemoryAccess[macTile.layoutType];
-                    auto ldsWriteStride   = useSwappedAccess
-                                                ? (macTile.sizes[1] / macTile.subTileSizes[1])
-                                                : (macTile.sizes[0] / macTile.subTileSizes[0]);
-
                     auto LDSTileTag = kgraph.mapper.get<LDS>(storeLDS);
                     auto LDSTile    = kgraph.coordinates.getNode<LDS>(LDSTileTag);
+
                     if(!LDSTile.isDirect2LDS)
-                    {
-                        Log::debug("  LDSTile {} is not Direct2LDS.", LDSTileTag);
                         continue;
-                    }
 
                     if(sameMacroTile)
-                    {
-                        auto const lanesPerWavefront = context->targetArchitecture().GetCapability(
-                            GPUCapability::DefaultWavefrontSize);
-                        AssertFatal(ldsWriteStride % lanesPerWavefront == 0);
                         result.push_back({loadGlobal, storeLDS});
-                    }
                 }
             }
             return result;
@@ -152,9 +170,6 @@ namespace rocRoller
                 AssertFatal(
                     m_context->targetArchitecture().HasCapability(GPUCapability::HasDirectToLds),
                     "Not have DirectToLds capability");
-
-                // TODO: remove it after fixing the wait count observer for Direct-to-LDS
-                m_context->setWaitZeroBeforeBarrier(true);
             }
 
             for(auto loadAndStore : candidates)

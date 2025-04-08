@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -34,8 +59,6 @@ namespace rocRoller
         UNKNOWN = 0,
         GFX908,
         GFX90A,
-        GFX940,
-        GFX941,
         GFX942,
         GFX950,
         GFX1010,
@@ -91,8 +114,7 @@ namespace rocRoller
 
         constexpr bool isCDNA3GPU() const
         {
-            return gfx == GPUArchitectureGFX::GFX940 || gfx == GPUArchitectureGFX::GFX941
-                   || gfx == GPUArchitectureGFX::GFX942;
+            return gfx == GPUArchitectureGFX::GFX942;
         }
 
         constexpr bool isCDNA35GPU() const
@@ -181,16 +203,13 @@ namespace rocRoller
         return target.name();
     }
 
-    constexpr std::array<rocRoller::GPUArchitectureTarget, 19> SupportedArchitectures
+    constexpr std::array<rocRoller::GPUArchitectureTarget, 16> SupportedArchitectures
         = {GPUArchitectureTarget{GPUArchitectureGFX::GFX908},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX908, {.xnack = true}},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX908, {.sramecc = true}},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX90A},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX90A, {.xnack = true}},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX90A, {.sramecc = true}},
-           GPUArchitectureTarget{GPUArchitectureGFX::GFX940},
-           GPUArchitectureTarget{GPUArchitectureGFX::GFX941},
-           GPUArchitectureTarget{GPUArchitectureGFX::GFX941, {.sramecc = true}},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX942},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX942, {.sramecc = true}},
            GPUArchitectureTarget{GPUArchitectureGFX::GFX950},

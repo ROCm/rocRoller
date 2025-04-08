@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CodeGen/WaitCount.hpp>
 #include <rocRoller/Utilities/Logging.hpp>
 
@@ -28,7 +54,10 @@ TEST_F(WaitCountTest, Basic)
 TEST_F(WaitCountTest, Combine)
 {
     GPUArchitecture arch{GPUArchitectureTarget{GPUArchitectureGFX::GFX90A}};
-    auto            wc = WaitCount::KMCnt(arch, 2);
+    // Add capability so VSCnt can be generated
+    arch.AddCapability(GPUCapability::SeparateVscnt, 0);
+    arch.AddCapability(GPUCapability::HasExpcnt, 0);
+    auto wc = WaitCount::KMCnt(arch, 2);
 
     wc.combine(WaitCount::LoadCnt(arch, 4));
 
@@ -123,6 +152,7 @@ TEST_F(WaitCountTest, VSCnt)
     GPUArchitecture TestWithVSCnt{GPUArchitectureTarget{GPUArchitectureGFX::GFX90A}};
     TestWithVSCnt.AddCapability(GPUCapability::SupportedISA, 0);
     TestWithVSCnt.AddCapability(GPUCapability::SeparateVscnt, 0);
+    TestWithVSCnt.AddCapability(GPUCapability::HasExpcnt, 0);
     EXPECT_EQ(TestWithVSCnt.HasCapability(GPUCapability::SupportedISA), true);
     EXPECT_EQ(TestWithVSCnt.HasCapability(GPUCapability::SeparateVscnt), true);
 
@@ -145,6 +175,7 @@ TEST_F(WaitCountTest, VSCnt)
 
     GPUArchitecture TestNoVSCnt{GPUArchitectureTarget{GPUArchitectureGFX::GFX90A}};
     TestNoVSCnt.AddCapability(GPUCapability::SupportedISA, 0);
+    TestNoVSCnt.AddCapability(GPUCapability::HasExpcnt, 0);
     EXPECT_EQ(TestNoVSCnt.HasCapability(GPUCapability::SupportedISA), true);
     EXPECT_EQ(TestNoVSCnt.HasCapability(GPUCapability::SeparateVscnt), false);
 
@@ -171,6 +202,7 @@ TEST_F(WaitCountTest, SaturatedValues)
     testArch.AddCapability(GPUCapability::MaxExpcnt, 7);
     testArch.AddCapability(GPUCapability::MaxLgkmcnt, 15);
     testArch.AddCapability(GPUCapability::MaxVmcnt, 63);
+    testArch.AddCapability(GPUCapability::HasExpcnt, 0);
     EXPECT_EQ(testArch.HasCapability(GPUCapability::MaxExpcnt), true);
     EXPECT_EQ(testArch.HasCapability(GPUCapability::MaxLgkmcnt), true);
     EXPECT_EQ(testArch.HasCapability(GPUCapability::MaxVmcnt), true);

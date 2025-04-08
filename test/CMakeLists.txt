@@ -1,11 +1,32 @@
 
-option(ROCROLLER_TESTS_SKIP_GUIDEPOSTS "Skip compiling guidepost tests." ON)
-option(ROCROLLER_TESTS_SKIP_SLOW
-       "Skip slow tests (currently only Python tests)" ON
-)
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
+option(ROCROLLER_TESTS_SKIP_SLOW "Skip slow tests (currently only Python tests)" ON)
 
 if(CODE_COVERAGE)
-    set(ROCROLLER_TESTS_SKIP_GUIDEPOSTS ON)
     set(ROCROLLER_TESTS_SKIP_SLOW OFF)
 endif()
 
@@ -14,9 +35,6 @@ include(CTest)
 # Header only/static, not visible to library users, so not necessary to use system packages
 rocroller_add_dependency(googletest VERSION 1.12.1)
 rocroller_add_dependency(Catch2 VERSION 3.7.0)
-rocroller_add_dependency(
-    mxDataGenerator HASH 05fd3a47fa83db1ccc81178ba360a8a7ade9bd49
-)
 
 # Component stand-alone test
 add_executable(ComponentTest standalone/ComponentTest.cpp)
@@ -26,21 +44,6 @@ target_link_libraries(ComponentTest rocroller_interface msgpackc-cxx)
 target_include_directories(
     ComponentTest PRIVATE ${PROJECT_SOURCE_DIR}/lib/include
 )
-
-add_library(
-    common_test_utilities OBJECT common/CommonGraphs.cpp common/Utilities.cpp common/mxDataGen.cpp
-)
-
-target_compile_options(
-    common_test_utilities PUBLIC ${COROUTINES_COMPILE_OPTION}
-                                 ${EXTRA_COMPILE_OPTIONS}
-)
-target_link_options(common_test_utilities PUBLIC ${EXTRA_LINK_OPTIONS})
-target_link_libraries(
-    common_test_utilities rocroller_interface openblas mxDataGenerator
-)
-
-target_include_directories(common_test_utilities PUBLIC common/)
 
 set(
     rocRollerTests_SOURCES
@@ -55,7 +58,6 @@ set(
     unit/ArithmeticTest.cpp
     unit/AssemblerTest.cpp
     unit/AssertTest.cpp
-    unit/BranchGeneratorTest.cpp
     unit/BufferDescriptorTest.cpp
     unit/CommandTest.cpp
     unit/CommonSubexpressionElimTest.cpp
@@ -120,21 +122,10 @@ set(
     unit/VectorAddBenchmark.cpp
     unit/WaitCountObserverTest.cpp
     unit/WaitCountTest.cpp
+    unit/OperationTagTest.cpp
     unit/StreamTest.cpp
     unit/EnumToStringTest.cpp
 )
-
-if(NOT ROCROLLER_TESTS_SKIP_GUIDEPOSTS)
-    list(
-        APPEND
-        rocRollerTests_SOURCES
-        unit/GemmGuidePost/GemmGuidePost.cpp
-        unit/GemmGuidePost/GemmGuidePost_Minimal.cpp
-        unit/GemmGuidePost/GemmGuidePost_Optimized.cpp
-        unit/GemmGuidePost/HGemmGuidePost_Minimal.cpp
-        unit/GemmGuidePost/HGemmGuidePost_Optimized.cpp
-    )
-endif()
 
 add_executable(rocRollerTests ${rocRollerTests_SOURCES})
 
@@ -144,7 +135,6 @@ target_link_options(rocRollerTests PUBLIC ${EXTRA_LINK_OPTIONS})
 target_link_libraries(
     rocRollerTests
     common_test_utilities
-    msgpackc-cxx
     gtest_main
     gmock
     OpenMP::OpenMP_CXX
@@ -168,7 +158,9 @@ set(
     catch/CustomAssertions.cpp
     catch/TestKernels.cpp
 
+    catch/AnnotateInstructionsTest.cpp
     catch/BinaryExpressionTest.cpp
+    catch/BranchGeneratorTest.cpp
     catch/CommandArgumentValueTest.cpp
     catch/CommandTest.cpp
     catch/CustomAssertionTest.cpp
@@ -185,13 +177,13 @@ set(
     catch/HazardObserverTest.cpp
     catch/IdentifyParallelDimensionsTest.cpp
     catch/KernelArgumentsTest.cpp
+    catch/KernelGraphColouringTest.cpp
     catch/KernelGraphConstraintsTest.cpp
     catch/KernelGraphRemoveDuplicatesTest.cpp
     catch/KernelGraphSimplifyTest.cpp
-    catch/KernelGraphUtilsTest.cpp
     catch/LargerLDSTest.cpp
+    catch/LoadPackedTest.cpp
     catch/MultipleLDSAllocationTest.cpp
-    catch/mxDataGeneratorTest.cpp
     catch/RandomNumberExpressionTest.cpp
     catch/RandomNumberGenerationTest.cpp
     catch/ScalarExpressionTest.cpp
@@ -201,6 +193,10 @@ set(
     catch/TestContextTest.cpp
     catch/UnrollLoopsTest.cpp
     catch/UtilsTest.cpp
+    catch/mxDataGeneratorTest.cpp
+    catch/WidenAddrExprTo64bitTest.cpp
+    catch/WMMAHazardObserverTest.cpp
+    catch/WMMAObserverUnitTest.cpp
 )
 
 add_executable(rocRollerTests_catch ${rocRollerTests_catch_SOURCES})
@@ -210,7 +206,6 @@ target_link_options(rocRollerTests_catch PUBLIC ${EXTRA_LINK_OPTIONS})
 target_link_libraries(
     rocRollerTests_catch
     common_test_utilities
-    msgpackc-cxx
     Catch2::Catch2WithMain
     OpenMP::OpenMP_CXX
 )
@@ -225,6 +220,14 @@ if(YAML_BACKEND STREQUAL "YAML_CPP")
         rocRollerTests_catch PUBLIC ROCROLLER_TESTS_USE_YAML_CPP
     )
 endif()
+
+# Add gemm client tests.  Use pytest-cmake integration for parallelism.
+find_package(Pytest)
+pytest_discover_tests(
+  GEMMClientTests
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/client
+  ENVIRONMENT "ROCROLLER_BUILD_DIR=${PROJECT_BINARY_DIR}"
+)
 
 # ArchGen unit tests
 add_executable(ArchGenTests unit/GPUArchitectureGeneratorTest.cpp)
@@ -243,7 +246,6 @@ target_link_libraries(
            rocroller_interface
            gtest_main
            gmock
-           msgpackc-cxx
            isa_spec_manager
 )
 

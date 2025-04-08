@@ -8,7 +8,12 @@ def getPrComments(pullRequest) {
 }
 
 def withSSH(platform, pipeline) {
-    withCredentials([sshUserPrivateKey(credentialsId:"a1_mlselibci_npi-internal-github-ssh-key", keyFileVariable:"ROCROLLER_KEY_FILE")])
+    withCredentials(
+        [
+            sshUserPrivateKey(credentialsId:"github-rocmmathlibrariesbot-ssh_key-mathci_enterprise_job", keyFileVariable:"PUBLIC_KEY_FILE"),
+            sshUserPrivateKey(credentialsId:"github_enterprise-a1_mlselibci_npi-ssh_key-mathci_enterprise_job", keyFileVariable: "ENTERPRISE_KEY_FILE"),
+        ]
+    )
     {
         configFileProvider(
             [configFile(fileId: 'github-enterprise-known-hosts', variable: 'ENTERPRISE_KNOWN_HOSTS'),
@@ -18,7 +23,8 @@ def withSSH(platform, pipeline) {
             mkdir -p ~/.ssh/
             cat ${ENTERPRISE_KNOWN_HOSTS} >> ~/.ssh/known_hosts
             eval `ssh-agent -s`
-            ssh-add ${ROCROLLER_KEY_FILE}
+            ssh-add ${PUBLIC_KEY_FILE}
+            ssh-add ${ENTERPRISE_KEY_FILE}
             ssh-add -L
             cat ${ENTERPRISE_SSH_CONFIG} >> ~/.ssh/config
             """
@@ -67,9 +73,6 @@ def runTestCommand (platform, project)
     def command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/
-
-                # Add the node install to our PATH.
-                source ../utils/graupel/setup-node
 
                 echo Using `nproc` threads for testing.
                 OMP_NUM_THREADS=8 ctest -j `nproc` --output-on-failure ${testExclude}
@@ -207,16 +210,18 @@ def runPerformanceCommand (platform, project)
 
     withSSH(platform){
         sshBlock ->
-        def rrperfSuite = platform.jenkinsLabel.contains('gfx942') ? "all_gfx942" : "all"
+        def rrperfSuite = "all"
 
 
         if (env.CHANGE_ID)
         {
             // either a label or a parameter can block comparison to master branch
-            def masterCompare = !pullRequest.labels.any { it == "ci:no-build-master"}
-            if (masterCompare && params?."Build master branch for comparison" != null)
+            def masterCompare = !(
+                pullRequest.labels.any { it == "ci:no-build-master" || it == "ci:no-build-target" }
+            )
+            if (masterCompare && (params?."Build target branch for comparison" != null))
             {
-                masterCompare = params."Build master branch for comparison"
+                masterCompare = params."Build target branch for comparison"
             }
             String masterCompareCommand
             if (masterCompare)

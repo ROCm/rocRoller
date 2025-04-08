@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2019-2025 Advanced Micro Devices, Inc.
+ * Copyright 2019-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,15 +30,18 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
-#include <format>
 #include <iostream>
 #include <mutex>
 #include <numeric>
 #include <set>
 #include <sstream>
 #include <type_traits>
+#include <unordered_set>
 #include <variant>
 #include <vector>
+
+#include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <rocRoller/Utilities/Concepts.hpp>
 #include <rocRoller/Utilities/Generator.hpp>
@@ -134,6 +137,16 @@ namespace rocRoller
 
     template <CHasToString T>
     inline std::ostream& operator<<(std::ostream& stream, std::set<T> const& x)
+    {
+        stream << "set{";
+        streamJoin(stream, x, ", ");
+        stream << "}";
+
+        return stream;
+    }
+
+    template <CHasToString T>
+    inline std::ostream& operator<<(std::ostream& stream, std::unordered_set<T> const& x)
     {
         stream << "set{";
         streamJoin(stream, x, ", ");
@@ -369,6 +382,8 @@ namespace rocRoller
         return name(obj);
     }
 
+    std::string escapeSymbolName(std::string name);
+
     std::vector<char> readFile(std::string const&);
 
     std::string readMetaDataFromCodeObject(std::string const& fileName);
@@ -405,31 +420,22 @@ namespace std
     }
 
     template <typename T>
-    struct formatter<std::vector<T>, char>
+    inline std::ostream& operator<<(std::ostream& stream, std::unordered_set<T> const& array)
     {
-        template <class ParseContext>
-        constexpr ParseContext::iterator parse(ParseContext& ctx)
-        {
-            auto it = ctx.begin();
-            if(it == ctx.end())
-                return it;
+        stream << "{";
+        rocRoller::streamJoin(stream, array, ", ");
+        stream << "}";
+        return stream;
+    }
 
-            if(it != ctx.end() && *it != '}')
-                throw std::format_error("Invalid format args.");
-
-            return it;
-        }
-
-        template <class FmtContext>
-        FmtContext::iterator format(std::vector<T> v, FmtContext& ctx) const
-        {
-            ostringstream out;
-            out << "[";
-            rocRoller::streamJoin(out, v, " ");
-            out << "]";
-            return std::ranges::copy(std::move(out).str(), ctx.out()).out;
-        }
-    };
+    template <typename T>
+    inline std::ostream& operator<<(std::ostream& stream, std::vector<T> const& array)
+    {
+        stream << "{";
+        rocRoller::streamJoin(stream, array, ", ");
+        stream << "}";
+        return stream;
+    }
 }
 
 #include <rocRoller/Utilities/Utils_impl.hpp>

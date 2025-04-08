@@ -1,4 +1,30 @@
-cmake_minimum_required(VERSION 3.16...3.22)
+
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
+cmake_minimum_required(VERSION 3.21...3.22)
 
 set(ROCROLLER_VERSION "1.0.0")
 set(ROCROLLER_SOVERSION 1)
@@ -81,6 +107,9 @@ option(ROCROLLER_USE_HIP "Use HIP within the rocRoller." ON)
 option(ROCROLLER_EMBED_ARCH_DEF
        "Embed the generated GPU architecture msgpack in the library" ON
 )
+option(ROCROLLER_USE_PREGENERATED_ARCH_DEF
+       "Use the pregenerates GPU architecture definition YAML file(s) in the repository." ON
+)
 option(SKIP_CPPCHECK "Skip CPPCHECK." ON)
 
 option(CODE_ANALYSIS "When building, don't query for tests etc." OFF)
@@ -91,6 +120,9 @@ option(BUILD_CLIENTS "Build performance testing clients" ON)
 option(BUILD_TESTING "Build rocRoller test clients" ON)
 option(BUILD_DOCS "Build rocRoller documentation" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
+
+option(MXDATAGENERATOR_SSH "Fetch mxDataGenerator via SSH" OFF)
+set(MXDATAGENERATOR_GIT_URL "github.com" CACHE STRING "Base Git URL to fetch mxDataGenerator from.")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
@@ -155,7 +187,8 @@ rocroller_add_dependency(
 )
 
 # does not show up in headers, no system package required
-rocroller_add_dependency(spdlog VERSION 1.14.1)
+rocroller_add_dependency(fmt VERSION 11.1.3)
+rocroller_add_dependency(spdlog VERSION 1.15.1)
 
 if(YAML_BACKEND STREQUAL "YAML_CPP")
     # shows up in headers, system package required
@@ -209,15 +242,10 @@ configure_file(
 add_subdirectory(GPUArchitectureGenerator)
 add_subdirectory(lib)
 
-rocm_package_add_dependencies(COMPONENT runtime DEPENDS "libstdc++6 >= 13.1.0")
-rocm_package_add_deb_dependencies(
-    COMPONENT devel DEPENDS liboost-container1.74-dev
-)
-rocm_package_add_rpm_dependencies(
-    COMPONENT devel DEPENDS liboost-container1.74-devel
-)
 
 if(BUILD_CLIENTS OR BUILD_TESTING)
+    add_subdirectory(test/common)
+
     if(NOT CLIENTS_OS)
         rocm_set_os_id(CLIENTS_OS)
         string(TOLOWER "${CLIENTS_OS}" CLIENTS_OS)
@@ -227,20 +255,24 @@ if(BUILD_CLIENTS OR BUILD_TESTING)
     set(OPENMP_DEB "libomp-dev")
     set(OPENMP_RPM "libgomp")
 
-    rocm_package_setup_component(clients)
+    if(PROJECT_IS_TOP_LEVEL)
+        rocm_package_setup_component(clients)
+    endif()
 endif()
 
 if(BUILD_TESTING)
     enable_testing()
-    rocm_package_setup_client_component(
-        tests
-        DEPENDS DEB
-                "${OPENMP_DEB}"
-                "libopenblas-dev"
-                RPM
-                "${OPENMP_RPM}"
-                "libopenblas-devel"
-    )
+    if(PROJECT_IS_TOP_LEVEL)
+        rocm_package_setup_client_component(
+            tests
+            DEPENDS DEB
+                    "${OPENMP_DEB}"
+                    "libopenblas-dev"
+                    RPM
+                    "${OPENMP_RPM}"
+                    "libopenblas-devel"
+        )
+    endif()
     add_subdirectory(test)
 endif()
 
@@ -250,65 +282,69 @@ if(BUILD_DOCS)
 endif()
 
 if(BUILD_CLIENTS)
-    rocm_package_setup_client_component(
-        benchmarks DEPENDS DEB "${OPENMP_DEB}" RPM "${OPENMP_RPM}"
-    )
+    if(PROJECT_IS_TOP_LEVEL)
+        rocm_package_setup_client_component(
+            benchmarks DEPENDS DEB "${OPENMP_DEB}" RPM "${OPENMP_RPM}"
+        )
+    endif()
     # Add client directory
     add_subdirectory(client)
 endif()
 
-include(GNUInstallDirs)
+if(PROJECT_IS_TOP_LEVEL)
+    include(GNUInstallDirs)
 
-if(WIN32)
-    set(CPACK_SOURCE_GENERATOR "ZIP")
-    set(CPACK_GENERATOR "ZIP")
-else()
-    set(CPACK_GENERATOR "DEB")
-endif()
-
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
-set(CPACK_RPM_PACKAGE_LICENSE "MIT")
-
-if(WIN32)
-    set(CMAKE_INSTALL_PREFIX
-        "C:/hipSDK"
-        CACHE PATH "Install path" FORCE
-    )
-    set(INSTALL_PREFIX "C:/hipSDK")
-    set(CPACK_SET_DESTDIR FALSE)
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "C:/hipSDK")
-    set(CPACK_PACKAGING_INSTALL_PREFIX "")
-    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
-else()
-    if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
-        set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+    if(WIN32)
+        set(CPACK_SOURCE_GENERATOR "ZIP")
+        set(CPACK_GENERATOR "ZIP")
+    else()
+        set(CPACK_GENERATOR "DEB")
     endif()
-    set(CPACK_SET_DESTDIR
-        OFF
-        CACHE
-            BOOL
-            "Boolean toggle to make CPack use DESTDIR mechanism when packaging"
+
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
+    set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+
+    if(WIN32)
+        set(CMAKE_INSTALL_PREFIX
+            "C:/hipSDK"
+            CACHE PATH "Install path" FORCE
+        )
+        set(INSTALL_PREFIX "C:/hipSDK")
+        set(CPACK_SET_DESTDIR FALSE)
+        set(CPACK_PACKAGE_INSTALL_DIRECTORY "C:/hipSDK")
+        set(CPACK_PACKAGING_INSTALL_PREFIX "")
+        set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+    else()
+        if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
+            set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+        endif()
+        set(CPACK_SET_DESTDIR
+            OFF
+            CACHE
+                BOOL
+                "Boolean toggle to make CPack use DESTDIR mechanism when packaging"
+        )
+    endif()
+
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+        "\${CPACK_PACKAGING_INSTALL_PREFIX}"
+    )
+
+    set(package_name rocroller)
+
+    rocm_package_add_deb_dependencies(STATIC_DEPENDS "rocm-llvm-dev >= 18.0.0")
+    rocm_package_add_rpm_dependencies(STATIC_DEPENDS "rocm-llvm-devel >= 18.0.0")
+
+    set(ROCROLLER_CONFIG_DIR
+        "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+        CACHE PATH "Path placed into ldconfig file"
+    )
+
+    rocm_create_package(
+        NAME ${package_name}
+        DESCRIPTION "A library for generating AMDGPU kernels"
+        MAINTAINER "rocRoller Maintainer <rocroller-maintainer@amd.com>"
+        LDCONFIG
+        LDCONFIG_DIR ${ROCROLLER_CONFIG_DIR}
     )
 endif()
-
-set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
-    "\${CPACK_PACKAGING_INSTALL_PREFIX}"
-)
-
-set(package_name rocroller)
-
-rocm_package_add_deb_dependencies(STATIC_DEPENDS "rocm-llvm-dev >= 18.0.0")
-rocm_package_add_rpm_dependencies(STATIC_DEPENDS "rocm-llvm-devel >= 18.0.0")
-
-set(ROCROLLER_CONFIG_DIR
-    "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-    CACHE PATH "Path placed into ldconfig file"
-)
-
-rocm_create_package(
-    NAME ${package_name}
-    DESCRIPTION "A library for generating AMDGPU kernels"
-    MAINTAINER "rocRoller Maintainer <rocroller-maintainer@amd.com>"
-    LDCONFIG
-    LDCONFIG_DIR ${ROCROLLER_CONFIG_DIR}
-)

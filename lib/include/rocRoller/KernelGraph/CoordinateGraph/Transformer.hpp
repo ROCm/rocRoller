@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -20,19 +45,13 @@ namespace rocRoller
         {
         public:
             Transformer() = delete;
-            Transformer(std::shared_ptr<CoordinateGraph>,
-                        ContextPtr                       = nullptr,
-                        Expression::ExpressionTransducer = nullptr);
+            Transformer(CoordinateGraph const* graph);
+            Transformer(CoordinateGraph const* graph, Expression::ExpressionTransducer transducer);
 
             /**
              * Set expression transducer.
              */
             void setTransducer(Expression::ExpressionTransducer);
-
-            /**
-             * Get expression transducer.
-             */
-            Expression::ExpressionTransducer getTransducer() const;
 
             /**
              * Set the index expression for the dimension.
@@ -87,17 +106,21 @@ namespace rocRoller
             /**
              * Implicitly set indexes for all Workgroup and Workitem dimensions in the graph.
              */
-            void fillExecutionCoordinates();
+            void fillExecutionCoordinates(ContextPtr context);
 
         private:
+            Expression::ExpressionPtr transduce(Expression::ExpressionPtr exp) const;
+            std::vector<Expression::ExpressionPtr>
+                transduce(std::vector<Expression::ExpressionPtr> exps) const;
+
             template <typename Visitor>
             std::vector<Expression::ExpressionPtr>
                 stride(std::vector<int> const&, bool forward, Visitor& visitor) const;
 
             std::map<int, Expression::ExpressionPtr> m_indexes;
-            std::shared_ptr<CoordinateGraph>         m_graph;
-            ContextPtr                               m_context;
-            Expression::ExpressionTransducer         m_transducer;
+
+            CoordinateGraph const*           m_graph;
+            Expression::ExpressionTransducer m_transducer;
         };
     }
 }

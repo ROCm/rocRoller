@@ -1,5 +1,31 @@
 #!/usr/bin/env python3
 
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
+
 """
 Use a genetic algorithm to optimize scheduler weights for rocRoller.
 
@@ -42,7 +68,7 @@ mp_pool = None
 
 
 def instantiate_gpus(idxs: List[int]):
-    global gpus, mp_pool
+    global gpus, mp_pool  # noqa: disable=F824
     for idx in idxs:
         gpus[idx] = multiprocessing.Lock()
     if mp_pool is not None:
@@ -51,7 +77,7 @@ def instantiate_gpus(idxs: List[int]):
 
 
 def acquire_lock() -> Tuple[int, multiprocessing.Lock]:
-    global gpus
+    global gpus  # noqa: disable=unused-variable
     for i in range(100):
         for id, lock in gpus.items():
             locked = lock.acquire(False)
@@ -62,14 +88,14 @@ def acquire_lock() -> Tuple[int, multiprocessing.Lock]:
 
 
 def pool() -> multiprocessing.Pool:
-    global mp_pool, gpus
+    global mp_pool, gpus  # noqa: disable=F824
     if mp_pool is None:
         mp_pool = multiprocessing.Pool(len(gpus))
     return mp_pool
 
 
 def terminate_pool():
-    global mp_pool
+    global mp_pool  # noqa: disable=F824
 
     if mp_pool is not None:
         mp_pool.terminate()
@@ -77,7 +103,7 @@ def terminate_pool():
 
 
 def close_pool():
-    global mp_pool
+    global mp_pool  # noqa: disable=F824
 
     if mp_pool is not None:
         mp_pool.close()
@@ -261,6 +287,7 @@ def bench(
         build_dir = rrperf.run.get_build_dir()
         env = rrperf.run.get_arch_env(build_dir)
         env["ROCROLLER_SCHEDULER_WEIGHTS"] = str(weights_path.absolute())
+        env["OMP_NUM_THREADS"] = str(1)
 
         cmd = problem.command(device=device, yaml=result_path.absolute())
 
@@ -314,7 +341,7 @@ prev_results = {}
 
 
 def split_old_new_results(weights) -> Tuple[List[Weights], List[Weights]]:
-    global prev_results
+    global prev_results  # noqa: disable=F824
 
     already_ran = []
     to_run = []
@@ -330,7 +357,7 @@ def split_old_new_results(weights) -> Tuple[List[Weights], List[Weights]]:
 def generation(
     output_dir: pathlib.Path, problem: rrperf.problems.GEMMRun, weights: List[Weights]
 ) -> List[Result]:
-    global prev_results
+    global prev_results  # noqa: disable=F824
 
     already_ran, to_run = split_old_new_results(weights)
 

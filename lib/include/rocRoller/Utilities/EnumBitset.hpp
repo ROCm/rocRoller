@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2022-2024 Advanced Micro Devices, Inc.
+ * Copyright 2022-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,7 @@ namespace rocRoller
         using Base::operator[];
 
         constexpr EnumBitset(std::initializer_list<Enum> items);
+        // cppcheck-suppress noExplicitConstructor
         constexpr EnumBitset(Base const& val);
 
         /**

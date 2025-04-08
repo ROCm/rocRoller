@@ -1,3 +1,28 @@
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
 import pathlib
 from rrperf.problems import GEMMRun, CodeGenRun, TensileRun
 
@@ -297,7 +322,8 @@ def hgemm():
             **fp16,
         )
 
-    yield from visualizer()
+    # TODO: Enable once visualizer is working
+    # yield from visualizer()
 
 
 def visualizer():
@@ -447,18 +473,6 @@ def streamk():
             prefetch=False,  # TODO: Fix k loop unrolling with stream k
             streamK=True,
             streamKTwoTile=twoTile,
-        )
-        yield mkGEMM(
-            HGEMM_7680x8448x8192,
-            mac_m=128,
-            mac_n=256,
-            mac_k=16,
-            trans_A="N",
-            trans_B="T",
-            prefetch=False,  # TODO: Fix k loop unrolling with stream k
-            streamK=True,
-            streamKTwoTile=twoTile,
-            numWGs=220,
         )
 
 
@@ -1253,20 +1267,7 @@ def all():
     yield from sgemm()
     yield from hgemm()
     yield from hgemm_no_store_LDS()
-    # TODO: fix tensile benchmarks with newer Tensile version
-    # yield from tensile_benchmarks()
-    # yield from streamk() # FIXME
-    yield from scalar_is_zero()
-    yield from codegen()
-
-
-def all_gfx942():
-    yield from sgemm()
-    yield from hgemm()
-    yield from hgemm_no_store_LDS()
-    # TODO: fix tensile benchmarks with newer Tensile version
-    # yield from tensile_benchmarks()
-    # yield from streamk() # FIXME
+    yield from streamk()
     yield from scalar_is_zero()
     yield from codegen()
 

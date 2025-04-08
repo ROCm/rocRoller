@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <rocRoller/KernelGraph/Utils.hpp>
 
@@ -540,6 +565,23 @@ namespace rocRoller
                 std::get<Operation>(elem));
         }
 
+        int getTransformTarget(int storageTarget, KernelGraph const& kgraph)
+        {
+            namespace CT     = rocRoller::KernelGraph::CoordinateGraph;
+            auto isDuplicate = CT::isEdge<Duplicate>;
+            auto outbound    = kgraph.coordinates.getOutputNodeIndices(storageTarget, isDuplicate)
+                                .to<std::vector>();
+
+            if(outbound.empty())
+                return storageTarget;
+
+            AssertFatal(outbound.size() == 1,
+                        "Only one outbound Duplicate edge is supported.",
+                        ShowValue(outbound));
+
+            return outbound[0];
+        }
+
         std::pair<std::vector<int>, std::unordered_set<int>> findRequiredCoordinates(
             int target, Graph::Direction direction, KernelGraph const& kgraph)
         {
@@ -676,7 +718,8 @@ namespace rocRoller
         {
             std::unordered_set<int> required;
 
-            auto [target, direction]    = getOperationTarget(tag, graph);
+            auto [target, direction] = getOperationTarget(tag, graph);
+            Log::debug("{} target: {}", tag, target);
             auto [targetRequired, path] = findRequiredCoordinates(target, direction, graph);
 
             std::copy(targetRequired.cbegin(),
@@ -748,6 +791,16 @@ namespace rocRoller
             }
 
             return rv;
+        }
+
+        void duplicateMacroTile(KernelGraph& graph, int load)
+        {
+            auto original = graph.mapper.get<MacroTile>(load);
+            auto newMacroTile
+                = graph.coordinates.addElement(graph.coordinates.getElement(original));
+            graph.coordinates.addElement(Duplicate(), {newMacroTile}, {original});
+            graph.mapper.disconnect<MacroTile>(load, original);
+            graph.mapper.connect<MacroTile>(load, newMacroTile);
         }
 
         int duplicateControlNode(KernelGraph& graph, int tag)
@@ -889,16 +942,8 @@ namespace rocRoller
 
         VariableType getVariableType(KernelGraph const& graph, int opTag)
         {
-            auto l = graph.control.get<LoadTiled>(opTag);
-            if(l)
-                return l->varType;
-            auto s = graph.control.get<StoreTiled>(opTag);
-            if(s)
-                return s->dataType;
-            auto ll = graph.control.get<LoadLDSTile>(opTag);
-            if(ll)
-                return ll->varType;
-            Throw<FatalError>("Invalid load/store operation.");
+            auto node = graph.control.getNode(opTag);
+            return getVariableType(node);
         }
 
         void orderMemoryNodes(KernelGraph&                         graph,
@@ -1065,6 +1110,31 @@ namespace rocRoller
                 }
                 k.mapper.disconnect(opTag1, c.coordinate, c.connection);
             }
+        }
+
+        ExpressionPtr tileCeilDivide(ExpressionPtr sdSize, int tileSize)
+        {
+            auto tileSizeExpr = literal(static_cast<uint>(tileSize));
+            auto one          = literal(1u);
+
+            return (sdSize + tileSizeExpr - one) / tileSizeExpr;
+        }
+
+        bool hasDeallocate(const KernelGraph& graph, int registerTag)
+        {
+            auto connections = [&]() -> Generator<int> {
+                for(const auto& connection : graph.mapper.getCoordinateConnections(registerTag))
+                    co_yield connection.control;
+            };
+
+            for(const auto& deallocateTag :
+                filter(graph.control.isElemType<Deallocate>(), connections()))
+            {
+                auto dimTag = graph.mapper.get<Dimension>(deallocateTag);
+                if(dimTag == registerTag)
+                    return true;
+            }
+            return false;
         }
     }
 }

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2019-2025 Advanced Micro Devices, Inc.
+ * Copyright 2019-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -390,7 +390,7 @@ namespace rocRoller
          * 1. If variableType == Half, this returns Halfx2.
          * 2. If variableType == Float, this returns {}.
          */
-        std::optional<VariableType> unsegmentedVariableType() const;
+        std::optional<VariableType> packedVariableType() const;
 
         VariableType variableType;
         VariableType segmentVariableType;

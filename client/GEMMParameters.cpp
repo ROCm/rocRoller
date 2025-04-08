@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include "./include/GEMMParameters.hpp"
 
 namespace rocRoller
@@ -11,9 +37,18 @@ namespace rocRoller
                 std::ostringstream rv;
                 rv << "GEMM_" << toString(transA) << toString(transB);
 
-                rv << "_";
-                for(auto const& t : {typeA, typeB, typeC, typeD, typeAcc})
-                    rv << t.substr(0, 1);
+                if(scaleA != rocRoller::Operations::ScaleMode::None)
+                    rv << "_mx" << typeA;
+                else
+                    rv << "_" << typeA;
+
+                if(scaleB != rocRoller::Operations::ScaleMode::None)
+                    rv << "_mx" << typeB;
+                else
+                    rv << "_" << typeB;
+
+                for(auto const& t : {typeC, typeD, typeAcc})
+                    rv << "_" << t;
 
                 rv << "_MT";
                 rocRoller::streamJoin(rv, std::vector{macM, macN, macK}, "x");
@@ -24,11 +59,17 @@ namespace rocRoller
                 rv << "_LDS";
                 rocRoller::streamJoin(rv, std::vector{loadLDSA, loadLDSB, storeLDSD}, "");
 
+                rv << "_SLDS";
+                rocRoller::streamJoin(rv, std::vector{loadLDSScaleA, loadLDSScaleB}, "");
+
                 rv << "_Direct2LDS";
                 rocRoller::streamJoin(rv, std::vector{direct2LDSA, direct2LDSB}, "");
 
                 rv << "_UNROLL";
                 rocRoller::streamJoin(rv, std::vector{unrollX, unrollY}, "x");
+
+                rv << "_SwizzleScale";
+                rocRoller::streamJoin(rv, std::vector{swizzleScale}, "");
 
                 if(prefetch)
                 {
@@ -98,6 +139,7 @@ namespace rocRoller
                 s << "MI:        " << x.waveM << "x" << x.waveN << "x" << x.waveK << "x" << x.waveB
                   << std::endl;
                 s << "Scaling:   A:" << x.scaleA << " B:" << x.scaleB << std::endl;
+                s << "SwizzleScale:        " << x.swizzleScale << std::endl;
                 s << "LDS:       " << x.loadLDSA << x.loadLDSB << x.storeLDSD << std::endl;
                 s << "Direct2LDS:       " << x.direct2LDSA << x.direct2LDSB << std::endl;
                 s << "LSDScale:  " << x.loadLDSScaleA << x.loadLDSScaleB << std::endl;

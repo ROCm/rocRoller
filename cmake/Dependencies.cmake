@@ -1,4 +1,30 @@
-cmake_minimum_required(VERSION 3.18...3.22)
+
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
+cmake_minimum_required(VERSION 3.21...3.22)
 
 include(FetchContent)
 
@@ -17,14 +43,16 @@ endif()
 set(_rocroller_all_local_deps
     spdlog
     msgpack
-    yaml-cpp
     Catch2
     CLI11
     libdivide
+    boost
     ROCmCMakeBuildTools
 )
 # Dependencies where we never look for a local version
 set(_rocroller_all_remote_deps
+    fmt
+    yaml-cpp
     isa_spec_manager
     mrisa_xml
     googletest
@@ -84,7 +112,7 @@ function(rocroller_add_dependency dep_name)
         return()
     endif()
 
-    if(PARSE_COMPONENTS)
+    if(PARSE_COMPONENTS AND PROJECT_IS_TOP_LEVEL)
         if(COMMAND rocm_package_add_dependencies)
             unset(name_deb)
             unset(name_rpm)
@@ -170,11 +198,27 @@ macro(_build_local)
 endmacro()
 
 # Functions to fetch individual components
+function(_fetch_fmt VERSION HASH)
+    _determine_git_tag("" master)
+
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+    set(FMT_SYSTEM_HEADERS ON)
+
+    FetchContent_Declare(
+        fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG ${GIT_TAG}
+    )
+    FetchContent_MakeAvailable(fmt)
+    _exclude_from_all(${fmt_SOURCE_DIR})
+endfunction()
+
 function(_fetch_spdlog VERSION HASH)
     _determine_git_tag(v v1.x)
 
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    set(SPDLOG_USE_STD_FORMAT ON)
+    set(SPDLOG_USE_STD_FORMAT OFF)
+    set(SPDLOG_FMT_EXTERNAL_HO ON)
     set(SPDLOG_BUILD_PIC ON)
     set(SPDLOG_INSTALL ON)
     FetchContent_Declare(
@@ -227,7 +271,7 @@ function(_fetch_yaml-cpp VERSION HASH)
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     set(YAML_CPP_BUILD_TOOLS OFF)
     set(YAML_CPP_INSTALL ON)
-    # set(YAML_BUILD_SHARED_LIBS OFF)
+    set(YAML_BUILD_SHARED_LIBS OFF)
     FetchContent_Declare(
         yaml_cpp
         GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
@@ -309,6 +353,24 @@ function(_fetch_mrisa_xml VERSION HASH)
     )
 endfunction()
 set(mrisa_xml_EXPORT_VARS mrisa_xml_SOURCE_DIR)
+
+function(_fetch_boost VERSION HASH)
+    _determine_git_tag("boost-" "boost-1.81.0")
+    FetchContent_Declare(
+        boost
+        URL https://github.com/boostorg/boost/releases/download/${GIT_TAG}/${GIT_TAG}.tar.gz
+    )
+    _save_var(BUILD_TESTING)
+    set(BUILD_TESTING OFF)
+    _save_var(BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS OFF)
+    set(Boost_USE_STATIC_LIBS ON)
+    FetchContent_MakeAvailable(boost)
+    _restore_var(BUILD_SHARED_LIBS)
+    _restore_var(BUILD_TESTING)
+    _exclude_from_all(${boost_SOURCE_DIR})
+    _mark_targets_as_system(${boost_SOURCE_DIR})
+endfunction()
 
 function(_fetch_cmrc VERSION HASH)
     _determine_git_tag("" master)
@@ -415,9 +477,14 @@ endfunction()
 
 function(_fetch_mxDataGenerator VERSION HASH)
     _determine_git_tag(v main)
+    if(MXDATAGENERATOR_SSH)
+        set(mxDataGenerator_url "git@${MXDATAGENERATOR_GIT_URL}:ROCm/mxDataGenerator.git")
+    else()
+        set(mxDataGenerator_url "https://${MXDATAGENERATOR_GIT_URL}/ROCm/mxDataGenerator.git")
+    endif()
     FetchContent_Declare(
         mxDataGenerator
-        GIT_REPOSITORY git@github.com:ROCm/mxDataGenerator.git
+        GIT_REPOSITORY ${mxDataGenerator_url}
         GIT_TAG ${GIT_TAG}
     )
     FetchContent_MakeAvailable(mxDataGenerator)
@@ -446,7 +513,7 @@ set(ROCmCMakeBuildTools_EXPORT_VARS CMAKE_MODULE_PATH)
 macro(_determine_git_tag PREFIX DEFAULT)
     if(HASH)
         set(GIT_TAG ${HASH})
-    elseif(VERSION AND NOT ${PREFIX} STREQUAL "FALSE")
+    elseif(VERSION AND NOT "${PREFIX}" STREQUAL "FALSE")
         set(GIT_TAG ${PREFIX}${VERSION})
     else()
         set(GIT_TAG ${DEFAULT})
@@ -505,9 +572,11 @@ macro(_pushstate)
     unset(CMAKE_CXX_CPPCHECK)
     unset(CMAKE_CXX_CPPCHECK CACHE)
     _save_var(CMAKE_MESSAGE_INDENT)
+    _save_var(CPACK_GENERATOR)
 endmacro()
 
 macro(_popstate)
+    _restore_var(CPACK_GENERATOR)
     _restore_var(CMAKE_MESSAGE_INDENT)
     _restore_var(CMAKE_CXX_CPPCHECK)
 endmacro()

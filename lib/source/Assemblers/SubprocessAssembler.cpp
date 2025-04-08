@@ -1,4 +1,28 @@
-
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <cstdio>
 #include <filesystem>
@@ -54,11 +78,16 @@ namespace rocRoller
         return {ret_code, result};
     }
 
-    void SubprocessAssembler::executeChecked(std::string const& command)
+    void SubprocessAssembler::executeChecked(std::string const&           command,
+                                             std::function<void()> const& cleanupCall)
     {
         auto [retCode, output] = execute(command);
 
-        AssertFatal(retCode == 0, ShowValue(command), ShowValue(retCode), ShowValue(output));
+        if(retCode != 0)
+        {
+            cleanupCall();
+            Throw<FatalError>(ShowValue(command), ShowValue(retCode), ShowValue(output));
+        }
     }
 
     std::string SubprocessAssembler::makeTempFolder()
@@ -87,7 +116,7 @@ namespace rocRoller
 
         std::filesystem::path tmpFolder = makeTempFolder();
 
-        auto deleteDir = [tmpFolder](auto*) { std::filesystem::remove_all(tmpFolder); };
+        auto deleteDir = [tmpFolder]() { std::filesystem::remove_all(tmpFolder); };
 
         auto assemblyFile   = tmpFolder / "kernel.s";
         auto objectFile     = tmpFolder / "kernel.o";
@@ -99,6 +128,11 @@ namespace rocRoller
         }
 
         std::string assemblerPath = Settings::getInstance()->get(Settings::SubprocessAssemblerPath);
+        if(assemblerPath.empty())
+        {
+            std::string rocmPath = Settings::getInstance()->get(Settings::ROCMPath);
+            assemblerPath        = rocmPath + "/bin/amdclang++";
+        }
 
         {
 
@@ -120,7 +154,7 @@ namespace rocRoller
 
             auto command = joinArgs(args);
 
-            executeChecked(command);
+            executeChecked(command, deleteDir);
         }
 
         {
@@ -129,10 +163,14 @@ namespace rocRoller
 
             auto command = joinArgs(args);
 
-            executeChecked(command);
+            executeChecked(command, deleteDir);
         }
 
-        return readFile(codeObjectFile);
+        auto fileContents = readFile(codeObjectFile);
+
+        deleteDir();
+
+        return fileContents;
     }
 
     std::vector<char> SubprocessAssembler::assembleMachineCode(const std::string& machineCode,

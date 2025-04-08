@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <map>
@@ -10,6 +36,16 @@
 
 namespace rocRoller
 {
+    inline std::string toString(RegisterExpressionAttributes t)
+    {
+        return concatenate("{\n",
+                           ShowValue(t.dataType),
+                           ShowValue(t.unitStride),
+                           ShowValue(t.elementBlockSize),
+                           ShowValue(t.elementBlockStride),
+                           ShowValue(t.trLoadPairStride),
+                           "}");
+    }
     inline RegisterTagManager::RegisterTagManager(ContextPtr context)
         : m_context(context)
     {
@@ -26,6 +62,16 @@ namespace rocRoller
 
     inline Register::ValuePtr RegisterTagManager::getRegister(int tag)
     {
+        auto merge = getIndex(tag);
+        if(merge)
+        {
+            auto [dst, index] = *merge;
+            AssertFatal(hasRegister(dst), ShowValue(dst));
+
+            auto target = m_registers.at(dst);
+            return target->subset({index});
+        }
+
         AssertFatal(hasRegister(tag), ShowValue(tag));
         return m_registers.at(tag);
     }
@@ -87,6 +133,19 @@ namespace rocRoller
     inline void RegisterTagManager::addRegister(int tag, Register::ValuePtr value)
     {
         AssertFatal(!hasExpression(tag), "Tag already associated with an expression");
+        AssertFatal(!hasRegister(tag), "Tag ", tag, " already in RegisterTagManager.");
+        if(auto existingTag = findRegister(value))
+        {
+            AssertFatal(value->readOnly(),
+                        "Read/write Tag ",
+                        tag,
+                        ": ",
+                        value->toString(),
+                        " intersects with existing tag ",
+                        *existingTag,
+                        ": ",
+                        getRegister(*existingTag)->toString());
+        }
         m_registers.insert(std::pair<int, Register::ValuePtr>(tag, value));
     }
 
@@ -100,6 +159,17 @@ namespace rocRoller
                 tag, {value, attrs}));
     }
 
+    inline std::optional<std::pair<int, int>> RegisterTagManager::getIndex(int tag) const
+    {
+        auto iter = m_indexes.find(tag);
+        if(iter != m_indexes.end())
+        {
+            return iter->second;
+        }
+
+        return std::nullopt;
+    }
+
     inline void RegisterTagManager::deleteTag(int tag)
     {
         auto inst = Instruction::Comment(concatenate("Deleting tag ", tag));
@@ -111,6 +181,17 @@ namespace rocRoller
     inline bool RegisterTagManager::hasRegister(int tag) const
     {
         return m_registers.count(tag) > 0;
+    }
+
+    inline std::optional<int> RegisterTagManager::findRegister(Register::ValuePtr reg) const
+    {
+        for(auto const& [tag, existingReg] : m_registers)
+        {
+            if(existingReg->intersects(reg))
+                return tag;
+        }
+
+        return std::nullopt;
     }
 
     inline bool RegisterTagManager::hasExpression(int tag) const

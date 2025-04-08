@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include "ContextFixture.hpp"
@@ -55,6 +81,23 @@ inline auto mfmaSupportedISAValues()
 {
     return ::testing::ValuesIn(
         rocRoller::GPUArchitectureLibrary::getInstance()->getMFMASupportedISAs());
+}
+
+/**
+ * Returns a (googletest) Generator that will yield every GPU ISA supported by rocRoller, that
+ * has WMMA instructions.
+ *
+ * Useful if you want to parameterize a test with combinations of each ISA with other
+ * parameters. Example:
+ * INSTANTIATE_TEST_SUITE_P(SuiteName,
+ *                          FixtureClass,
+ *                          ::testing::Combine(wmmaSupportedISAValues(),
+ *                                             ::testing::Values(1, 2, 4, 8, 12, 16, 20, 44)));
+ */
+inline auto wmmaSupportedISAValues()
+{
+    return ::testing::ValuesIn(
+        rocRoller::GPUArchitectureLibrary::getInstance()->getWMMASupportedISAs());
 }
 
 /**
@@ -121,6 +164,11 @@ inline auto mfmaSupportedISATuples()
     return ::testing::Combine(mfmaSupportedISAValues());
 }
 
+inline auto wmmaSupportedISATuples()
+{
+    return ::testing::Combine(wmmaSupportedISAValues());
+}
+
 class BaseGPUContextFixture : public ContextFixture
 {
 protected:
@@ -159,6 +207,17 @@ using GPUContextFixture = GPUContextFixtureParam<>;
             GTEST_SKIP() << m_context->targetArchitecture().target().toString() \
                          << " has no capability " << cap << std::endl;          \
         }                                                                       \
+    } while(0)
+
+#define REQUIRE_EITHER_ARCH_CAP(capA, capB)                                               \
+    do                                                                                    \
+    {                                                                                     \
+        if(!(m_context->targetArchitecture().HasCapability(capA)                          \
+             || m_context->targetArchitecture().HasCapability(capB)))                     \
+        {                                                                                 \
+            GTEST_SKIP() << m_context->targetArchitecture().target().toString()           \
+                         << " has no capability " << capA << " or " << capB << std::endl; \
+        }                                                                                 \
     } while(0)
 
 #define REQUIRE_NOT_ARCH_CAP(cap)                                               \

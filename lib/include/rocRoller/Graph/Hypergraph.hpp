@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <boost/multi_index/identity.hpp>
@@ -29,8 +55,7 @@ namespace rocRoller
             Count
         };
 
-        std::ostream& operator<<(std::ostream&, ElementType const& e);
-        std::string   toString(ElementType e);
+        std::string toString(ElementType e);
 
         /**
          * @brief Returns the complementary type to `t`.
@@ -44,8 +69,8 @@ namespace rocRoller
             Count
         };
 
-        std::ostream& operator<<(std::ostream&, Direction const& d);
-        std::string   toString(Direction d);
+        std::string         toString(Direction d);
+        constexpr Direction opposite(Direction d);
 
         enum class GraphModification : int
         {
@@ -55,10 +80,7 @@ namespace rocRoller
             Count
         };
 
-        std::ostream& operator<<(std::ostream&, GraphModification const& g);
-        std::string   toString(GraphModification g);
-
-        constexpr Direction opposite(Direction);
+        std::string toString(GraphModification m);
 
         namespace mi = boost::multi_index;
 

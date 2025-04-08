@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <gtest/gtest-spi.h>
 
 #include <rocRoller/KernelGraph/ControlGraph/ControlEdge_fwd.hpp>
@@ -120,8 +146,8 @@ namespace rocRollerTest
         std::string expected = R".(
         digraph {
                 "1"[label="Kernel(1)"];
-                "2"[label="LoadLinear(2)"];
-                "3"[label="LoadLinear(3)"];
+                "2"[label="LoadLinear Value: Float(2)"];
+                "3"[label="LoadLinear Value: Float(3)"];
                 "4"[label="Body(4)",shape=box];
                 "5"[label="Body(5)",shape=box];
                 "6"[label="Assign Count nullptr(6)"];
@@ -305,8 +331,8 @@ namespace rocRollerTest
         std::string expected = R".(
         digraph {
             "1"[label="Kernel(1)"];
-            "2"[label="LoadLinear(2)"];
-            "3"[label="LoadLinear(3)"];
+            "2"[label="LoadLinear Value: Float(2)"];
+            "3"[label="LoadLinear Value: Float(3)"];
             "4"[label="Body(4)",shape=box];
             "5"[label="Body(5)",shape=box];
             "6"[label="Assign Count nullptr(6)"];
@@ -322,13 +348,13 @@ namespace rocRollerTest
             "16"[label="Body(16)",shape=box];
             "17"[label="Assign Count nullptr(17)"];
             "18"[label="Body(18)",shape=box];
-            "19"[label="LoadLinear(19)"];
+            "19"[label="LoadLinear Value: Float(19)"];
             "20"[label="Sequence(20)",shape=box];
             "21"[label="Scope(21)"];
             "22"[label="Body(22)",shape=box];
             "23"[label="Assign Count nullptr(23)"];
             "24"[label="Body(24)",shape=box];
-            "25"[label="LoadLinear(25)"];
+            "25"[label="LoadLinear Value: Float(25)"];
             "26"[label="Sequence(26)",shape=box];
             "27"[label="Assign Count nullptr(27)"];
             "28"[label="Sequence(28)",shape=box];
@@ -417,7 +443,7 @@ namespace rocRollerTest
         std::string expected = R".(
         digraph {
                 "1"[label="Kernel(1)"];
-                "2"[label="LoadLinear(2)"];
+                "2"[label="LoadLinear Value: Float(2)"];
                 "3"[label="Body(3)",shape=box];
                 "4"[label="ConditionalOp : nullptr(4)"];
                 "5"[label="Sequence(5)",shape=box];
@@ -555,5 +581,7 @@ namespace rocRollerTest
 
         EXPECT_EQ(true, hasExistingSetCoordinate(kg, load1, coord1, unrollDim));
         EXPECT_EQ(false, hasExistingSetCoordinate(kg, load1, coord3, unrollDim));
+        EXPECT_EQ(true, hasExistingSetCoordinate(kg, load1, coord2, unrollDim));
+        EXPECT_EQ(false, hasExistingSetCoordinate(kg, load2, coord1, unrollDim));
     }
 }

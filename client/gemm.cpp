@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <filesystem>
 
@@ -6,6 +31,7 @@
 #include <hip/hip_runtime.h>
 #endif /* ROCROLLER_USE_HIP */
 
+#include <rocRoller/AssemblyKernel.hpp>
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/Operations/CommandArgument_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>
@@ -67,6 +93,7 @@ struct rocRoller::Serialization::
         iot::mapRequired(io, "scale_B", result.solutionParams.scaleB);
         iot::mapRequired(io, "loadLDSScale_A", result.solutionParams.loadLDSScaleA);
         iot::mapRequired(io, "loadLDSScale_B", result.solutionParams.loadLDSScaleB);
+        iot::mapRequired(io, "swizzleScale", result.solutionParams.swizzleScale);
 
         iot::mapRequired(io, "mac_m", result.solutionParams.macM);
         iot::mapRequired(io, "mac_n", result.solutionParams.macN);
@@ -161,6 +188,7 @@ struct rocRoller::Serialization::MappingTraits<Client::GEMMClient::SolutionParam
         iot::mapRequired(io, "scale_B", params.scaleB);
         iot::mapRequired(io, "loadScaleLDS_A", params.loadLDSScaleA);
         iot::mapRequired(io, "loadScaleLDS_B", params.loadLDSScaleB);
+        iot::mapRequired(io, "swizzleScale", params.swizzleScale);
 
         iot::mapRequired(io, "streamK", params.streamK);
         iot::mapRequired(io, "streamKTwoTile", params.streamKTwoTile);
@@ -180,8 +208,8 @@ namespace rocRoller::Client::GEMMClient
 
     template <typename A, typename B, typename C, typename D>
     std::pair<bool, double>
-        validate(std::vector<typename UnsegmentedTypeOf<A>::type> const& h_A,
-                 std::vector<typename UnsegmentedTypeOf<B>::type> const& h_B,
+        validate(std::vector<typename PackedTypeOf<A>::type> const&      h_A,
+                 std::vector<typename PackedTypeOf<B>::type> const&      h_B,
                  std::vector<C> const&                                   h_C,
                  std::vector<D> const&                                   h_D,
                  std::vector<uint8_t> const&                             h_scaleA,
@@ -194,7 +222,7 @@ namespace rocRoller::Client::GEMMClient
         // Host result
         std::vector<D> h_result(problemParams.m * problemParams.n, static_cast<D>(0.0));
 
-        if(!h_scaleA.empty() && !h_scaleB.empty())
+        if(!h_scaleA.empty() || !h_scaleB.empty())
         {
             rocRoller::ScaledCPUMM(h_result,
                                    h_C,
@@ -268,13 +296,13 @@ namespace rocRoller::Client::GEMMClient
                                 static_cast<unsigned long>(problemParams.n)},
                                "N");
 
-        using UnsegmentedTypeA = typename UnsegmentedTypeOf<A>::type;
-        using UnsegmentedTypeB = typename UnsegmentedTypeOf<B>::type;
-        std::vector<UnsegmentedTypeA> hostA;
-        std::vector<UnsegmentedTypeB> hostB;
-        std::vector<C>                hostC;
-        std::vector<D>                hostD(problemParams.m * problemParams.n, D{});
-        std::vector<uint8_t>          hostScaleA, hostScaleB;
+        using PackedTypeA = typename PackedTypeOf<A>::type;
+        using PackedTypeB = typename PackedTypeOf<B>::type;
+        std::vector<PackedTypeA> hostA;
+        std::vector<PackedTypeB> hostB;
+        std::vector<C>           hostC;
+        std::vector<D>           hostD(problemParams.m * problemParams.n, D{});
+        std::vector<uint8_t>     hostScaleA, hostScaleB;
 
         auto seed = 31415u;
         DGenInput(seed,
@@ -296,10 +324,12 @@ namespace rocRoller::Client::GEMMClient
 
         std::shared_ptr<uint8_t> deviceScaleA, deviceScaleB;
         AssertFatal(problemParams.scaleA == Operations::ScaleMode::None
+                        || problemParams.scaleA == Operations::ScaleMode::SingleScale
                         || problemParams.scaleA == Operations::ScaleMode::Separate,
                     "Scale mode not supported!",
                     ShowValue(problemParams.scaleA));
         AssertFatal(problemParams.scaleB == Operations::ScaleMode::None
+                        || problemParams.scaleB == Operations::ScaleMode::SingleScale
                         || problemParams.scaleB == Operations::ScaleMode::Separate,
                     "Scale mode not supported!",
                     ShowValue(problemParams.scaleB));
@@ -332,8 +362,17 @@ namespace rocRoller::Client::GEMMClient
                 {size_t(problemParams.m), size_t(problemParams.k / elementsPerMXBlock)},
                 problemParams.transA == TransposeType::T ? "T" : "N");
             auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
-            setCommandTensorArg(commandArgs, aScaleTag, descAScale, deviceScaleA.get());
+            setCommandTensorArg(commandArgs, aScaleTag.value(), descAScale, deviceScaleA.get());
         }
+        else if(problemParams.scaleA == Operations::ScaleMode::SingleScale)
+        {
+            auto scaleValue             = floatToScale(problemParams.scaleValueA);
+            auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
+            commandArgs.setArgument(aScaleTag.value(), ArgumentType::Value, scaleValue);
+
+            hostScaleA = {scaleValue};
+        }
+
         if(problemParams.scaleB == Operations::ScaleMode::Separate)
         {
             auto dataTypeB  = TypeInfo<A>::Var.dataType;
@@ -342,19 +381,31 @@ namespace rocRoller::Client::GEMMClient
                 {size_t(problemParams.k / elementsPerMXBlock), size_t(problemParams.n)},
                 problemParams.transB == TransposeType::T ? "T" : "N");
             auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
-            setCommandTensorArg(commandArgs, bScaleTag, descBScale, deviceScaleB.get());
+            setCommandTensorArg(commandArgs, bScaleTag.value(), descBScale, deviceScaleB.get());
+        }
+        else if(problemParams.scaleB == Operations::ScaleMode::SingleScale)
+        {
+            auto scaleValue             = floatToScale(problemParams.scaleValueB);
+            auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
+            commandArgs.setArgument(bScaleTag.value(), ArgumentType::Value, scaleValue);
+
+            hostScaleB = {scaleValue};
         }
 
         gemm->validateRunParameters(command, problemParams, runParams, commandKernel);
 
         auto runtimeArgs = commandArgs.runtimeArguments();
 
-        auto scratchSpaceRequired = commandKernel->scratchSpaceRequired(runtimeArgs);
-        if(scratchSpaceRequired > 0)
+        // Note: the lifetime of deviceScratch needs to exceed kernel executions
+        std::shared_ptr<uint8_t> deviceScratch;
         {
-            auto deviceScratch = make_shared_device<uint8_t>(scratchSpaceRequired, 0);
-            commandArgs.setArgument(
-                gemm->getScratchTag(), ArgumentType::Value, deviceScratch.get());
+            auto scratchSpaceRequired = commandKernel->scratchSpaceRequired(runtimeArgs);
+            if(scratchSpaceRequired > 0)
+            {
+                deviceScratch = make_shared_device<uint8_t>(scratchSpaceRequired, 0);
+                commandArgs.setArgument(
+                    gemm->getScratchTag(), ArgumentType::Value, deviceScratch.get());
+            }
         }
 
         if(runParams.visualize)
@@ -587,7 +638,7 @@ namespace rocRoller::Client::GEMMClient
     {
         GEMMSolutionPtr gemmSolution;
 
-        auto arch = context->targetArchitecture().target();
+        auto const& arch = context->targetArchitecture().target();
 
         if(solution.streamK)
         {
@@ -698,7 +749,7 @@ namespace rocRoller::Client::GEMMClient
             }
         }
 
-        auto arch = GPUArchitectureLibrary::getInstance()->GetArch(architecture.target);
+        auto const arch = GPUArchitectureLibrary::getInstance()->GetArch(architecture.target);
 
         if(solution.scheduler != "")
         {
@@ -926,6 +977,8 @@ int main(int argc, const char* argv[])
         .loadLDSScaleA = false,
         .loadLDSScaleB = false,
 
+        .swizzleScale = false,
+
         .loadLDSA  = true,
         .loadLDSB  = true,
         .storeLDSD = true,
@@ -958,6 +1011,9 @@ int main(int argc, const char* argv[])
 
         .alpha = 2.0f,
         .beta  = 0.5f,
+
+        .scaleValueA = 1.0f,
+        .scaleValueB = 1.0f,
     };
 
     rocRoller::Client::GEMMClient::TypeParameters types;
@@ -997,6 +1053,8 @@ int main(int argc, const char* argv[])
     app.add_option("-K,--K", problem.k, "Tensor size K.");
     app.add_option("--alpha", problem.alpha, "Alpha scalar.");
     app.add_option("--beta", problem.beta, "Beta scalar.");
+    app.add_option("--scaleValue_A", problem.scaleValueA, "Single scale value for A.");
+    app.add_option("--scaleValue_B", problem.scaleValueB, "Single scale value for B.");
 
     //
     // Problem types
@@ -1037,7 +1095,7 @@ int main(int argc, const char* argv[])
             types.scaleA = fromString<Operations::ScaleMode>(res[0]);
             return true;
         },
-        "Enable MX scaling of A matrix [None | Separate].",
+        "Enable MX scaling of A matrix [None | Separate | SingleScale].",
         "Default: None.");
     app.add_option(
         "--scale_B",
@@ -1045,7 +1103,7 @@ int main(int argc, const char* argv[])
             types.scaleB = fromString<Operations::ScaleMode>(res[0]);
             return true;
         },
-        "Enable MX scaling of B matrix [None | Separate].",
+        "Enable MX scaling of B matrix [None | Separate | SingleScale].",
         "Default: None.");
 
     //
@@ -1139,6 +1197,9 @@ int main(int argc, const char* argv[])
 
     app.add_flag("--loadLDSScale_A", solution.loadLDSScaleA, "Use LDS when loading A scale.");
     app.add_flag("--loadLDSScale_B", solution.loadLDSScaleB, "Use LDS when loading B scale.");
+
+    app.add_flag(
+        "--swizzleScale", solution.swizzleScale, "Use Swizzle when loading A and B scale.");
 
     //
     // Benchmarking options
@@ -1325,6 +1386,18 @@ int main(int argc, const char* argv[])
         types.transB  = solution.transB;
         types.scaleA  = solution.scaleA;
         types.scaleB  = solution.scaleB;
+    }
+
+    if(types.scaleA != Operations::ScaleMode::None && types.scaleB == Operations::ScaleMode::None)
+    {
+        types.scaleB        = Operations::ScaleMode::SingleScale;
+        problem.scaleValueB = 1.0f;
+    }
+
+    if(types.scaleB != Operations::ScaleMode::None && types.scaleA == Operations::ScaleMode::None)
+    {
+        types.scaleA        = Operations::ScaleMode::SingleScale;
+        problem.scaleValueA = 1.0f;
     }
 
     // Currently, we only support F32 accumulation

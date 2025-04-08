@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
 
@@ -52,7 +78,8 @@ namespace rocRoller
     uint bitsPerTransposeLoad(uint elementBits)
     {
         AssertFatal((elementBits == 16 || elementBits == 8 || elementBits == 6 || elementBits == 4),
-                    "Transpose load from LDS only available for 16, 8, 6, and 4-bit datatypes.");
+                    "Transpose load from LDS only available for 16, 8, 6, and 4-bit datatypes.",
+                    ShowValue(elementBits));
 
         if(elementBits == 6)
         {
@@ -103,7 +130,8 @@ namespace rocRoller
         AssertFatal(addr != nullptr);
 
         AssertFatal((elementBits == 16 || elementBits == 8 || elementBits == 6 || elementBits == 4),
-                    "Transpose load from LDS only available for 16, 8, 6, and 4-bit datatypes.");
+                    "Transpose load from LDS only available for 16, 8, 6, and 4-bit datatypes.",
+                    ShowValue(elementBits));
 
         AssertFatal(numBytes > 0 && (numBytes < m_wordSize || numBytes % m_wordSize == 0),
                     "Invalid number of bytes");
@@ -160,6 +188,12 @@ namespace rocRoller
         co_yield load(kind, val1, addr1, offset1, 2, comment, false, buffDesc, buffOpts);
         co_yield load(kind, val2, addr2, offset2, 2, comment, true, buffDesc, buffOpts);
 
+        // Zero-out upper 16-bits
+        co_yield generateOp<Expression::BitwiseAnd>(
+            val1, val1, Register::Value::Literal(0x0000FFFF));
+        // Zero-out lower 16-bits
+        co_yield generateOp<Expression::BitwiseAnd>(
+            val2, val2, Register::Value::Literal(0xFFFF0000));
         co_yield generateOp<Expression::BitwiseOr>(dest, val1, val2);
     }
 
@@ -191,8 +225,8 @@ namespace rocRoller
                                                             Register::ValuePtr  toPack) const
     {
         auto valuesPerWord = m_wordSize / toPack->variableType().getElementSize();
-        auto unsegmented   = DataTypeInfo::Get(toPack->variableType()).unsegmentedVariableType();
-        if(!unsegmented)
+        auto packed        = DataTypeInfo::Get(toPack->variableType()).packedVariableType();
+        if(!packed)
         {
             Throw<FatalError>("Segmented variable type not found for ",
                               ShowValue(toPack->variableType()));
@@ -200,7 +234,7 @@ namespace rocRoller
 
         result = Register::Value::Placeholder(toPack->context(),
                                               toPack->regType(),
-                                              *unsegmented,
+                                              *packed,
                                               toPack->valueCount() / valuesPerWord,
                                               Register::AllocationOptions::FullyContiguous());
         for(int i = 0; i < result->registerCount(); i++)

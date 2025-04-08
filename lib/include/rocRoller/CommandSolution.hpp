@@ -1,11 +1,46 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <memory>
 
-#include <rocRoller/AssemblyKernel.hpp>
+#include <rocRoller/CommandSolution_fwd.hpp>
+
+#include <rocRoller/AssemblyKernel_fwd.hpp>
+#include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/ExecutableKernel_fwd.hpp>
+#include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/KernelArguments.hpp>
+#include <rocRoller/KernelGraph/CoordinateGraph/Dimension_fwd.hpp>
+#include <rocRoller/KernelGraph/KernelGraph_fwd.hpp>
+#include <rocRoller/KernelOptions.hpp>
 #include <rocRoller/Operations/Command_fwd.hpp>
+#include <rocRoller/Operations/OperationTag.hpp>
+#include <rocRoller/Utilities/EnumBitset.hpp>
 #include <rocRoller/Utilities/HIPTimer.hpp>
 
 namespace rocRoller
@@ -87,6 +122,8 @@ namespace rocRoller
         unsigned int unrollK   = 0;
         bool         fuseLoops = true;
         bool         tailLoops = true;
+
+        bool swizzleScale = false;
 
         bool prefetch          = false;
         int  prefetchInFlight  = 1;
@@ -236,7 +273,7 @@ namespace rocRoller
          */
         void launchKernel(RuntimeArguments const& args, hipStream_t stream = 0);
 
-        KernelGraph::KernelGraph getKernelGraph() const;
+        KernelGraph::KernelGraphPtr getKernelGraph() const;
 
         std::string getInstructions() const;
 
@@ -270,6 +307,11 @@ namespace rocRoller
         size_t scratchSpaceRequired(RuntimeArguments const& args) const;
 
         /**
+         * @brief Returns the workgroup size
+         */
+        std::array<unsigned int, 3> const& getWorkgroupSize() const;
+
+        /**
          * @brief Returns the hipFunction for the kernel
          */
         hipFunction_t getHipFunction() const;
@@ -280,18 +322,14 @@ namespace rocRoller
 
         std::vector<Expression::ExpressionPtr> m_predicates;
 
-        KernelGraph::KernelGraph          m_kernelGraph;
+        KernelGraph::KernelGraphPtr       m_kernelGraph;
         ContextPtr                        m_context;
         std::shared_ptr<ExecutableKernel> m_executableKernel;
         CommandParametersPtr              m_commandParameters;
         CommandLaunchParametersPtr        m_launchParameters;
 
-        Generator<Instruction> commandComments();
-
         void generateKernelGraph(std::string name);
         void generateKernelSource();
-
-        Generator<Instruction> kernelInstructions();
 
         /**
          * @brief Determines launch bounds and arguments, and launches the kernel with
@@ -314,7 +352,7 @@ namespace rocRoller
     class CommandSolution
     {
     public:
-        CommandSolution(CommandPtr command);
+        explicit CommandSolution(CommandPtr command);
 
         void                                 appendKernel(CommandKernelPtr kernel);
         std::vector<CommandKernelPtr> const& kernels() const;

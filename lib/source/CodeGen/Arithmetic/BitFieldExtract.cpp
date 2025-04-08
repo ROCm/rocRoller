@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 #include <rocRoller/CodeGen/Arithmetic/BitFieldExtract.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
@@ -85,37 +111,63 @@ namespace rocRoller
             AssertFatal(dstType.dataType == expr.outputDataType);
             AssertFatal(expr.offset + expr.width <= srcInfo.elementBits);
             AssertFatal(expr.width <= dstInfo.elementBits);
+            AssertFatal(!dst->isBitfield(),
+                        "Cannot write to a bitfield, the whole register is written.");
+            AssertFatal(dst->valueCount() == 1);
+            AssertFatal(arg->valueCount() == 1);
 
-            constexpr auto op_v32 = DO_SIGNED ? "v_bfe_i32" : "v_bfe_u32";
-            constexpr auto op_s32 = DO_SIGNED ? "s_bfe_i32" : "s_bfe_u32";
-            constexpr auto op_s64 = DO_SIGNED ? "s_bfe_i64" : "s_bfe_u64";
-            using ShiftRType      = std::
+            const char* op_v32;
+            const char* op_s32;
+            const char* op_s64;
+
+            if constexpr(!DO_SIGNED)
+            {
+                op_v32 = "v_bfe_u32";
+                op_s32 = "s_bfe_u32";
+                op_s64 = "s_bfe_u64";
+            }
+            else
+            {
+                if(dstInfo.elementBits == expr.width)
+                {
+                    // if the bitfield is the exact width of the output datatype, no sign extension is required
+                    // therefore we should use the unsigned version of the instructions
+                    op_v32 = "v_bfe_u32";
+                    op_s32 = "s_bfe_u32";
+                    op_s64 = "s_bfe_u64";
+                }
+                else
+                {
+                    op_v32 = "v_bfe_i32";
+                    op_s32 = "s_bfe_i32";
+                    op_s64 = "s_bfe_i64";
+                }
+            }
+
+            using ShiftRType = std::
                 conditional_t<DO_SIGNED, Expression::ArithmeticShiftR, Expression::LogicalShiftR>;
 
             // determine which registers to extract from, and where to extract them to
-            auto& from   = arg;
-            auto& to     = dst;
-            auto  offset = expr.offset;
+            auto from   = arg;
+            auto to     = dst;
+            auto offset = expr.offset;
             if(from->registerCount() > to->registerCount())
             {
                 // determine which registers contain the bits being extracted
-                const auto lo_reg = expr.offset >> 5;
-                const auto hi_reg = (expr.offset + expr.width - 1) >> 5;
+                const auto lo_reg = expr.offset / Register::bitsPerRegister;
+                const auto hi_reg = (expr.offset + expr.width - 1) / Register::bitsPerRegister;
                 // only take from the registers that are actually of interest
                 std::vector<int> ind(hi_reg - lo_reg + 1);
                 std::iota(ind.begin(), ind.end(), lo_reg);
                 from = arg->subset(ind);
                 // adjust the offset to the registers actually being used
-                offset = expr.offset - lo_reg * 32;
+                offset = expr.offset - lo_reg * Register::bitsPerRegister;
             }
 
             if(to->registerCount() > from->registerCount())
             {
                 // determine where the results should be written
                 std::vector<int> ind(from->registerCount());
-                // use the highest registers if this is signed, that way we can
-                // do sign extension / fill the upper registers with zeros
-                // with the appropriate shift right
                 std::iota(ind.begin(), ind.end(), dst->registerCount() - from->registerCount());
                 to = dst->subset(ind);
             }
@@ -158,7 +210,7 @@ namespace rocRoller
                                     {to},
                                     {from, Register::Value::Literal((expr.width << 16) | offset)},
                                     {},
-                                    concatenate(ShowValue(offset), ", ", ShowValue(expr.width))));
+                                    concatenate("offset = ", offset, ", width = ", expr.width)));
                 }
                 else if(from->registerCount() == 2)
                 {
@@ -167,7 +219,7 @@ namespace rocRoller
                                     {to},
                                     {from, Register::Value::Literal((expr.width << 16) | offset)},
                                     {},
-                                    concatenate(ShowValue(offset), ", ", ShowValue(expr.width))));
+                                    concatenate("offset = ", offset, ", width = ", expr.width)));
                 }
                 else
                 {
@@ -175,19 +227,27 @@ namespace rocRoller
                                       ShowValue(dstInfo.elementBits));
                 }
             }
-            if(dst->registerCount() > to->registerCount())
+            if(dstInfo.elementBits > expr.width)
             {
-                // if we extracted to an area smaller than the actual destination, extend the result
-                co_yield generateOp<ShiftRType>(
-                    dst,
-                    dst,
-                    Register::Value::Literal(32 * (dst->registerCount() - to->registerCount())));
-            }
-            if(dstInfo.elementBits < dst->registerCount() * 32)
-            {
-                // Ensure we only sign-extend into the bits we're actually expecting for this datatype
-                co_yield generateOp<Expression::BitwiseAnd>(
-                    dst, dst, Register::Value::Literal((1u << dstInfo.elementBits) - 1));
+                auto resultExpr = dst->expression();
+                // only need sign extension logic if the value extracted is narrower than the width of the type extracted
+                if(dst->registerCount() > to->registerCount())
+                {
+                    // if we extracted to an area smaller than the actual destination, then we extracted to the upper registers
+                    // complete the extraction & sign extension by shifting right into the lowest register
+                    resultExpr = resultExpr >> Expression::literal(
+                                     Register::bitsPerRegister
+                                     * (dst->registerCount() - to->registerCount()));
+                }
+                if(dstInfo.elementBits < dst->registerCount() * Register::bitsPerRegister
+                   && DO_SIGNED)
+                {
+                    AssertFatal(dstInfo.elementBits < 32,
+                                "Shift left by 32-bit is undefined behavior");
+                    // Ensure we only sign-extend into the bits we're actually expecting for this datatype
+                    resultExpr = Expression::literal((1u << dstInfo.elementBits) - 1) & resultExpr;
+                }
+                co_yield Expression::generate(dst, resultExpr, getContextFromValues(dst));
             }
         }
     };
@@ -212,6 +272,7 @@ namespace rocRoller
                     dstType.dataType,
                     " or packed ",
                     dstType.dataType);
+
         AssertFatal(expr.width == dstInfo.elementBits && expr.offset % dstInfo.elementBits == 0);
         AssertFatal(dst->valueCount() <= srcInfo.packing);
 

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <algorithm>
 
 #include <rocRoller/AssemblyKernel.hpp>
@@ -78,9 +104,9 @@ namespace rocRollerTest
                                                1,
                                                Register::AllocationOptions::FullyContiguous());
 
-            auto unsegmented = DataTypeInfo::Get(F8Type).unsegmentedVariableType();
-            AssertFatal(unsegmented, "packed data type not found");
-            DataType packedDataType = unsegmented->dataType;
+            auto packed = DataTypeInfo::Get(F8Type).packedVariableType();
+            AssertFatal(packed, "packed data type not found");
+            DataType packedDataType = packed->dataType;
 
             auto a_ptr
                 = Register::Value::Placeholder(context,
@@ -290,7 +316,6 @@ namespace rocRollerTest
             auto bufDesc = std::make_shared<rocRoller::BufferDescriptor>(m_context);
             co_yield bufDesc->setup();
             co_yield bufDesc->setSize(Register::Value::Literal(N));
-            co_yield bufDesc->setOptions(Register::Value::Literal(131072)); //0x00020000
 
             auto bufInstOpts = rocRoller::BufferInstructionOptions();
 

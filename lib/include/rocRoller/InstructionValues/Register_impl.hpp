@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <algorithm>
@@ -87,6 +113,21 @@ namespace rocRoller
             case Type::EXEC:
             case Type::EXEC_LO:
             case Type::EXEC_HI:
+            case Type::TTMP7:
+            case Type::TTMP9:
+                return true;
+
+            default:
+                return false;
+            }
+        }
+
+        constexpr inline bool IsTTMP(Type t)
+        {
+            switch(t)
+            {
+            case Type::TTMP7:
+            case Type::TTMP9:
                 return true;
 
             default:
@@ -106,6 +147,14 @@ namespace rocRoller
             if((lhs == Type::M0 && rhs == Type::Literal)
                || (lhs == Type::Literal && rhs == Type::M0))
                 return Type::M0;
+
+            if(lhs == Type::Count || rhs == Type::Count)
+            {
+                return Type::Count;
+            }
+
+            if((IsTTMP(lhs) && rhs == Type::Literal) || (lhs == Type::Literal && IsTTMP(rhs)))
+                return Type::Scalar;
 
             if(!IsRegister(lhs) && !IsRegister(rhs))
             {
@@ -161,6 +210,10 @@ namespace rocRoller
                 return "EXEC_LO";
             case Type::EXEC_HI:
                 return "EXEC_HI";
+            case Type::TTMP7:
+                return "TTMP7";
+            case Type::TTMP9:
+                return "TTMP9";
             }
             Throw<FatalError>("Invalid register type!");
         }
@@ -422,6 +475,11 @@ namespace rocRoller
             return IsSpecial(m_regType);
         }
 
+        inline constexpr bool Value::isTTMP() const
+        {
+            return IsTTMP(m_regType);
+        }
+
         inline constexpr bool Value::isSCC() const
         {
             return m_regType == Type::SCC;
@@ -533,6 +591,12 @@ namespace rocRoller
             case Type::EXEC_HI:
                 os << "exec_hi";
                 return;
+            case Type::TTMP7:
+                os << "ttmp7";
+                return;
+            case Type::TTMP9:
+                os << "ttmp9";
+                return;
             default:
                 break;
             }
@@ -626,6 +690,8 @@ namespace rocRoller
             case Type::EXEC:
             case Type::EXEC_LO:
             case Type::EXEC_HI:
+            case Type::TTMP7:
+            case Type::TTMP9:
                 specialString(os);
                 return;
             case Type::Literal:
@@ -643,7 +709,7 @@ namespace rocRoller
 
         inline std::string Value::description() const
         {
-            auto rv = concatenate(regType(), " ", variableType(), ": ");
+            auto rv = concatenate(regType(), " ", variableType(), " x ", valueCount(), ": ");
 
             if(allocationState() == AllocationState::Unallocated)
                 rv += "(unallocated)";
@@ -738,6 +804,24 @@ namespace rocRoller
             m_name = std::move(name);
         }
 
+        inline void Value::setReadOnly()
+        {
+            AssertFatal(m_allocation);
+
+            m_allocation->setReadOnly();
+        }
+
+        inline bool Value::readOnly() const
+        {
+            if(regType() == Type::Literal)
+                return true;
+
+            if(!m_allocation)
+                return false;
+
+            return m_allocation->readOnly();
+        }
+
         inline ValuePtr Value::negate() const
         {
             AssertFatal(IsRegister(m_regType) && hasContiguousIndices());
@@ -781,8 +865,19 @@ namespace rocRoller
 
             std::vector<int> coords;
             for(auto i : indices)
+            {
                 for(auto j = 0; j < registersPerElement; ++j)
-                    coords.push_back(m_allocationCoord.at(i * registersPerElement + j));
+                {
+                    auto idx = i * registersPerElement + j;
+                    AssertFatal(idx < m_allocationCoord.size(),
+                                ShowValue(i),
+                                ShowValue(j),
+                                ShowValue(registersPerElement),
+                                ShowValue(idx),
+                                ShowValue(m_allocationCoord.size()));
+                    coords.push_back(m_allocationCoord.at(idx));
+                }
+            }
             return std::make_shared<Value>(m_allocation, m_regType, m_varType, coords);
         }
 
@@ -1034,6 +1129,11 @@ namespace rocRoller
 
             msg << " (" << m_variableType << ")";
 
+            if(m_controlOp)
+            {
+                msg << " (op " << *m_controlOp << ")";
+            }
+
             auto iter = m_registerIndices.begin();
             if(iter != m_registerIndices.end())
             {
@@ -1047,6 +1147,16 @@ namespace rocRoller
             msg << std::endl;
 
             return msg.str();
+        }
+
+        inline void Allocation::setReadOnly()
+        {
+            m_readOnly = true;
+        }
+
+        inline bool Allocation::readOnly() const
+        {
+            return m_readOnly;
         }
 
         inline int Allocation::registerCount() const

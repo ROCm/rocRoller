@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CodeGen/SubInstruction.hpp>
 
 namespace rocRoller
@@ -8,19 +34,14 @@ namespace rocRoller
                                Register::ValuePtr rhs,
                                std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || (gpu.isRDNAGPU() && gpu.gfx < GPUArchitectureGFX::GFX1200))
-        {
-            return Instruction("s_sub_i32", {dest}, {lhs, rhs}, {}, comment);
-        }
-        else if(gpu.isRDNA4GPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitScalarCO))
         {
             return Instruction("s_sub_co_i32", {dest}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("ScalarSubInt32 not implemented for {}.", gpu.toString()));
+            return Instruction("s_sub_i32", {dest}, {lhs, rhs}, {}, comment);
         }
     }
 
@@ -30,19 +51,14 @@ namespace rocRoller
                                 Register::ValuePtr rhs,
                                 std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || (gpu.isRDNAGPU() && gpu.gfx < GPUArchitectureGFX::GFX1200))
-        {
-            return Instruction("s_sub_u32", {dest}, {lhs, rhs}, {}, comment);
-        }
-        else if(gpu.isRDNA4GPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitScalarCO))
         {
             return Instruction("s_sub_co_u32", {dest}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("ScalarSubUInt32 not implemented for {}\n", gpu.toString()));
+            return Instruction("s_sub_u32", {dest}, {lhs, rhs}, {}, comment);
         }
     }
 
@@ -52,19 +68,14 @@ namespace rocRoller
                                           Register::ValuePtr rhs,
                                           std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || (gpu.isRDNAGPU() && gpu.gfx < GPUArchitectureGFX::GFX1200))
-        {
-            return Instruction("s_subb_u32", {dest}, {lhs, rhs}, {}, comment);
-        }
-        else if(gpu.isRDNA4GPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitScalarCOCI))
         {
             return Instruction("s_sub_co_ci_u32", {dest}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("ScalarSubUInt32CarryInOut not implemented for {}\n", gpu.toString()));
+            return Instruction("s_subb_u32", {dest}, {lhs, rhs}, {}, comment);
         }
     }
 
@@ -74,19 +85,14 @@ namespace rocRoller
                                 Register::ValuePtr rhs,
                                 std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU())
-        {
-            return Instruction("v_sub_u32", {dest}, {lhs, rhs}, {}, comment);
-        }
-        else if(gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitNC))
         {
             return Instruction("v_sub_nc_u32", {dest}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("VectorSubUInt32 not implemented for {}\n", gpu.toString()));
+            return Instruction("v_sub_u32", {dest}, {lhs, rhs}, {}, comment);
         }
     }
 
@@ -97,15 +103,15 @@ namespace rocRoller
                                         Register::ValuePtr rhs,
                                         std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitVectorCO))
         {
             return Instruction("v_sub_co_u32", {dest, carry}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("VectorSubUInt32CarryOut not implemented for {}\n", gpu.toString()));
+            Throw<FatalError>(fmt::format("VectorSubUInt32CarryOut not implemented for {}\n",
+                                          arch.target().toString()));
         }
     }
 
@@ -126,20 +132,15 @@ namespace rocRoller
                                           Register::ValuePtr rhs,
                                           std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU())
-        {
-            return Instruction("v_subb_co_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
-        }
-        else if(gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitVectorCOCI))
         {
             return Instruction(
                 "v_sub_co_ci_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("VectorSubUInt32CarryInOut not implemented for {}\n", gpu.toString()));
+            return Instruction("v_subb_co_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
         }
     }
 
@@ -159,19 +160,14 @@ namespace rocRoller
                                    Register::ValuePtr rhs,
                                    std::string        comment)
     {
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU())
-        {
-            return Instruction("v_subrev_u32", {dest}, {lhs, rhs}, {}, comment);
-        }
-        else if(gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitVectorRevNC))
         {
             return Instruction("v_subrev_nc_u32", {dest}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("VectorSubRevUInt32 not implemented for {}\n", gpu.toString()));
+            return Instruction("v_subrev_u32", {dest}, {lhs, rhs}, {}, comment);
         }
     }
 
@@ -183,15 +179,15 @@ namespace rocRoller
                                            std::string        comment)
     {
 
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitVectorRevCO))
         {
             return Instruction("v_subrev_co_u32", {dest, carryOut}, {lhs, rhs}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(
-                std::format("VectorSubRevUInt32CarryOut not implemented for {}\n", gpu.toString()));
+            Throw<FatalError>(fmt::format("VectorSubRevUInt32CarryOut not implemented for {}\n",
+                                          arch.target().toString()));
         }
     }
 
@@ -215,21 +211,16 @@ namespace rocRoller
                                              std::string        comment)
     {
 
-        auto gpu = ctx->targetArchitecture().target();
-        if(gpu.isCDNAGPU())
-        {
-            return Instruction(
-                "v_subbrev_co_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
-        }
-        else if(gpu.isRDNAGPU())
+        auto const& arch = ctx->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::HasExplicitVectorRevCOCI))
         {
             return Instruction(
                 "v_subrev_co_ci_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
         }
         else
         {
-            Throw<FatalError>(std::format("VectorSubRevUInt32CarryInOut not implemented for {}\n",
-                                          gpu.toString()));
+            return Instruction(
+                "v_subbrev_co_u32", {dest, carryOut}, {lhs, rhs, carryIn}, {}, comment);
         }
     }
 

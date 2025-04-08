@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <sstream>
@@ -119,8 +145,12 @@ namespace rocRoller
             auto        context      = m_context.lock();
             const auto& architecture = context->targetArchitecture();
 
-            const auto& gpu = architecture.target();
-            if(inst.getOpCode() == (gpu.isRDNA4GPU() ? "s_barrier_signal" : "s_barrier"))
+            AssertFatal(architecture.HasCapability(GPUCapability::s_barrier)
+                            || architecture.HasCapability(GPUCapability::s_barrier_signal),
+                        "Either s_barrier or s_barrier_signal must be supported");
+            if(inst.getOpCode()
+               == (architecture.HasCapability(GPUCapability::s_barrier_signal) ? "s_barrier_signal"
+                                                                               : "s_barrier"))
             {
                 if(context->kernelOptions().alwaysWaitZeroBeforeBarrier)
                 {
@@ -129,6 +159,19 @@ namespace rocRoller
                         *explanation += "WaitCnt Needed: alwaysWaitZeroBeforeBarrier is set.";
                     }
                     return WaitCount::Zero(architecture);
+                }
+
+                if(m_needsWaitDirect2LDS)
+                {
+                    if(explanation != nullptr)
+                    {
+                        *explanation += "WaitCnt Needed: vmcnt(0) before an s_barrier for "
+                                        "direct-to-LDS.";
+                    }
+                    auto dldscnt = WaitCount::KMCnt(architecture, 0);
+                    dldscnt.combine(WaitCount::DSCnt(architecture, 0));
+                    dldscnt.combine(WaitCount::LoadCnt(architecture, 0));
+                    return dldscnt;
                 }
 
                 if(!m_instructionQueues.at(GPUWaitQueue::KMQueue).empty()
@@ -222,6 +265,29 @@ namespace rocRoller
                     }
                 }
             }
+        }
+
+        inline bool WaitcntObserver::isDirect2LDS(Instruction const& inst)
+        {
+            if(inst.getOpCode().rfind("buffer_load_", 0) == 0)
+            {
+                for(auto const& mod : inst.getModifiers())
+                {
+                    if(mod.rfind("lds", 0) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        inline void WaitcntObserver::observeWaitDirect2LDS(Instruction const& inst)
+        {
+            if(isDirect2LDS(inst) && !m_needsWaitDirect2LDS)
+                m_needsWaitDirect2LDS = true;
+            if((inst.getOpCode().rfind("s_barrier", 0) == 0) && m_needsWaitDirect2LDS)
+                m_needsWaitDirect2LDS = false;
         }
     };
 

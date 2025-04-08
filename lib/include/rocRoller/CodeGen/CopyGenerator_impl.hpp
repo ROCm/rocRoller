@@ -1,7 +1,28 @@
-/**
- * @brief
- * @copyright Copyright 2021 Advanced Micro Devices, Inc.
- */
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2021-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -66,6 +87,11 @@ namespace rocRoller
         if(dest->regType() == Register::Type::Scalar
            && src->regType() == Register::Type::Accumulator)
         {
+            const auto& arch = context->targetArchitecture();
+            AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                        concatenate("Architecture",
+                                    arch.target().toString(),
+                                    "does not use Accumulator registers."));
 
             Throw<FatalError>("Can not copy accumulator register into scalar register");
         }
@@ -129,6 +155,11 @@ namespace rocRoller
         else if(src->regType() == Register::Type::Literal
                 && dest->regType() == Register::Type::Accumulator)
         {
+            const auto& arch = context->targetArchitecture();
+            AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                        concatenate("Architecture",
+                                    arch.target().toString(),
+                                    "does not use Accumulator registers."));
             if(dest->variableType().getElementSize() == 4)
             {
                 for(size_t k = 0; k < dest->registerCount(); ++k)
@@ -191,6 +222,11 @@ namespace rocRoller
             // ACCVGPR -> Vector
             else if(src->regType() == Register::Type::Accumulator)
             {
+                const auto& arch = context->targetArchitecture();
+                AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                            concatenate("Architecture",
+                                        arch.target().toString(),
+                                        "does not use Accumulator registers."));
                 for(size_t i = 0; i < src->registerCount(); ++i)
                 {
                     co_yield_(Instruction(
@@ -238,6 +274,11 @@ namespace rocRoller
             // Vector -> ACCVGPR
             if(src->regType() == Register::Type::Vector)
             {
+                const auto& arch = context->targetArchitecture();
+                AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                            concatenate("Architecture",
+                                        arch.target().toString(),
+                                        "does not use Accumulator registers."));
                 for(size_t i = 0; i < src->registerCount(); ++i)
                 {
                     co_yield_(Instruction(

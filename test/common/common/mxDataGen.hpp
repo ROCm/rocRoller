@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <DataGenerator.hpp>
 #include <rocRoller/DataTypes/DataTypes_Utils.hpp>
 #include <rocRoller/TensorDescriptor.hpp>
@@ -89,11 +115,11 @@ namespace rocRoller
     }
 
     template <typename rrDT>
-    std::vector<typename UnsegmentedTypeOf<rrDT>::type>
+    std::vector<typename PackedTypeOf<rrDT>::type>
         getRandomVector(const DGen::DataGenerator<typename rrDT2DGenDT<rrDT>::type>& dgen,
                         bool                                                         hasScale)
     {
-        using UDT = typename UnsegmentedTypeOf<rrDT>::type;
+        using UDT = typename PackedTypeOf<rrDT>::type;
 
         std::vector<uint8_t> dataByte = dgen.getDataBytes();
 
@@ -129,17 +155,18 @@ namespace rocRoller
         }
 
         Throw<FatalError>("Unsupported data type");
+
+        return {};
     }
 
     template <typename rrDT>
-    std::vector<typename UnsegmentedTypeOf<rrDT>::type> DGenVector(TensorDescriptor& desc,
-                                                                   const float       min = -1.f,
-                                                                   const float       max = 1.f,
-                                                                   const uint32_t seed = 1713573849,
-                                                                   bool           hasScale = false,
-                                                                   const int      blockScaling = 1,
-                                                                   const DataPattern pattern
-                                                                   = Bounded)
+    std::vector<typename PackedTypeOf<rrDT>::type> DGenVector(TensorDescriptor& desc,
+                                                              const float       min  = -1.f,
+                                                              const float       max  = 1.f,
+                                                              const uint32_t    seed = 1713573849,
+                                                              bool              hasScale = false,
+                                                              const int         blockScaling = 1,
+                                                              const DataPattern pattern = Bounded)
     {
         if(hasScale)
             AssertFatal(blockScaling == 32, "Block scaling size must be 32.");

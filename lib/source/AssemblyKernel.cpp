@@ -1,4 +1,28 @@
-
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <rocRoller/AssemblyKernel.hpp>
 
@@ -19,10 +43,19 @@ namespace rocRoller
         m_argumentPointer->setName("Kernel argument pointer");
         co_yield m_argumentPointer->allocate();
 
-        m_workgroupIndex[0]
-            = Register::Value::Placeholder(ctx, Register::Type::Scalar, DataType::UInt32, 1);
-        m_workgroupIndex[0]->setName("Workgroup Index X");
-        co_yield m_workgroupIndex[0]->allocate();
+        if(ctx->targetArchitecture().HasCapability(GPUCapability::WorkgroupIdxViaTTMP))
+        {
+            m_workgroupIndex[0] = std::make_shared<Register::Value>(
+                ctx, Register::Type::TTMP9, DataType::UInt32, 1);
+            m_workgroupIndex[0]->setName("Workgroup Index X");
+        }
+        else
+        {
+            m_workgroupIndex[0]
+                = Register::Value::Placeholder(ctx, Register::Type::Scalar, DataType::UInt32, 1);
+            m_workgroupIndex[0]->setName("Workgroup Index X");
+            co_yield m_workgroupIndex[0]->allocate();
+        }
 
         if(m_kernelDimensions > 1)
         {
@@ -100,6 +133,29 @@ namespace rocRoller
         if(ctx->kernelOptions().preloadKernelArguments)
             co_yield ctx->argLoader()->loadAllArguments();
 
+        if(ctx->targetArchitecture().HasCapability(GPUCapability::WorkgroupIdxViaTTMP))
+        {
+            if(m_kernelDimensions > 1)
+            {
+                co_yield generateOp(
+                    m_workgroupIndex[1],
+                    std::make_shared<Register::Value>(
+                        ctx, Register::Type::TTMP7, DataType::UInt32, 1),
+                    Expression::BitFieldExtract{
+                        {nullptr, "Extract 16 bit Y coordinate"}, DataType::UInt32, 0, 16});
+            }
+
+            if(m_kernelDimensions > 2)
+            {
+                co_yield generateOp(
+                    m_workgroupIndex[2],
+                    std::make_shared<Register::Value>(
+                        ctx, Register::Type::TTMP7, DataType::UInt32, 1),
+                    Expression::BitFieldExtract{
+                        {nullptr, "Extract 16 bit Z coordinate"}, DataType::UInt32, 16, 16});
+            }
+        }
+
         if(m_packedWorkitemIndex)
         {
             co_yield generateOp(
@@ -130,6 +186,27 @@ namespace rocRoller
             m_packedWorkitemIndex.reset();
             if(ctx->kernelOptions().preloadKernelArguments)
                 m_argumentPointer.reset();
+            else
+                m_argumentPointer->setReadOnly();
+        }
+
+        for(auto& reg : m_workgroupIndex)
+        {
+            if(reg)
+            {
+                co_yield Instruction::Comment(
+                    fmt::format("Marking {} as read-only", reg->description()));
+                reg->setReadOnly();
+            }
+        }
+        for(auto& reg : m_workitemIndex)
+        {
+            if(reg)
+            {
+                co_yield Instruction::Comment(
+                    fmt::format("Marking {} as read-only", reg->description()));
+                reg->setReadOnly();
+            }
         }
     }
 

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2019-2025 Advanced Micro Devices, Inc.
+ * Copyright 2019-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -308,4 +308,19 @@ TEST_F(DataTypesTest, GetIntegerType)
     EXPECT_EQ(DataType::UInt32,
               VariableType(DataType::Int32, PointerType::PointerLocal).getArithmeticType());
     EXPECT_EQ(DataType::Int32, VariableType(DataType::Int32).getArithmeticType());
+}
+
+TEST_F(DataTypesTest, PackedUnpacked)
+{
+    using namespace rocRoller;
+    EXPECT_EQ(DataType::Halfx2, DataTypeInfo::Get(DataType::Half).packedVariableType());
+    EXPECT_EQ(std::nullopt, DataTypeInfo::Get(DataType::Halfx2).packedVariableType());
+
+    EXPECT_EQ(DataType::BF8x4, DataTypeInfo::Get(DataType::BF8).packedVariableType());
+    EXPECT_EQ(std::nullopt, DataTypeInfo::Get(DataType::Halfx2).packedVariableType());
+
+    EXPECT_EQ(DataType::FP8x4, DataTypeInfo::Get(DataType::FP8).packedVariableType());
+    EXPECT_EQ(std::nullopt, DataTypeInfo::Get(DataType::FP8x4).packedVariableType());
+
+    EXPECT_EQ(std::nullopt, DataTypeInfo::Get(DataType::Halfx2).packedVariableType());
 }

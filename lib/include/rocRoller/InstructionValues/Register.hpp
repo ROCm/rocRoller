@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <bit>
@@ -163,6 +189,7 @@ namespace rocRoller
             bool           isZeroLiteral() const;
 
             constexpr bool isSpecial() const;
+            constexpr bool isTTMP() const;
             constexpr bool isSCC() const;
             bool           isVCC() const;
             constexpr bool isExec() const;
@@ -220,6 +247,9 @@ namespace rocRoller
 
             std::string name() const;
             void        setName(std::string name);
+
+            void setReadOnly();
+            bool readOnly() const;
 
             /**
              * Return negated copy.
@@ -459,14 +489,24 @@ namespace rocRoller
             std::string name() const;
             void        setName(std::string name);
 
+            std::optional<int> controlOp() const;
+            void               setControlOp(int op);
+
+            void setReadOnly();
+            bool readOnly() const;
+
         private:
             friend class Value;
             friend class Allocator;
+
+            bool m_readOnly = false;
 
             std::weak_ptr<Context> m_context;
 
             Type         m_regType;
             VariableType m_variableType;
+
+            std::optional<int> m_controlOp;
 
             AllocationOptions m_options;
 

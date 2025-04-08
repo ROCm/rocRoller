@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2021-2025 Advanced Micro Devices, Inc.
+ * Copyright 2021-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,13 +41,6 @@ namespace rocRoller
 {
     namespace Expression
     {
-        enum class EvaluationTime : int
-        {
-            Translate = 0, //< An expression where all the values come from CommandArgumentValues.
-            KernelLaunch, //< An expression where values may come from CommandArguments or CommandArgumentValues.
-            KernelExecute, // An expression that depends on at least one Register::Value.
-            Count
-        };
         std::string   toString(EvaluationTime t);
         std::ostream& operator<<(std::ostream&, EvaluationTime const&);
 

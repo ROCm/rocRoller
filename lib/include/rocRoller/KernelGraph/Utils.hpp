@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -129,6 +154,15 @@ namespace rocRoller
         std::pair<int, Graph::Direction> getOperationTarget(int tag, KernelGraph const& kgraph);
 
         /**
+         * Returns the true coordinate that should be the target of a
+         * coordinate traversal, given a coordinate node used for storage.
+         *
+         * For now this will just follow any Duplicate edge leaving
+         * `storageTarget`.
+         */
+        int getTransformTarget(int storageTarget, KernelGraph const& kgraph);
+
+        /**
          * @brief Find all required coordintes needed to compute
          * indexes for the target dimension.
          *
@@ -251,6 +285,8 @@ namespace rocRoller
         std::pair<Expression::ExpressionPtr, Expression::ExpressionPtr>
             getForLoopIncrement(KernelGraph const& graph, int forLoop);
 
+        void duplicateMacroTile(KernelGraph& graph, int tag);
+
         int duplicateControlNode(KernelGraph& graph, int tag);
 
         /**
@@ -362,7 +398,8 @@ namespace rocRoller
                                 std::vector<int> const&          sdim,
                                 std::vector<unsigned int> const& jammedTiles,
                                 CommandParametersPtr             params,
-                                ContextPtr                       context);
+                                ContextPtr                       context,
+                                bool                             isDirect2LDS = false);
 
         /**
          * @brief Store version of addLoadThreadTileCT.
@@ -374,7 +411,8 @@ namespace rocRoller
                                   int                                iMacY,
                                   std::array<unsigned int, 3> const& workgroupSizes,
                                   std::vector<unsigned int> const&   jammedTiles,
-                                  bool                               useSwappedAccess);
+                                  bool                               useSwappedAccess,
+                                  bool                               isDirect2LDS = false);
 
         /**
          * @brief Store version of addLoadMacroTileCT.
@@ -385,6 +423,16 @@ namespace rocRoller
                                 int                              macTileTag,
                                 std::vector<int> const&          sdim,
                                 std::vector<unsigned int> const& jammedTiles = {1, 1});
+
+        /**
+         * @brief Store version of addLoad1DMacroTileCT.
+         */
+        std::tuple<int, int, int>
+            addStore1DMacroTileCT(KernelGraph&                     graph,
+                                  std::vector<DeferredConnection>& connections,
+                                  int                              macTileTag,
+                                  std::vector<int> const&          sdim,
+                                  std::vector<unsigned int> const& jammedTiles = {1, 1});
 
         /**
          * @brief Add coordinate-transforms for tiling two
@@ -405,6 +453,27 @@ namespace rocRoller
                                std::vector<DeferredConnection>& connections,
                                int                              macTileTag,
                                std::vector<int> const&          sdim);
+
+        /**
+         * @brief Add coordinate-transforms for tiling the X
+         * SubDimension coordinate into macro number/index
+         * coordinates. No tiling is done on the Y SubDimension
+         * coordinate, instead it is passed through to a macro
+         * index coordinate only.
+         *
+         * The geometry of the tiling is taken from the MacroTile
+         * associated with `macTileTag`.
+         *
+         * Required (deferred) connections are appended to
+         * `connections`.
+         *
+         * @return Tuple of: row MacroTileNumber, row MacroTileIndex,
+         * column MacroTileIndex.
+         */
+        std::tuple<int, int, int> addLoad1DMacroTileCT(KernelGraph&                     graph,
+                                                       std::vector<DeferredConnection>& connections,
+                                                       int                              macTileTag,
+                                                       std::vector<int> const&          sdim);
 
         /**
          * @brief Add coordinate-transforms for loading a ThreadTile
@@ -436,7 +505,8 @@ namespace rocRoller
                                  int                                iMacY,
                                  std::array<unsigned int, 3> const& workgroupSizes,
                                  std::vector<unsigned int> const&   jammedTiles,
-                                 bool                               useSwappedAccess);
+                                 bool                               useSwappedAccess,
+                                 bool                               isDirect2LDS = false);
 
         /**
          * @brief Create an internal tile backed by a ThreadTile.
@@ -514,6 +584,24 @@ namespace rocRoller
         *
         */
         void moveConnections(rocRoller::KernelGraph::KernelGraph& kgraph, int opTag1, int opTag2);
+
+        /**
+        * @brief ceil(a/b) = (a+b-1)/b
+        *
+        * @param sdSize SubDimension size
+        * @param tileSize MacroTile size
+        *
+        */
+        Expression::ExpressionPtr tileCeilDivide(Expression::ExpressionPtr sdSize, int tileSize);
+
+        /**
+        * @brief Identifies whether a registerTag has an associated deallocate node.
+        *
+        * @param graph
+        * @param registerTag
+        *
+        */
+        bool hasDeallocate(const KernelGraph& graph, int tag);
     }
 }
 

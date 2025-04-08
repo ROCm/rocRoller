@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include "include/GraphInspector.hpp"
 
@@ -14,11 +39,11 @@ namespace rocRoller
             , m_runtimeArgs(runtimeArgs)
             , m_kgraph(kernel.getKernelGraph())
             , m_coords(std::make_shared<KernelGraph::CoordinateGraph::CoordinateGraph>(
-                  m_kgraph.coordinates))
-            , m_tx(m_coords, kernel.getContext())
+                  m_kgraph->coordinates))
+            , m_tx(m_coords.get())
             , m_invocation(kernel.getKernelInvocation(runtimeArgs.runtimeArguments()))
         {
-            m_tx.fillExecutionCoordinates();
+            m_tx.fillExecutionCoordinates(kernel.getContext());
             assignLiteralSizesAndStrides();
         }
 
@@ -108,11 +133,11 @@ namespace rocRoller
 
             for(auto const& macroTileTag :
                 m_kernel.getKernelGraph()
-                    .coordinates.getNodes<KernelGraph::CoordinateGraph::MacroTile>()
+                    ->coordinates.getNodes<KernelGraph::CoordinateGraph::MacroTile>()
                     .to<std::vector>())
             {
                 auto macroTile = m_kernel.getKernelGraph()
-                                     .coordinates.getNode<KernelGraph::CoordinateGraph::MacroTile>(
+                                     ->coordinates.getNode<KernelGraph::CoordinateGraph::MacroTile>(
                                          macroTileTag);
                 if(macroTile.layoutType == LayoutType::MATRIX_A)
                 {

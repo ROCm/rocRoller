@@ -1,4 +1,28 @@
-
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <algorithm>
 
@@ -314,6 +338,11 @@ namespace rocRoller
                 // If any sources were AGPRs, copy to VGPRs first.
                 if(valueCount > 1 && resType.regType == Register::Type::Accumulator)
                 {
+                    const auto& arch = m_context->targetArchitecture();
+                    AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                                concatenate("Architecture",
+                                            arch.target().toString(),
+                                            "does not use Accumulator registers."));
                     resType.regType = Register::Type::Vector;
                     co_yield m_context->copier()->ensureType(lhs, lhs, resType.regType);
                     co_yield m_context->copier()->ensureType(rhs, rhs, resType.regType);
@@ -531,6 +560,11 @@ namespace rocRoller
 
                 if(valueCount > 1 && regType == Register::Type::Accumulator)
                 {
+                    const auto& arch = m_context->targetArchitecture();
+                    AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                                concatenate("Architecture",
+                                            arch.target().toString(),
+                                            "does not use Accumulator registers."));
                     regType = Register::Type::Vector;
                     for(int i = 0; i < results.size(); ++i)
                     {
@@ -580,6 +614,11 @@ namespace rocRoller
 
                 if(valueCount > 1 && regType == Register::Type::Accumulator)
                 {
+                    const auto& arch = m_context->targetArchitecture();
+                    AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                                concatenate("Architecture",
+                                            arch.target().toString(),
+                                            "does not use Accumulator registers."));
                     regType = Register::Type::Vector;
                     for(int i = 0; i < results.size(); ++i)
                     {
@@ -661,6 +700,11 @@ namespace rocRoller
                 {
                     if(destType.regType == rocRoller::Register::Type::Accumulator)
                     {
+                        const auto& arch = m_context->targetArchitecture();
+                        AssertFatal(arch.HasCapability(GPUCapability::HasAccCD),
+                                    concatenate("Architecture",
+                                                arch.target().toString(),
+                                                "does not use Accumulator registers."));
                         // If the expr is a matrix multiply (mfma), the register type might
                         // be ACCVGPR. But Unary operation cannot work on ACCVGPR,
                         // and we have to allocate Vector instead.
@@ -773,9 +817,14 @@ namespace rocRoller
                 {
                     auto const accRegCount = M * N * B / m_context->kernel()->wavefront_size();
 
+                    auto const& arch    = m_context->targetArchitecture();
+                    auto const  regType = arch.HasCapability(GPUCapability::HasAccCD)
+                                              ? Register::Type::Accumulator
+                                              : Register::Type::Vector;
+
                     dest = Register::Value::Placeholder(
                         m_context,
-                        Register::Type::Accumulator,
+                        regType,
                         accType,
                         accRegCount,
                         Register::AllocationOptions::FullyContiguous());
@@ -909,6 +958,9 @@ namespace rocRoller
                 auto evalTimes = evaluationTimes(expr);
                 if(evalTimes[EvaluationTime::Translate])
                 {
+                    AssertFatal(std::holds_alternative<Register::ValuePtr>(expr)
+                                    || std::holds_alternative<CommandArgumentValue>(expr),
+                                ShowValue(expr));
                     auto result = Register::Value::Literal(evaluate(expr));
 
                     if(dest == nullptr)

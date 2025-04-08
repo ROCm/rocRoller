@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <algorithm>
 
@@ -160,7 +185,7 @@ namespace rocRoller
     {
     }
 
-    KernelGraph::KernelGraph CommandKernel::getKernelGraph() const
+    KernelGraph::KernelGraphPtr CommandKernel::getKernelGraph() const
     {
         return m_kernelGraph;
     }
@@ -180,10 +205,10 @@ namespace rocRoller
         return m_context->instructions()->toString();
     }
 
-    Generator<Instruction> CommandKernel::commandComments()
+    Generator<Instruction> commandComments(CommandPtr command)
     {
-        co_yield Instruction::Comment(m_command->toString());
-        co_yield Instruction::Comment(m_command->argInfo());
+        co_yield Instruction::Comment(command->toString());
+        co_yield Instruction::Comment(command->argInfo());
     }
 
     void CommandKernel::generateKernelGraph(std::string name)
@@ -208,7 +233,11 @@ namespace rocRoller
         if(m_commandParameters->getManualWorkgroupSize())
             m_context->kernel()->setWorkgroupSize(*m_commandParameters->getManualWorkgroupSize());
         else
-            m_context->kernel()->setWorkgroupSize({64, 1, 1});
+        {
+            unsigned int wfs = m_context->targetArchitecture().GetCapability(
+                GPUCapability::DefaultWavefrontSize);
+            m_context->kernel()->setWorkgroupSize({wfs, 1, 1});
+        }
 
         auto zero = std::make_shared<Expression::Expression>(0u);
         m_context->kernel()->setDynamicSharedMemBytes(zero);
@@ -216,15 +245,15 @@ namespace rocRoller
         if(!m_context->kernelOptions().lazyAddArguments)
             m_context->kernel()->addCommandArguments(m_command->getArguments());
 
-        m_kernelGraph = KernelGraph::translate(m_command);
+        auto kernelGraph = KernelGraph::translate(m_command);
 
         if(Settings::getInstance()->get(Settings::LogGraphs))
             Log::debug("CommandKernel::generateKernel: post translate: {}",
-                       m_kernelGraph.toDOT(false, "CommandKernel::generateKernel: post translate"));
+                       kernelGraph.toDOT(false, "CommandKernel::generateKernel: post translate"));
 
         if(Settings::getInstance()->get(Settings::EnforceGraphConstraints))
         {
-            check = m_kernelGraph.checkConstraints();
+            check = kernelGraph.checkConstraints();
             AssertFatal(
                 check.satisfied,
                 concatenate("CommandKernel::generateKernel: post translate:\n", check.explanation));
@@ -294,47 +323,53 @@ namespace rocRoller
         transforms.push_back(std::make_shared<KernelGraph::OrderEpilogueBlocks>());
         transforms.push_back(std::make_shared<KernelGraph::CleanLoops>());
         transforms.push_back(
+            std::make_shared<KernelGraph::SwizzleScale>(m_commandParameters, m_context));
+        transforms.push_back(
             std::make_shared<KernelGraph::AddPrefetch>(m_commandParameters, m_context));
         transforms.push_back(std::make_shared<KernelGraph::AddF6LDSPadding>(m_context));
         transforms.push_back(std::make_shared<KernelGraph::AddComputeIndex>());
         transforms.push_back(
             std::make_shared<KernelGraph::AddDirect2LDS>(m_context, m_commandParameters));
-        transforms.push_back(std::make_shared<KernelGraph::AddConvert>());
         transforms.push_back(std::make_shared<KernelGraph::AddPRNG>(m_context));
+        transforms.push_back(
+            std::make_shared<KernelGraph::UpdateWavefrontParameters>(m_commandParameters));
+        transforms.push_back(std::make_shared<KernelGraph::LoadPacked>(m_context));
+        transforms.push_back(std::make_shared<KernelGraph::AddConvert>());
         transforms.push_back(std::make_shared<KernelGraph::AddDeallocate>());
         transforms.push_back(std::make_shared<KernelGraph::InlineIncrements>());
         transforms.push_back(std::make_shared<KernelGraph::Simplify>());
         transforms.push_back(std::make_shared<KernelGraph::CleanArguments>(m_context, m_command));
-        transforms.push_back(
-            std::make_shared<KernelGraph::UpdateWavefrontParameters>(m_commandParameters));
         transforms.push_back(std::make_shared<KernelGraph::SetWorkitemCount>(m_context));
 
-        for(auto& t : transforms)
+        for(auto const& t : transforms)
         {
-            m_kernelGraph = m_kernelGraph.transform(t);
+            kernelGraph = kernelGraph.transform(t);
         }
+
+        m_kernelGraph = std::make_shared<KernelGraph::KernelGraph>(kernelGraph);
     }
 
-    Generator<Instruction> CommandKernel::kernelInstructions()
+    Generator<Instruction> kernelInstructions(ContextPtr                  context,
+                                              CommandPtr                  command,
+                                              KernelGraph::KernelGraphPtr kernelGraph)
     {
-        co_yield commandComments();
-        co_yield m_context->kernel()->preamble();
-        co_yield m_context->kernel()->prolog();
+        co_yield commandComments(command);
+        co_yield context->kernel()->preamble();
+        co_yield context->kernel()->prolog();
 
-        co_yield KernelGraph::generate(m_kernelGraph, m_context->kernel());
+        co_yield KernelGraph::generate(*kernelGraph, context->kernel());
 
-        co_yield m_context->kernel()->postamble();
-        co_yield m_context->kernel()->amdgpu_metadata();
+        co_yield context->kernel()->postamble();
+        co_yield context->kernel()->amdgpu_metadata();
     }
 
     void CommandKernel::generateKernelSource()
     {
         TIMER(t, "CommandKernel::generateKernelSource");
-        m_context->kernel()->setKernelGraphMeta(
-            std::make_shared<KernelGraph::KernelGraph>(m_kernelGraph));
+        m_context->kernel()->setKernelGraphMeta(m_kernelGraph);
         m_context->kernel()->setCommandMeta(m_command);
 
-        m_context->schedule(kernelInstructions());
+        m_context->schedule(kernelInstructions(m_context, m_command, m_kernelGraph));
     }
 
     std::vector<char> CommandKernel::assembleKernel()
@@ -514,5 +549,10 @@ namespace rocRoller
                     ShowValue(toString(amount)));
 
         return getUnsignedInt(evaluate(amount, args));
+    }
+
+    std::array<unsigned int, 3> const& CommandKernel::getWorkgroupSize() const
+    {
+        return m_context->kernel()->workgroupSize();
     }
 }

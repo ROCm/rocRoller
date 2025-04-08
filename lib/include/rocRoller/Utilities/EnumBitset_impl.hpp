@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2022-2023 Advanced Micro Devices, Inc.
+ * Copyright 2022-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,10 @@ namespace rocRoller
         size_t rv = 0;
 
         for(auto const& entry : items)
+        {
+            // cppcheck-suppress useStlAlgorithm
             rv |= (1UL << static_cast<size_t>(entry));
+        }
 
         return rv;
     }

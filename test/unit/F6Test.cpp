@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/AssemblyKernel.hpp>
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
@@ -78,13 +104,6 @@ namespace rocRollerTest
          */
         void genF6x16BufferLoadAndStore(int num_f6, DataType F6x16Type)
         {
-            auto arch = m_context->targetArchitecture().target();
-            if(!arch.isCDNAGPU())
-            {
-                GTEST_SKIP() << "Test not yet supported on "
-                             << m_context->targetArchitecture().target().toString() << std::endl;
-            }
-
             int N = (num_f6 / numF6PerF6x16) * numBytesPerF6x16;
 
             auto k = m_context->kernel();
@@ -277,7 +296,7 @@ namespace rocRollerTest
                              int                             t_m = 1, // thread tile size x
                              int                             t_n = 1) // thread tile size y
         {
-            REQUIRE_ARCH_CAP(GPUCapability::HasExplicitCO);
+            REQUIRE_ARCH_CAP(GPUCapability::HasExplicitVectorCO);
 
             AssertFatal(nx % numF6PerF6x16 == 0, "Invalid F6 Dimensions");
 
@@ -365,6 +384,13 @@ namespace rocRollerTest
 
     TEST_P(F6Test, GPU_F6x16BufferLoadAndStore)
     {
+        auto const& arch = m_context->targetArchitecture().target();
+        if(!arch.isCDNAGPU())
+        {
+            GTEST_SKIP() << "Test not yet supported on "
+                         << m_context->targetArchitecture().target().toString() << std::endl;
+        }
+
         int  num_f6    = 16;
         auto F6x16Type = std::get<rocRoller::DataType>(GetParam()) == DataType::FP6
                              ? DataType::FP6x16
@@ -383,6 +409,13 @@ namespace rocRollerTest
 
     TEST_P(F6Test, GPU_F6x16GlobalLoadAndStore)
     {
+        auto const& arch = m_context->targetArchitecture().target();
+        if(!arch.isCDNAGPU())
+        {
+            GTEST_SKIP() << "Test not yet supported on "
+                         << m_context->targetArchitecture().target().toString() << std::endl;
+        }
+
         int  num_f6    = 16;
         auto F6x16Type = std::get<rocRoller::DataType>(GetParam()) == DataType::FP6
                              ? DataType::FP6x16
@@ -416,6 +449,13 @@ namespace rocRollerTest
 
     TEST_P(F6Test, GPU_F6TiledLoadStore)
     {
+        auto const& arch = m_context->targetArchitecture().target();
+        if(!arch.isCDNAGPU())
+        {
+            GTEST_SKIP() << "Test not yet supported on "
+                         << m_context->targetArchitecture().target().toString() << std::endl;
+        }
+
         int workitemsPerWorkgroup = 64;
         int elementsPerWorkitem   = 16;
 

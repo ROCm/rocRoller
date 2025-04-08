@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2021-2025 Advanced Micro Devices, Inc.
+ * Copyright 2021-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,8 @@
 
 #include <rocRoller/AssemblyKernelArgument.hpp>
 
-#include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
-#include <rocRoller/Operations/CommandArgument.hpp>
-#include <rocRoller/Utilities/Component.hpp>
+#include <rocRoller/Operations/CommandArgument_fwd.hpp>
 #include <rocRoller/Utilities/RTTI.hpp>
 #include <rocRoller/Utilities/Random.hpp>
 

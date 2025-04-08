@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <map>
@@ -6,6 +32,7 @@
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
+#include <rocRoller/KernelGraph/KernelGraph_fwd.hpp>
 #include <rocRoller/KernelGraph/RegisterTagManager_fwd.hpp>
 
 namespace rocRoller
@@ -17,7 +44,7 @@ namespace rocRoller
      */
     struct RegisterExpressionAttributes
     {
-        DataType dataType; //< Desired result type of the expression
+        DataType dataType   = DataType::None; //< Desired result type of the expression
         bool     unitStride = false; //< Expression corresponds to a unitary (=1) element-stride.
         uint     elementBlockSize = 0; //< If non-zero, elements are loaded in blocks.
         Expression::ExpressionPtr
@@ -47,6 +74,17 @@ namespace rocRoller
     public:
         RegisterTagManager(ContextPtr context);
         ~RegisterTagManager();
+
+        /**
+         * Copies any necessary info from the kernel graph.
+     * Currently registers Index edges.
+         */
+        void initialize(KernelGraph::KernelGraph const& kgraph);
+
+        /**
+         * Causes `src` to index the register allocation from `dst`.
+         */
+        void addIndex(int src, int dst, int index);
 
         /**
          * @brief Get the Register::Value associated with the provided tag.
@@ -145,6 +183,8 @@ namespace rocRoller
          */
         bool hasRegister(int tag) const;
 
+        std::optional<int> findRegister(Register::ValuePtr reg) const;
+
         /**
          * @brief Returns whether or not an expression has already been added to the
          *        Register Manager.
@@ -155,11 +195,18 @@ namespace rocRoller
          */
         bool hasExpression(int tag) const;
 
+        /**
+         * If `getIndex(tag)`, then returns the pair <tag, index>.
+         */
+        std::optional<std::pair<int, int>> getIndex(int tag) const;
+
     private:
         std::weak_ptr<Context>            m_context;
         std::map<int, Register::ValuePtr> m_registers;
         std::map<int, std::pair<Expression::ExpressionPtr, RegisterExpressionAttributes>>
             m_expressions;
+
+        std::map<int, std::pair<int, int>> m_indexes;
     };
 }
 

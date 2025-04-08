@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/CodeGen/BranchGenerator.hpp>
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
@@ -953,7 +979,14 @@ namespace rocRollerTest
             auto        newOutput = getNewOutput();
             std::string expected;
             if(waitBeforeBarrier)
-                expected += "s_waitcnt vmcnt(0) lgkmcnt(0) expcnt(0) //\n";
+            {
+                expected += "s_waitcnt vmcnt(0) lgkmcnt(0)";
+                if(m_context->targetArchitecture().HasCapability(GPUCapability::HasExpcnt))
+                {
+                    expected += " expcnt(0)";
+                }
+                expected += " //\n";
+            }
 
             expected += "s_barrier ";
 
@@ -1084,7 +1117,12 @@ namespace rocRollerTest
 
             if(waitBeforeBarrier)
             {
-                expected += "s_waitcnt vmcnt(0) lgkmcnt(0) expcnt(0) //\n";
+                expected += "s_waitcnt vmcnt(0) lgkmcnt(0)";
+                if(m_context->targetArchitecture().HasCapability(GPUCapability::HasExpcnt))
+                {
+                    expected += " expcnt(0)";
+                }
+                expected += " //\n";
             }
             else
             {
@@ -1401,5 +1439,216 @@ namespace rocRollerTest
 
         auto inst_end = Instruction("s_endpgm", {}, {}, {}, "");
         EXPECT_THROW(m_context->schedule(inst_end), FatalError);
+    }
+
+    TEST_F(WaitCountObserverTest, Direct2LDSWaitCount)
+    {
+        rocRoller::Scheduling::InstructionStatus peeked;
+        auto const&                              arch = m_context->targetArchitecture();
+
+        auto src1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        src1->allocateNow();
+
+        auto dst1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        dst1->allocateNow();
+
+        auto lds1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        lds1->allocateNow();
+
+        auto lds2
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        lds2->allocateNow();
+
+        auto src2
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        src2->allocateNow();
+
+        auto dst2
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        dst2->allocateNow();
+
+        auto zero = Register::Value::Literal(0);
+
+        auto inst1 = Instruction("buffer_load_dword", {}, {src1, zero}, {"lds"}, "");
+        peeked     = m_context->observer()->peek(inst1);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst1);
+
+        auto barrier1 = Instruction("s_barrier", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(barrier1);
+        auto dldsCount{rocRoller::WaitCount::KMCnt(arch, 0)};
+        dldsCount.combine(rocRoller::WaitCount::DSCnt(arch, 0));
+        dldsCount.combine(rocRoller::WaitCount::LoadCnt(arch, 0));
+        EXPECT_EQ(peeked.waitCount, dldsCount);
+        m_context->schedule(barrier1);
+
+        auto inst2 = Instruction("ds_read_b32", {dst1}, {lds1}, {}, "");
+        peeked     = m_context->observer()->peek(inst2);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst2);
+
+        auto barrier2 = Instruction("s_barrier", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(barrier2);
+        auto kmDsCount{rocRoller::WaitCount::KMCnt(arch, 0)};
+        kmDsCount.combine(rocRoller::WaitCount::DSCnt(arch, 0));
+        EXPECT_EQ(peeked.waitCount, kmDsCount);
+        m_context->schedule(barrier2);
+
+        auto inst3 = Instruction("buffer_load_dword", {dst2}, {src2, zero}, {}, "");
+        peeked     = m_context->observer()->peek(inst3);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst3);
+
+        auto barrier3 = Instruction("s_barrier", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(barrier3);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(barrier3);
+
+        auto inst4 = Instruction("ds_write_b32", {lds2}, {dst2}, {}, "");
+        peeked     = m_context->observer()->peek(inst4);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount::LoadCnt(arch, 0));
+        m_context->schedule(inst4);
+
+        auto barrier4 = Instruction("s_barrier", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(barrier4);
+        EXPECT_EQ(peeked.waitCount, kmDsCount);
+        m_context->schedule(barrier4);
+
+        auto inst_end = Instruction("s_endpgm", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(inst_end);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst_end);
+
+        std::string expected = R"(
+            buffer_load_dword v0, 0 lds
+            s_waitcnt vmcnt(0) lgkmcnt(0)
+            s_barrier
+            ds_read_b32 v1, v2
+            s_waitcnt lgkmcnt(0)
+            s_barrier
+            buffer_load_dword v5, v4, 0
+            s_barrier
+            s_waitcnt vmcnt(0)
+            ds_write_b32 v3, v5
+            s_waitcnt lgkmcnt(0)
+            s_barrier
+            s_endpgm
+        )";
+
+        EXPECT_EQ(NormalizedSource(output()), NormalizedSource(expected));
+    }
+
+    TEST_F(WaitCountObserverTest, PrefetchWaitCount)
+    {
+        rocRoller::Scheduling::InstructionStatus peeked;
+        auto const&                              arch = m_context->targetArchitecture();
+
+        auto src1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        src1->allocateNow();
+
+        auto dst1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        dst1->allocateNow();
+
+        auto lds1
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        lds1->allocateNow();
+
+        auto src2
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        src2->allocateNow();
+
+        auto dst2
+            = std::make_shared<Register::Value>(m_context,
+                                                Register::Type::Vector,
+                                                DataType::Float,
+                                                1,
+                                                Register::AllocationOptions::FullyContiguous());
+        dst2->allocateNow();
+
+        auto zero = Register::Value::Literal(0);
+
+        auto inst1 = Instruction("buffer_load_dword", {dst1}, {src1, zero}, {}, "");
+        peeked     = m_context->observer()->peek(inst1);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst1);
+
+        auto inst2 = Instruction("buffer_load_dword", {dst2}, {src2, zero}, {}, "");
+        peeked     = m_context->observer()->peek(inst2);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst2);
+
+        auto inst3 = Instruction("ds_write_b32", {lds1}, {dst1}, {}, "");
+        peeked     = m_context->observer()->peek(inst3);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount::LoadCnt(arch, 1));
+        m_context->schedule(inst3);
+
+        auto barrier1 = Instruction("s_barrier", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(barrier1);
+        auto kmDsCount{rocRoller::WaitCount::KMCnt(arch, 0)};
+        kmDsCount.combine(rocRoller::WaitCount::DSCnt(arch, 0));
+        EXPECT_EQ(peeked.waitCount, kmDsCount);
+        m_context->schedule(barrier1);
+
+        auto inst_end = Instruction("s_endpgm", {}, {}, {}, "");
+        peeked        = m_context->observer()->peek(inst_end);
+        EXPECT_EQ(peeked.waitCount, rocRoller::WaitCount());
+        m_context->schedule(inst_end);
+
+        std::string expected = R"(
+            buffer_load_dword v1, v0, 0
+            buffer_load_dword v4, v3, 0
+            s_waitcnt vmcnt(1)
+            ds_write_b32 v2, v1
+            s_waitcnt lgkmcnt(0)
+            s_barrier
+            s_endpgm
+        )";
+
+        EXPECT_EQ(NormalizedSource(output()), NormalizedSource(expected));
     }
 }

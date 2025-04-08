@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <cmath>
 #include <memory>
 
@@ -50,7 +76,7 @@ namespace ArithmeticTest
 
             auto k = m_context->kernel();
 
-            auto gpu = m_context->targetArchitecture().target();
+            auto const& gpu = m_context->targetArchitecture().target();
             if(!(gpu.isCDNAGPU() || gpu.isRDNAGPU()))
             {
                 GTEST_SKIP() << "Skipping GPU arithmetic tests for " << GetParam();
@@ -244,6 +270,22 @@ namespace ArithmeticTest
                         .outputDataType = dataType, .offset = 8, .width = 8});
                 co_yield store(21);
 
+                co_yield generateOp<Expression::BitwiseAnd>(
+                    c, Register::Value::Literal(static_cast<T>(LITERAL_TEST)), b);
+                co_yield store(22);
+
+                co_yield generateOp<Expression::BitwiseAnd>(
+                    c, a, Register::Value::Literal(static_cast<T>(LITERAL_TEST)));
+                co_yield store(23);
+
+                co_yield generateOp<Expression::BitwiseAnd>(
+                    c, Register::Value::Literal(LITERAL_TEST), b);
+                co_yield store(24);
+
+                co_yield generateOp<Expression::BitwiseAnd>(
+                    c, a, Register::Value::Literal(LITERAL_TEST));
+                co_yield store(25);
+
                 //
                 // Logical / boolean
                 //
@@ -315,7 +357,7 @@ namespace ArithmeticTest
                 commandKernel.setContext(m_context);
                 commandKernel.generateKernel();
 
-                size_t const resultSize           = 22;
+                size_t const resultSize           = 26;
                 size_t const comparisonResultSize = 10;
 
                 auto d_result = make_shared_device<T>(resultSize);
@@ -407,6 +449,9 @@ namespace ArithmeticTest
                                       std::bit_cast<T>((std::bit_cast<similar_integral_type<T>>(a)
                                                         << (sizeof(T) * 8 - 16))
                                                        >> (sizeof(T) * 8 - 8)));
+
+                            EXPECT_EQ(result[22], LITERAL_TEST & b);
+                            EXPECT_EQ(result[23], a & LITERAL_TEST);
 
                             int wm = regType == Register::Type::Vector ? numBoolRegs : 1;
 
@@ -774,7 +819,7 @@ namespace ArithmeticTest
         m_context->schedule(k->preamble());
         m_context->schedule(k->prolog());
 
-        auto gpu = m_context->targetArchitecture().target();
+        auto const& gpu = m_context->targetArchitecture().target();
 
         auto kb = [&]() -> Generator<Instruction> {
             Register::ValuePtr s_result, s_a;
@@ -894,7 +939,7 @@ namespace ArithmeticTest
         m_context->schedule(k->preamble());
         m_context->schedule(k->prolog());
 
-        auto gpu = m_context->targetArchitecture().target();
+        auto const& gpu = m_context->targetArchitecture().target();
 
         auto kb = [&]() -> Generator<Instruction> {
             Register::ValuePtr s_result, s_a, s_b, s_c;

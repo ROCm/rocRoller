@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -42,7 +67,7 @@ TestContext TestContext::ForTarget(rocRoller::GPUArchitecture const& arch,
                                    rocRoller::KernelOptions const&   kernelOpts,
                                    Params const&... params)
 {
-    auto kernelName = KernelName(arch, params...);
+    auto kernelName = KernelName(arch.target(), params...);
     auto ctx        = rocRoller::Context::ForTarget(arch, kernelName, kernelOpts);
     return {ctx};
 }
@@ -68,55 +93,7 @@ std::string TestContext::KernelName(Params const&... params)
  */
 inline std::string TestContext::EscapeKernelName(std::string name)
 {
-    char underscore = '_';
-    char replaced   = '*';
-
-    // Replace any character that isn't alphanumeric with underscore,
-    // or one of a few special cases.
-
-    std::map<char, char> specialCharacters = {{'+', 'p'}, {'-', 'm'}};
-    for(auto& c : name)
-    {
-        if(!isalnum(c) && c != underscore)
-        {
-            auto iter = specialCharacters.find(c);
-            if(iter != specialCharacters.end())
-                c = iter->second;
-            else
-                c = replaced;
-        }
-    }
-
-    // Delete any trailing '*'s.
-
-    while(!name.empty() && name.back() == replaced)
-        name.pop_back();
-
-    std::string rv;
-    rv.reserve(name.size());
-
-    // Delete any leading '*'s, as well as any duplicate '*'s.
-
-    for(auto const& c : name)
-    {
-        if(c != replaced || (!rv.empty() && rv.back() != replaced))
-        {
-            rv += c;
-        }
-    }
-
-    // If the name is now completely empty, return '_'.
-    if(rv.empty())
-        rv += replaced;
-
-    // Replace any '*' chars with '_'.
-    for(auto& c : rv)
-    {
-        if(c == replaced)
-            c = underscore;
-    }
-
-    return rv;
+    return rocRoller::escapeSymbolName(name);
 }
 
 inline rocRoller::ContextPtr TestContext::get()
@@ -136,4 +113,30 @@ inline rocRoller::Context* TestContext::operator->()
 inline std::string TestContext::output()
 {
     return m_context->instructions()->toString();
+}
+
+inline std::vector<rocRoller::Register::ValuePtr>
+    TestContext::createRegisters(rocRoller::Register::Type const        regType,
+                                 rocRoller::DataType const              dataType,
+                                 size_t const                           amount,
+                                 int const                              regCount,
+                                 rocRoller::Register::AllocationOptions allocOptions)
+{
+    std::vector<rocRoller::Register::ValuePtr> regs;
+    for(size_t i = 0; i < amount; i++)
+    {
+        auto reg = std::make_shared<rocRoller::Register::Value>(
+            m_context, regType, dataType, regCount, allocOptions);
+        try
+        {
+            reg->allocateNow();
+        }
+        catch(...)
+        {
+            std::cout << i << std::endl;
+            throw;
+        }
+        regs.push_back(reg);
+    }
+    return regs;
 }

@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -8,6 +33,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -231,11 +257,13 @@ namespace GPUArchitectureGenerator
 
             for(auto const& query : AssemblerQueries)
             {
-                if(TryAssembler(
-                       hipcc, isaVersion, std::get<0>(query.second), std::get<1>(query.second)))
-                {
-                    AddCapability(isaVersion, query.first, 0);
-                }
+                std::ranges::for_each(
+                    std::get<0>(query.second), [hipcc, isaVersion, query](auto assembly) {
+                        if(TryAssembler(hipcc, isaVersion, assembly, std::get<1>(query.second)))
+                        {
+                            AddCapability(isaVersion, query.first, 0);
+                        }
+                    });
             }
             for(auto const& cap : ArchSpecificCaps)
             {
@@ -252,7 +280,7 @@ namespace GPUArchitectureGenerator
                 }
             }
 
-            if(TryAssembler(hipcc, isaVersion, "s_waitcnt_loadcnt 63", ""))
+            if(TryAssembler(hipcc, isaVersion, "s_wait_loadcnt 63", ""))
             {
                 AddCapability(isaVersion, rocRoller::GPUCapability::MaxVmcnt, 63);
             }
@@ -269,7 +297,7 @@ namespace GPUArchitectureGenerator
                 AddCapability(isaVersion, rocRoller::GPUCapability::MaxVmcnt, 0);
             }
 
-            if(TryAssembler(hipcc, isaVersion, "s_waitcnt_kmcnt 31", ""))
+            if(TryAssembler(hipcc, isaVersion, "s_wait_kmcnt 31", ""))
             {
                 AddCapability(isaVersion, rocRoller::GPUCapability::MaxLgkmcnt, 31);
             }
@@ -364,20 +392,62 @@ namespace GPUArchitectureGenerator
         FillArchitectures(DEFAULT_ASSEMBLER, "");
     }
 
-    void GenerateFile(std::string const& fileName, bool asYAML)
+    void LoadYamls(std::vector<std::string> const& yamlIns)
     {
-        std::ofstream outputFile;
-        outputFile.open(fileName);
+        for(const auto& yamlIn : yamlIns)
+        {
+            std::map<rocRoller::GPUArchitectureTarget, rocRoller::GPUArchitecture> splitArch
+                = rocRoller::GPUArchitecture::readYaml(yamlIn);
+            for(const auto& gpuArchitecture : splitArch)
+            {
+                GPUArchitectures[gpuArchitecture.first] = gpuArchitecture.second;
+            }
+        }
+    }
+
+    void GenerateFile(std::string const& fileName, bool asYAML, bool splitYAML)
+    {
         if(asYAML)
         {
-            outputFile << rocRoller::GPUArchitecture::writeYaml(GPUArchitectures) << std::endl;
+            if(!splitYAML)
+            {
+                std::ofstream outputFile;
+                outputFile.open(fileName);
+                outputFile << rocRoller::GPUArchitecture::writeYaml(GPUArchitectures) << std::endl;
+                outputFile.close();
+            }
+            else
+            {
+                std::filesystem::path argPath(fileName);
+
+                for(const auto& gpuArchitecture : GPUArchitectures)
+                {
+                    std::map<rocRoller::GPUArchitectureTarget, rocRoller::GPUArchitecture>
+                        splitArch;
+                    splitArch[gpuArchitecture.first] = gpuArchitecture.second;
+
+                    std::string newFilename
+                        = argPath.parent_path()
+                          / (argPath.stem().string() + "_" + gpuArchitecture.first.toString()
+                             + argPath.extension().string());
+                    std::ranges::replace(newFilename, ':', '_');
+                    std::ranges::replace(newFilename, '+', 't');
+
+                    std::ofstream outputFile;
+                    outputFile.open(newFilename);
+                    outputFile << rocRoller::GPUArchitecture::writeYaml(splitArch) << std::endl;
+                    outputFile.close();
+                }
+            }
         }
         else
         {
             // As msgpack
+            std::ofstream outputFile;
+            outputFile.open(fileName);
             outputFile << rocRoller::GPUArchitecture::writeMsgpack(GPUArchitectures) << std::endl;
+            outputFile.close();
         }
-        outputFile.close();
     }
 
     rocRoller::GPUInstructionInfo ConvertSpecInstruction(const amdisa::Instruction& instruction,

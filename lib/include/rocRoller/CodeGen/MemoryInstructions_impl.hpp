@@ -1,6 +1,28 @@
-/**
- * @copyright Copyright 2022 Advanced Micro Devices, Inc.
- */
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2022-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <algorithm>
 #include <ranges>
@@ -717,7 +739,6 @@ namespace rocRoller
         AssertFatal(buffOpts.lds);
 
         auto ctx = m_context.lock();
-        AssertFatal(ctx->kernelOptions().alwaysWaitZeroBeforeBarrier);
 
         if(ctx->targetArchitecture().HasCapability(GPUCapability::HasWiderDirectToLds))
         {
@@ -916,12 +937,12 @@ namespace rocRoller
 
     inline Generator<Instruction> MemoryInstructions::barrier()
     {
-        const auto& gpu = m_context.lock()->targetArchitecture().target();
-        if(gpu.isCDNAGPU() || (gpu.isRDNAGPU() && gpu.gfx < GPUArchitectureGFX::GFX1200))
+        const auto& arch = m_context.lock()->targetArchitecture();
+        if(arch.HasCapability(GPUCapability::s_barrier))
         {
             co_yield Instruction("s_barrier", {}, {}, {}, "Memory barrier");
         }
-        else if(gpu.isRDNA4GPU())
+        else if(arch.HasCapability(GPUCapability::s_barrier_signal))
         {
             const auto normalBarrierID = -1;
             co_yield_(Instruction("s_barrier_signal",
@@ -938,7 +959,7 @@ namespace rocRoller
         else
         {
             Throw<FatalError>(
-                std::format("Barriers are not implemented for {}.\n", gpu.toString()));
+                fmt::format("Barriers are not implemented for {}.\n", arch.target().toString()));
         }
     }
 

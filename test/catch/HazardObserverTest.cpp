@@ -1,3 +1,28 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #include <cmath>
 #include <memory>
@@ -65,7 +90,7 @@ namespace HazardObserverTest
         return regs;
     }
 
-    TEST_CASE("VALUWriteVCC", "[observer][VALUWriteVCC]")
+    TEST_CASE("VALUWriteVCC", "[observer]")
     {
         SUPPORTED_ARCH_SECTION(arch)
         {
@@ -207,7 +232,7 @@ namespace HazardObserverTest
         }
     }
 
-    TEST_CASE("VALUTrans94X", "[observer][VALUTrans94X]")
+    TEST_CASE("VALUTrans94X", "[observer]")
     {
         SUPPORTED_ARCH_SECTION(arch)
         {
@@ -299,7 +324,7 @@ namespace HazardObserverTest
         }
     }
 
-    TEST_CASE("VALUWriteReadlane94X", "[observer][VALUWriteReadlane94X]")
+    TEST_CASE("VALUWriteReadlane94X", "[observer]")
     {
         SUPPORTED_ARCH_SECTION(arch)
         {
@@ -406,7 +431,7 @@ namespace HazardObserverTest
         }
     }
 
-    TEST_CASE("VCMPX_EXEC94X", "[observer][VCMPX_EXEC94X]")
+    TEST_CASE("VCMPX_EXEC94X", "[observer]")
     {
 
         SUPPORTED_ARCH_SECTION(arch)
@@ -515,7 +540,7 @@ namespace HazardObserverTest
         }
     }
 
-    TEST_CASE("OPSELxSDWA94X", "[observer][OPSELxSDWA94X]")
+    TEST_CASE("OPSELxSDWA94X", "[observer]")
     {
         SUPPORTED_ARCH_SECTION(arch)
         {
@@ -551,7 +576,7 @@ namespace HazardObserverTest
         }
     }
 
-    TEST_CASE("VALUWriteSGPRVMEM", "[observer][VALUWriteSGPRVMEM]")
+    TEST_CASE("VALUWriteSGPRVMEM", "[observer]")
     {
         SUPPORTED_ARCH_SECTION(arch)
         {
@@ -574,6 +599,110 @@ namespace HazardObserverTest
             peekAndSchedule(context, insts[1], 5);
 
             CHECK_THAT(context.output(), ContainsSubstring("s_nop 4"));
+        }
+    }
+
+    TEST_CASE("BufferStoreWrite", "[observer]")
+    {
+        SUPPORTED_ARCH_SECTION(arch)
+        {
+            if(arch.isRDNAGPU())
+            {
+                SKIP("RDNA not supported yet");
+            }
+
+            SECTION("NOPs added for buffer_store_dwordx4 followed by VALU")
+            {
+                auto context = TestContext::ForTarget(arch);
+                auto v = createRegisters(context, Register::Type::Vector, DataType::Float, 1, 4)[0];
+                auto addr = createRegisters(context, Register::Type::Vector, DataType::Raw32, 1)[0];
+                auto a    = createRegisters(
+                    context, Register::Type::Accumulator, DataType::Float, 1, 4)[0];
+                auto s = createRegisters(context, Register::Type::Scalar, DataType::Raw32, 1, 4)[0];
+
+                std::vector<Instruction> insts
+                    = {Instruction("buffer_store_dwordx4",
+                                   {},
+                                   {v, addr, s, Register::Value::Literal(0)},
+                                   {"offen"},
+                                   ""),
+                       Instruction("v_accvgpr_read", {v->subset({0})}, {a->subset({0})}, {}, ""),
+                       Instruction("v_accvgpr_read", {v->subset({1})}, {a->subset({1})}, {}, ""),
+                       Instruction("v_accvgpr_read", {v->subset({2})}, {a->subset({2})}, {}, ""),
+                       Instruction("v_accvgpr_read", {v->subset({3})}, {a->subset({3})}, {}, ""),
+                       Instruction("s_endpgm", {}, {}, {}, "")};
+
+                peekAndSchedule(context, insts[0]);
+                peekAndSchedule(
+                    context, insts[1], (arch.isCDNA1GPU() || arch.isCDNA2GPU()) ? 1 : 2);
+                peekAndSchedule(context, insts[2]);
+                peekAndSchedule(context, insts[3]);
+                peekAndSchedule(context, insts[4]);
+                peekAndSchedule(context, insts[5]);
+
+                CHECK_THAT(context.output(), ContainsSubstring("s_nop"));
+            }
+
+            SECTION("No NOPs when soffset is an SGPR")
+            {
+                auto context = TestContext::ForTarget(arch);
+                auto v = createRegisters(context, Register::Type::Vector, DataType::Float, 1, 4)[0];
+                auto addr = createRegisters(context, Register::Type::Vector, DataType::Raw32, 1)[0];
+                auto a    = createRegisters(
+                    context, Register::Type::Accumulator, DataType::Float, 1, 4)[0];
+                auto s = createRegisters(context, Register::Type::Scalar, DataType::Raw32, 1, 4)[0];
+                auto soffset
+                    = createRegisters(context, Register::Type::Scalar, DataType::Raw32, 1, 1)[0];
+
+                std::vector<Instruction> insts = {
+                    Instruction("buffer_store_dwordx4", {}, {v, addr, s, soffset}, {"offen"}, ""),
+                    Instruction("v_accvgpr_read", {v->subset({0})}, {a->subset({0})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v->subset({1})}, {a->subset({1})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v->subset({2})}, {a->subset({2})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v->subset({3})}, {a->subset({3})}, {}, ""),
+                    Instruction("s_endpgm", {}, {}, {}, "")};
+
+                peekAndSchedule(context, insts[0]);
+                peekAndSchedule(context, insts[1]);
+                peekAndSchedule(context, insts[2]);
+                peekAndSchedule(context, insts[3]);
+                peekAndSchedule(context, insts[4]);
+                peekAndSchedule(context, insts[5]);
+
+                CHECK_THAT(context.output(), !ContainsSubstring("s_nop"));
+            }
+
+            SECTION("No NOPs after buffer_store_dwordx4")
+            {
+                auto context = TestContext::ForTarget(arch);
+                auto v1
+                    = createRegisters(context, Register::Type::Vector, DataType::Float, 1, 4)[0];
+                auto v2
+                    = createRegisters(context, Register::Type::Vector, DataType::Float, 1, 4)[0];
+                auto addr = createRegisters(context, Register::Type::Vector, DataType::Raw32, 1)[0];
+                auto a    = createRegisters(
+                    context, Register::Type::Accumulator, DataType::Float, 1, 4)[0];
+                auto s = createRegisters(context, Register::Type::Scalar, DataType::Raw32, 1, 4)[0];
+                auto soffset
+                    = createRegisters(context, Register::Type::Scalar, DataType::Raw32, 1, 1)[0];
+
+                std::vector<Instruction> insts = {
+                    Instruction("buffer_store_dwordx4", {}, {v1, addr, s, soffset}, {"offen"}, ""),
+                    Instruction("v_accvgpr_read", {v2->subset({0})}, {a->subset({0})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v2->subset({1})}, {a->subset({1})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v2->subset({2})}, {a->subset({2})}, {}, ""),
+                    Instruction("v_accvgpr_read", {v2->subset({3})}, {a->subset({3})}, {}, ""),
+                    Instruction("s_endpgm", {}, {}, {}, "")};
+
+                peekAndSchedule(context, insts[0]);
+                peekAndSchedule(context, insts[1]);
+                peekAndSchedule(context, insts[2]);
+                peekAndSchedule(context, insts[3]);
+                peekAndSchedule(context, insts[4]);
+                peekAndSchedule(context, insts[5]);
+
+                CHECK_THAT(context.output(), !ContainsSubstring("s_nop"));
+            }
         }
     }
 

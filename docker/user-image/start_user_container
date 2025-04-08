@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 ################################################################################
-# Copyright 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+#
+# MIT License
+#
+# Copyright 2019-2025 AMD ROCm(TM) Software
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +22,9 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
 # CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 ################################################################################
+
 
 from __future__ import print_function
 import grp
@@ -30,7 +35,6 @@ import argparse
 dockerfiles = {
     "clang": "docker/dockerfile-ubuntu-clang",
     "gcc": "docker/dockerfile-ubuntu-gcc",
-    "trace": "docker/dockerfile-ubuntu-trace",
 }
 
 
@@ -150,6 +154,12 @@ def parseArgs():
         help="Whether to skip launching the container.",
     )
 
+    parser.add_argument("--amdgpu-url", help="amdgpu-install DEB URL")
+
+    parser.add_argument("--amdgpu-build-number", help="amdgpu-install build number")
+
+    parser.add_argument("--amdgpu-build-uri", help="amdgpu-install build uri")
+
     parser.add_argument(
         "--pull",
         dest="base_build_extra_args",
@@ -214,6 +224,34 @@ def get_run_args(args, image_name, container_name):
     return run_args
 
 
+def get_amdgpu_args(args):
+    build_args = []
+    for var in [
+        "ROCROLLER_AMDGPU_URL",
+        "ROCROLLER_AMDGPU_BUILD_NUMBER",
+        "ROCROLLER_AMDGPU_BUILD_URI",
+    ]:
+        prefix = "ROCROLLER_"
+        arg = var[len(prefix) :].lower()
+        if var in os.environ:
+            build_args.append(var + "=" + os.environ[var])
+        if getattr(args, arg, None) is not None:
+            if var in os.environ:
+                raise RuntimeError(
+                    f"{var} should not be specified both via environment variable and command-line argument."
+                )
+            build_args.append(var + "=" + getattr(args, arg))
+
+    return build_args
+
+
+def make_build_args(build):
+    rv = []
+    for arg in build:
+        rv.extend(["--build-arg", arg])
+    return rv
+
+
 def main():
     final_output = ""
     args = parseArgs()
@@ -235,6 +273,9 @@ def main():
     if len(args.command) > 0:
         args.command = ["bash", "--login", "-c", " ".join(args.command)]
 
+    build_args = get_amdgpu_args(args)
+    print(build_args)
+
     for version in args.versions:
         base_image_name = "-".join([args.image_prefix, version])
         user_image_name = "-".join([base_image_name, "user"])
@@ -243,24 +284,17 @@ def main():
         if args.delete_existing_container:
             printAndRun(["docker", "rm", "-f", container_name])
 
-        build_args = []
-        for arg in ["AMDGPU_URL", "AMDGPU_BUILD_NUMBER", "AMDGPU_BUILD_URI"]:
-            if arg in os.environ:
-                build_args.append(arg + "=" + os.environ[arg])
-
-        def make_build_args(args):
-            rv = []
-            for arg in args:
-                rv.extend(["--build-arg", arg])
-            return rv
-
         if not args.skip_base_build:
             buildImage(
                 dockerfiles[version],
                 base_image_name,
                 args.context,
                 *make_build_args(build_args),
-                *args.base_build_extra_args
+                *[
+                    arg
+                    for extra_arg in args.base_build_extra_args
+                    for arg in extra_arg.split()
+                ],
             )
 
         if not args.skip_user_build:
@@ -268,8 +302,12 @@ def main():
                 args.user_dockerfile,
                 user_image_name,
                 args.context,
-                *make_build_args(["base_image=" + base_image_name]),
-                *args.user_build_extra_args
+                *make_build_args(["base_image=" + base_image_name, "_UID=" + args.uid, "_GID=" + str(get_render_group())]),
+                *[
+                    arg
+                    for extra_arg in args.user_build_extra_args
+                    for arg in extra_arg.split()
+                ],
             )
 
         if not args.skip_container_run:
@@ -286,6 +324,7 @@ def main():
 
 
 def printAndRun(run_args):
+    print(run_args)
     print(" ".join(run_args))
     subprocess.check_call(run_args)
 

@@ -1,7 +1,28 @@
-/**
- * @brief
- * @copyright Copyright 2021 Advanced Micro Devices, Inc.
- */
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2021-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
 
 #pragma once
 
@@ -10,6 +31,7 @@
 #include <memory>
 #include <string>
 
+#include <rocRoller/Context.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
 #include <rocRoller/Utilities/Error.hpp>
 
@@ -61,14 +83,22 @@ namespace rocRoller
         std::copy(src.begin(), src.end(), m_src.begin());
         std::copy(modifiers.begin(), modifiers.end(), m_modifiers.begin());
 
+        addComment(comment);
+
         for(auto& dst : m_dst)
         {
             if(dst && dst->allocationState() == Register::AllocationState::Unallocated)
             {
                 dst->allocate(*this);
             }
+
+            if(dst && dst->readOnly())
+            {
+                addComment(fmt::format(
+                    "Read-only register cannot be the destination of an instruction: {}",
+                    dst->description()));
+            }
         }
-        addComment(comment);
     }
 
     inline Instruction Instruction::Allocate(Register::ValuePtr reg)
@@ -260,7 +290,9 @@ namespace rocRoller
     {
         for(auto& reg : m_src)
         {
-            if(reg && reg->isSpecial())
+            // TTMP registers are special but they are read-only in the kernel
+            // code thus do not create scheduling dependency.
+            if(reg && reg->isSpecial() && !reg->isTTMP())
             {
                 return true;
             }
@@ -381,6 +413,32 @@ namespace rocRoller
         os << m_directive;
     }
 
+    inline bool Instruction::requiresVnopForHazard() const
+    {
+        // TODO: Reevalute this method for retrieving/passing the context.
+        ContextPtr ctx = nullptr;
+        for(const auto& r : m_src)
+        {
+            if(r && r->context())
+            {
+                ctx = r->context();
+                break;
+            }
+        }
+        if(nullptr == ctx)
+        {
+            for(const auto& r : m_dst)
+            {
+                if(r && r->context())
+                {
+                    ctx = r->context();
+                    break;
+                }
+            }
+        }
+        return nullptr != ctx && ctx->targetArchitecture().target().isGFX12GPU();
+    }
+
     inline void Instruction::functionalString(std::ostream& os, LogLevel level) const
     {
         auto pos = os.tellp();
@@ -395,23 +453,37 @@ namespace rocRoller
 
         if(m_nopCount > 0)
         {
-            int count = m_nopCount;
-            while(count > 16)
+            if(requiresVnopForHazard())
             {
-                // s_nop can only handle values from 0 to 0xf
-                os << "s_nop 0xf\n";
-                count -= 16;
+                for(int i = 0; i < m_nopCount; i++)
+                    os << "v_nop\n";
             }
-            // Note: "s_nop 0" is 1 nop, "s_nop 0xf" is 16 nops
-            os << "s_nop " << (count - 1) << "\n";
+            else
+            {
+                int count = m_nopCount;
+                while(count > 16)
+                {
+                    // s_nop can only handle values from 0 to 0xf
+                    os << "s_nop 0xf\n";
+                    count -= 16;
+                }
+                // Note: "s_nop 0" is 1 nop, "s_nop 0xf" is 16 nops
+                os << "s_nop " << (count - 1) << "\n";
+            }
         }
 
         coreInstructionString(os);
 
-        if(level > LogLevel::Terse && !m_comments.empty())
+        if(level > LogLevel::Terse)
         {
+            std::string input;
+            if(!m_controlOps.empty())
+                input = fmt::format("(op {}) ", m_controlOps.front());
+            if(!m_comments.empty())
+                input += m_comments.front();
+
             // Only include the first comment in the functional string.
-            for(auto const& s : EscapeComment(m_comments[0], 1))
+            for(auto const& s : EscapeComment(input, 1))
             {
                 os << s;
             }
@@ -609,6 +681,9 @@ namespace rocRoller
         {
             if(a)
             {
+                if(!m_controlOps.empty())
+                    a->setControlOp(m_controlOps.front());
+
                 a->allocateNow();
             }
         }

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #pragma once
 
 #include <cstdint>
@@ -39,7 +65,7 @@ namespace rocRoller
         struct SetCoordinate
         {
             SetCoordinate();
-            SetCoordinate(Expression::ExpressionPtr value);
+            explicit SetCoordinate(Expression::ExpressionPtr value);
 
             Expression::ExpressionPtr value;
             std::string               coordName;
@@ -242,7 +268,7 @@ namespace rocRoller
         struct LoadLinear
         {
             LoadLinear();
-            LoadLinear(rocRoller::VariableType const varType);
+            explicit LoadLinear(rocRoller::VariableType const varType);
 
             rocRoller::VariableType varType;
 
@@ -263,7 +289,7 @@ namespace rocRoller
         struct LoadTiled
         {
             LoadTiled();
-            LoadTiled(VariableType const varType, bool const isTransposedTile = false);
+            explicit LoadTiled(VariableType const varType, bool const isTransposedTile = false);
 
             VariableType varType;
             bool         isTransposedTile;
@@ -277,7 +303,7 @@ namespace rocRoller
         struct LoadVGPR
         {
             LoadVGPR();
-            LoadVGPR(VariableType const varType, bool const scalar = false);
+            explicit LoadVGPR(VariableType const varType, bool const scalar = false);
 
             VariableType varType;
             bool         scalar;
@@ -305,18 +331,19 @@ namespace rocRoller
         struct LoadLDSTile
         {
             LoadLDSTile();
-            LoadLDSTile(VariableType const varType, bool const isTransposedTile = false);
+            explicit LoadLDSTile(VariableType const varType, bool const isTransposedTile = false);
 
             VariableType varType;
             bool         isTransposedTile;
 
             std::string name() const;
+            std::string toString() const;
         };
 
         struct LoadTileDirect2LDS
         {
             LoadTileDirect2LDS();
-            LoadTileDirect2LDS(VariableType const varType);
+            explicit LoadTileDirect2LDS(VariableType const varType);
 
             VariableType varType;
 
@@ -361,9 +388,9 @@ namespace rocRoller
         struct StoreTiled
         {
             StoreTiled();
-            StoreTiled(DataType const dtype);
+            explicit StoreTiled(VariableType const dtype);
 
-            DataType                 dataType = DataType::Count;
+            VariableType             varType = DataType::Count;
             BufferInstructionOptions bufOpts;
 
             std::string name() const;
@@ -380,9 +407,9 @@ namespace rocRoller
         struct StoreSGPR
         {
             StoreSGPR();
-            StoreSGPR(DataType const dtype, BufferInstructionOptions const bio);
+            StoreSGPR(VariableType const varType, BufferInstructionOptions const bio);
 
-            DataType                 dataType = DataType::Count;
+            VariableType             varType;
             BufferInstructionOptions bufOpts;
 
             std::string name() const;
@@ -394,9 +421,9 @@ namespace rocRoller
         struct StoreLDSTile
         {
             StoreLDSTile();
-            StoreLDSTile(DataType const dtype);
+            explicit StoreLDSTile(VariableType const varType);
 
-            DataType dataType = DataType::Count;
+            VariableType varType;
 
             std::string name() const;
         };
@@ -437,7 +464,7 @@ namespace rocRoller
         struct Exchange
         {
             Exchange();
-            Exchange(VariableType const varType);
+            explicit Exchange(VariableType const varType);
 
             VariableType varType;
 
@@ -450,7 +477,7 @@ namespace rocRoller
         struct SeedPRNG
         {
             SeedPRNG();
-            SeedPRNG(bool addTID);
+            explicit SeedPRNG(bool addTID);
             std::string toString() const;
 
             std::string name() const;
@@ -467,12 +494,15 @@ namespace rocRoller
          */
         std::string name(const Operation& x);
 
-        inline std::string toString(const Operation& x);
+        std::string toString(const Operation& x);
 
         /**
          * @brief Return the datatype associated with the Operation.
          */
-        inline DataType getDataType(const Operation& x);
+        DataType getDataType(const Operation& x);
+
+        VariableType getVariableType(Operation const& op);
+        void         setVariableType(Operation& op, VariableType varType);
     }
 }
 

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright 2024-2025 AMD ROCm(TM) Software
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
 #include <rocRoller/Context.hpp>
 
 #include <rocRoller/AssemblyKernel.hpp>
@@ -27,8 +53,8 @@ namespace rocRoller
     ContextPtr Context::ForDefaultHipDevice(std::string const&   kernelName,
                                             KernelOptions const& kernelOpts)
     {
-        int  idx  = -1;
-        auto arch = GPUArchitectureLibrary::getInstance()->GetDefaultHipDeviceArch(idx);
+        int         idx  = -1;
+        auto const& arch = GPUArchitectureLibrary::getInstance()->GetDefaultHipDeviceArch(idx);
 
         return Create(idx, arch, kernelName, kernelOpts);
     }
@@ -37,7 +63,7 @@ namespace rocRoller
                                      std::string const&   kernelName,
                                      KernelOptions const& kernelOpts)
     {
-        auto arch = GPUArchitectureLibrary::getInstance()->GetHipDeviceArch(deviceIdx);
+        auto const& arch = GPUArchitectureLibrary::getInstance()->GetHipDeviceArch(deviceIdx);
 
         return Create(deviceIdx, arch, kernelName, kernelOpts);
     }
@@ -46,7 +72,7 @@ namespace rocRoller
                                   std::string const&           kernelName,
                                   KernelOptions const&         kernelOpts)
     {
-        auto arch = GPUArchitectureLibrary::getInstance()->GetArch(target);
+        auto const arch = GPUArchitectureLibrary::getInstance()->GetArch(target);
         return ForTarget(arch, kernelName, kernelOpts);
     }
 
@@ -60,12 +86,6 @@ namespace rocRoller
     void Context::setRandomSeed(int seed)
     {
         m_random = std::make_shared<RandomGenerator>(seed);
-    }
-
-    // TODO: this is a temporary workaround for direct-to-LDS. Remove it after fixing the wait count observer.
-    void Context::setWaitZeroBeforeBarrier(bool always)
-    {
-        m_kernelOptions = {.alwaysWaitZeroBeforeBarrier = true};
     }
 
     ContextPtr Context::Create(int                    deviceIdx,
@@ -86,9 +106,13 @@ namespace rocRoller
             switch(regType)
             {
             case Register::Type::Accumulator:
-                rv->m_allocators[i]
-                    = std::make_shared<Register::Allocator>(regType, kernelOpts.maxACCVGPRs);
+            {
+                auto const maxACCVGPRs = rv->m_targetArch.HasCapability(GPUCapability::HasAccCD)
+                                             ? kernelOpts.maxACCVGPRs
+                                             : 0;
+                rv->m_allocators[i] = std::make_shared<Register::Allocator>(regType, maxACCVGPRs);
                 break;
+            }
             case Register::Type::Vector:
                 rv->m_allocators[i]
                     = std::make_shared<Register::Allocator>(regType, kernelOpts.maxVGPRs);

@@ -1,4 +1,30 @@
 
+################################################################################
+#
+# MIT License
+#
+# Copyright 2024-2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
+
 # rocRoller library
 
 # Print out compiler flags for viewing/debug
@@ -136,6 +162,7 @@ set(rocroller_src
     source/KernelGraph/KernelGraph_serialization.cpp
     source/KernelGraph/LastRWTracer.cpp
     source/KernelGraph/LowerFromCommand.cpp
+    source/KernelGraph/RegisterTagManager.cpp
     source/KernelGraph/Reindexer.cpp
     source/KernelGraph/ScopeManager.cpp
     source/KernelGraph/Utils.cpp
@@ -164,6 +191,7 @@ set(rocroller_src
     source/KernelGraph/Transformations/IdentifyParallelDimensions.cpp
     source/KernelGraph/Transformations/InlineIncrements.cpp
     source/KernelGraph/Transformations/KernelGraph_loop.cpp
+    source/KernelGraph/Transformations/LoadPacked.cpp
     source/KernelGraph/Transformations/LoopOverTileNumbers.cpp
     source/KernelGraph/Transformations/LowerLinear.cpp
     source/KernelGraph/Transformations/LowerTensorContraction.cpp
@@ -172,11 +200,13 @@ set(rocroller_src
     source/KernelGraph/Transformations/OrderMemory.cpp
     source/KernelGraph/Transformations/RemoveDuplicates.cpp
     source/KernelGraph/Transformations/Simplify.cpp
+    source/KernelGraph/Transformations/SwizzleScale.cpp
     source/KernelGraph/Transformations/UnrollLoops.cpp
     source/KernelGraph/Transformations/UpdateParameters.cpp
 
     source/Observers/ACCVGPRReadWrite.cpp
     source/Observers/ACCVGPRWriteWrite.cpp
+    source/Observers/BufferStoreDwordXXRead.cpp
     source/Observers/CMPXWriteExec.cpp
     source/Observers/DGEMM16x16x4Write.cpp
     source/Observers/DGEMM4x4x4Write.cpp
@@ -194,6 +224,10 @@ set(rocroller_src
     source/Observers/VALUWriteVCCVDIVFMAS.cpp
     source/Observers/VCMPXWrite94x.cpp
     source/Observers/WaitcntObserver.cpp
+    source/Observers/WMMAObserver.cpp
+    source/Observers/WMMAReadSrcD.cpp
+    source/Observers/WMMAWriteSrcD.cpp
+    source/Observers/WMMAWrite.cpp
     source/Observers/XDLReadSrcC908.cpp
     source/Observers/XDLReadSrcC90a.cpp
     source/Observers/XDLReadSrcC94x.cpp
@@ -233,8 +267,12 @@ set_target_properties(
         SOVERSION ${ROCROLLER_SOVERSION}
 )
 
-target_link_libraries(rocroller PRIVATE spdlog::spdlog_header_only)
-
+target_link_libraries(rocroller
+    PRIVATE
+    spdlog::spdlog_header_only
+    PUBLIC
+    fmt::fmt-header-only
+)
 if(ROCROLLER_EMBED_ARCH_DEF)
     target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:rocRoller::GPUArchitecture_def>)
 else()
@@ -268,6 +306,9 @@ target_include_directories(
 rocroller_add_dependency(libdivide VERSION 5.1)
 target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:libdivide>)
 
+rocroller_add_dependency(boost)
+target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:Boost::multi_index>)
+
 # LLVM has RTTI disabled by default and ROCm's LLVM also has RTTI disabled.
 # RTTI is enabled for rocRoller, except for the compilation units below.
 # If RTTI is also desired for this CUs, then the options are:
@@ -283,7 +324,6 @@ set_source_files_properties(
 
 if(YAML_BACKEND STREQUAL "YAML_CPP")
     target_link_libraries(rocroller PUBLIC yaml-cpp)
-    set(yaml_export_dependency PACKAGE yaml-cpp VERSION 0.7.0)
 endif()
 
 target_link_libraries(
@@ -315,5 +355,4 @@ rocm_export_targets(
     EXPORT rocroller_targets
     DEPENDS
         PACKAGE msgpack VERSION 3.3.0
-        ${yaml_export_dependency}
 )
