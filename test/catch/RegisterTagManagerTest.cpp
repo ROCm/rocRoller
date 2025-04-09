@@ -38,11 +38,11 @@ TEST_CASE("RegisterTagManager RegisterExpressionAttributes toString works",
           "[codegen][kernel-graph]")
 {
     auto expected = R"({
-        t.dataType = Int32
-        t.unitStride = 0
-        t.elementBlockSize = 0
-        t.elementBlockStride = nullptr
-        t.trLoadPairStride = nullptr
+    t.dataType = Int32
+    t.unitStride = 0
+    t.elementBlockSize = 0
+    t.elementBlockStride = nullptr
+    t.trLoadPairStride = nullptr
 })";
 
     CHECK(toString(RegisterExpressionAttributes{DataType::Int32, false}) == expected);
