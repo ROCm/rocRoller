@@ -354,6 +354,27 @@ namespace rocRoller
                     }
                 }
 
+                // If there exists a reindexing "chain" A -> B -> C, then processing
+                // B -> C before A -> B causes the old references to A to be left
+                // dangling. To avoid this, we collapse the chain so A -> C and B -> C,
+                // which matches the behaviour we would see if A -> B was processed first.
+                for(auto [oldTag, newTag] : expressionReindexer.coordinates)
+                {
+                    while(expressionReindexer.coordinates.count(newTag) > 0 && newTag != oldTag)
+                    {
+                        auto nextTag = expressionReindexer.coordinates.at(newTag);
+                        if(nextTag != newTag)
+                        {
+                            newTag = expressionReindexer.coordinates.at(newTag);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    expressionReindexer.coordinates[oldTag] = newTag;
+                }
+
                 // Update tile references
                 auto kernel = *graph.control.roots().begin();
                 reindexExpressions(graph, kernel, expressionReindexer);
