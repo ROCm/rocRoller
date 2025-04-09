@@ -105,6 +105,7 @@ namespace rocRoller
                     std::unordered_set<int>   loopGroup;
                     Expression::ExpressionPtr loopIncrement;
                     Expression::ExpressionPtr loopLength;
+                    std::map<int, int>        baseLoopContents;
                     for(auto const& loop : forLoops)
                     {
                         if(loopGroup.count(loop) != 0)
@@ -135,6 +136,37 @@ namespace rocRoller
                         {
                             loopIncrement = increment;
                         }
+
+                        // Loop similarity heuristic
+                        // We only want to fuse loops which are "the same" or similar.
+                        // Currently this is just counting the number of each type of node in the body.
+                        // We may want to replace this with a better heuristic in the future.
+                        auto               loopContentsGenerator = graph.control.nodesInBody(loop);
+                        std::map<int, int> loopContents;
+                        std::for_each(loopContentsGenerator.begin(),
+                                      loopContentsGenerator.end(),
+                                      [&](int tag) -> void {
+                                          auto type = graph.control.get<Operation>(tag)->index();
+                                          if(loopContents.contains(type))
+                                          {
+                                              loopContents[type]++;
+                                          }
+                                          else
+                                          {
+                                              loopContents[type] = 1;
+                                          }
+                                      });
+
+                        if(!baseLoopContents.empty())
+                        {
+                            if(baseLoopContents != loopContents)
+                                continue;
+                        }
+                        else
+                        {
+                            baseLoopContents = loopContents;
+                        }
+
                         loopGroup.insert(loop);
                     }
 
