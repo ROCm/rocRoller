@@ -34,6 +34,8 @@ namespace rocRoller
 {
     namespace KernelGraph
     {
+        using namespace ControlGraph;
+        namespace CT = rocRoller::KernelGraph::CoordinateGraph;
 
         /**
          * @brief Fuse Loops Transformation
@@ -70,7 +72,7 @@ namespace rocRoller
                               }
                               if(isSetCoordinate(tag))
                               {
-                                  return graph.mapper.get<ForLoop>(tag) > 0;
+                                  return graph.mapper.get<CoordinateGraph::ForLoop>(tag) > 0;
                               }
                               return false;
                           })
@@ -111,7 +113,7 @@ namespace rocRoller
                         if(loopGroup.count(loop) != 0)
                             continue;
 
-                        auto loopDim = getSize(std::get<Dimension>(graph.coordinates.getElement(
+                        auto loopDim = getSize(std::get<CT::Dimension>(graph.coordinates.getElement(
                             graph.mapper.get(loop, NaryArgument::DEST))));
 
                         // Loops to be fused must have the same length

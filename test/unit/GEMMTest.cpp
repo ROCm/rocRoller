@@ -132,26 +132,20 @@ namespace GEMMDriverTest
             float alpha = gemm.alpha;
             float beta  = gemm.beta;
 
-#define AssertMacroTileMatch(D)                                \
-    if(gemm.unroll##D > 0 && !gemm.tailLoops)                  \
-    {                                                          \
-        AssertFatal(D % (gemm.mac##D * gemm.unroll##D) == 0,   \
-                    "MacroTile size mismatch (" #D " unroll)", \
-                    ShowValue(D),                              \
-                    ShowValue(gemm.mac##D),                    \
-                    ShowValue(gemm.unroll##D));                \
-    }                                                          \
-    else                                                       \
-    {                                                          \
-        AssertFatal(D % gemm.mac##D == 0,                      \
-                    "MacroTile size mismatch (" #D ")",        \
-                    ShowValue(D),                              \
-                    ShowValue(gemm.mac##D));                   \
-    }
+            AssertFatal(M % gemm.macM == 0,
+                        "MacroTile size mismatch (M)",
+                        ShowValue(M),
+                        ShowValue(gemm.macM));
+            AssertFatal(N % gemm.macN == 0,
+                        "MacroTile size mismatch (N)",
+                        ShowValue(N),
+                        ShowValue(gemm.macN));
 
-            AssertMacroTileMatch(M);
-            AssertMacroTileMatch(N);
-            AssertMacroTileMatch(K);
+            if(gemm.unrollK > 0 && !gemm.tailLoops)
+            {
+                AssertFatal(K % (gemm.macK * gemm.unrollK) == 0,
+                            "MacroTile size mismatch (K unroll)");
+            }
 
             auto bpeA = DataTypeInfo::Get(dataTypeA).elementBytes;
             auto bpeB = DataTypeInfo::Get(dataTypeB).elementBytes;
@@ -423,8 +417,8 @@ namespace GEMMDriverTest
             params->fuseLoops                     = gemm.fuseLoops;
             params->tailLoops                     = gemm.tailLoops;
             params->allowAmbiguousMemoryNodes     = gemm.allowAmbiguousMemoryNodes;
-            params->unrollX                       = gemm.unrollM;
-            params->unrollY                       = gemm.unrollN;
+            params->unrollX                       = gemm.unrollX;
+            params->unrollY                       = gemm.unrollY;
             params->unrollK                       = gemm.unrollK;
             params->packMultipleElementsInto1VGPR = gemm.packMultipleElementsInto1VGPR;
             params->prefetch                      = gemm.prefetch;
