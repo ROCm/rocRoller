@@ -2730,6 +2730,34 @@ namespace GEMMDriverTest
         basicGEMM<Half>(gemm);
     }
 
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x2UnrollK)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 64;
+
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 16;
+
+        gemm.unrollK   = 2;
+        gemm.tailLoops = true;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 2 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 4;
+
+        gemm.loadLDSA  = false;
+        gemm.storeLDSD = false;
+        gemm.fuseLoops = false;
+
+        basicGEMM<Half>(gemm);
+    }
+
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x1)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
