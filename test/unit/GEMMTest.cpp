@@ -2737,8 +2737,7 @@ namespace GEMMDriverTest
         gemm.macN = 256;
         gemm.macK = 16;
 
-        gemm.unrollK   = 2;
-        gemm.tailLoops = true;
+        gemm.unrollK = 2;
 
         gemm.waveK = 8;
 
@@ -2797,9 +2796,7 @@ namespace GEMMDriverTest
         gemm.macN = 128;
         gemm.macK = 16;
 
-        gemm.unrollK                   = 2;
-        gemm.tailLoops                 = true;
-        gemm.allowAmbiguousMemoryNodes = true;
+        gemm.unrollK = 2;
 
         gemm.waveK = 8;
 
