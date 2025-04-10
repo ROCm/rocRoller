@@ -428,7 +428,7 @@ namespace rocRoller
                         {
                             continue;
                         }
-                        auto order = graph.control.compareNodes(contA, contB);
+                        auto order = graph.control.compareNodes(UseCacheIfAvailable, contA, contB);
                         if(!(order == NodeOrdering::LeftInBodyOfRight
                              || order == NodeOrdering::RightInBodyOfLeft))
                         {
