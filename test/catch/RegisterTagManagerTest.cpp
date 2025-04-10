@@ -27,6 +27,7 @@
 #include <rocRoller/KernelGraph/RegisterTagManager.hpp>
 
 #include <common/CommonGraphs.hpp>
+#include <common/SourceMatcher.hpp>
 
 #include "TestContext.hpp"
 
@@ -37,6 +38,7 @@ using namespace rocRoller;
 TEST_CASE("RegisterTagManager RegisterExpressionAttributes toString works",
           "[codegen][kernel-graph]")
 {
+    // clang-format off
     auto expected = R"({
     t.dataType = Int32
     t.unitStride = 0
@@ -44,8 +46,9 @@ TEST_CASE("RegisterTagManager RegisterExpressionAttributes toString works",
     t.elementBlockStride = nullptr
     t.trLoadPairStride = nullptr
 })";
-
-    CHECK(toString(RegisterExpressionAttributes{DataType::Int32, false}) == expected);
+    // clang-format on
+    CHECK(NormalizedSource(toString(RegisterExpressionAttributes{DataType::Int32, false}))
+          == NormalizedSource(expected));
 }
 
 SCENARIO("RegisterTagManager works", "[codegen][kernel-graph]")
