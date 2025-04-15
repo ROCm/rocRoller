@@ -363,6 +363,24 @@ def tail_loop_reproducer():
         mac_k=8,
     )
 
+def jammed_tail_loop():
+    yield mkGEMM(
+        M=256,
+        N=256,
+        K=24,
+        trans_A="T",
+        trans_B="N",
+        wave_m=32,
+        wave_n=32,
+        wave_k=2,
+        wave_b=1,
+        mac_m=64,
+        mac_n=64,
+        mac_k=8,
+        unroll_x=2,
+        unroll_y=2,
+        # unroll_k=2 implicit due to prefetchInFlight=2
+    )
 
 def guidepost_1():
     yield mkGEMM(

@@ -1186,6 +1186,29 @@ namespace GEMMDriverTest
         }
     }
 
+    TEST_P(GEMMTestGPU, GPU_BasicGEMMJammedUnrollKTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+        gemm.m         = 64;
+        gemm.n         = 128;
+        gemm.transA    = "T";
+        gemm.transB    = "N";
+        gemm.loadLDSA  = false;
+        gemm.loadLDSB  = false;
+        gemm.storeLDSD = false;
+        gemm.fuseLoops = true;
+        gemm.tailLoops = true;
+        gemm.unrollY   = 2;
+        gemm.unrollK   = 4;
+        gemm.macK      = 8;
+        for(auto k : {8, 16, 24, 32, 40, 48, 56, 64})
+        {
+            gemm.k = k;
+            basicGEMM<float>(gemm);
+        }
+    }
+
     TEST_P(GEMMTestGPU, GPU_BasicGEMMUnrollKLDS)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
@@ -2756,6 +2779,33 @@ namespace GEMMDriverTest
         basicGEMM<Half>(gemm);
     }
 
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x2UnrollKUseTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 80;
+
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 16;
+
+        gemm.unrollK = 2;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 2 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 4;
+
+        gemm.loadLDSA  = false;
+        gemm.storeLDSD = false;
+        gemm.fuseLoops = false;
+
+        basicGEMM<Half>(gemm);
+    }
+
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x1)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
@@ -2796,6 +2846,38 @@ namespace GEMMDriverTest
         gemm.m = 256;
         gemm.n = 512;
         gemm.k = 64;
+
+        gemm.macM = 128;
+        gemm.macN = 128;
+        gemm.macK = 16;
+
+        gemm.unrollK = 2;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 2 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 4;
+
+        gemm.transA = "T";
+        gemm.transB = "N";
+
+        basicGEMM<Half>(gemm);
+
+        std::string generatedCode = m_context->instructions()->toString();
+
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 22);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_read_b128"), 8);
+        EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
+    }
+
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x1UnrollKUseTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 80;
 
         gemm.macM = 128;
         gemm.macN = 128;
@@ -2880,6 +2962,37 @@ namespace GEMMDriverTest
         EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
     }
 
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1x2UnrollKUseTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 80;
+
+        gemm.macM = 128;
+        gemm.macN = 128;
+        gemm.macK = 16;
+
+        gemm.unrollK = 4;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 4 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 2;
+
+        gemm.transA = "T";
+
+        basicGEMM<Half>(gemm);
+
+        std::string generatedCode = m_context->instructions()->toString();
+
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b64"), 26);
+        EXPECT_EQ(countSubstring(generatedCode, "ds_read_b128"), 8);
+        EXPECT_EQ(countSubstring(generatedCode, "buffer_store_dwordx4"), 8);
+    }
+
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1x8)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
@@ -2927,6 +3040,31 @@ namespace GEMMDriverTest
 
         basicGEMM<Half>(gemm);
     }
+
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed1x8UnrollKUseTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 80;
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 16;
+
+        gemm.unrollK = 2;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 4 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 1;
+
+        gemm.storeLDSD = false;
+
+        basicGEMM<Half>(gemm);
+    }
+
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x4)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
@@ -2988,6 +3126,39 @@ namespace GEMMDriverTest
         EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 9);
     }
 
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed2x4UnrollKUseTailLoop)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 80;
+
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 16;
+
+        gemm.unrollK = 2;
+
+        gemm.prefetchInFlight  = 2;
+        gemm.prefetchLDSFactor = 2;
+        gemm.prefetchMixMemOps = true;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 2 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 2;
+
+        gemm.storeLDSD = false;
+
+        basicGEMM<Half>(gemm);
+
+        std::string generatedCode = m_context->instructions()->toString();
+
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 9);
+    }
+
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed4x2)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
@@ -3018,6 +3189,37 @@ namespace GEMMDriverTest
     }
 
     TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed4x2UnrollK)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
+        GEMMProblem gemm;
+
+        gemm.m = 256;
+        gemm.n = 512;
+        gemm.k = 64;
+
+        gemm.macM = 128;
+        gemm.macN = 256;
+        gemm.macK = 16;
+
+        gemm.unrollK = 4;
+
+        gemm.waveK = 8;
+
+        gemm.workgroupSizeX = 1 * gemm.wavefrontSize;
+        gemm.workgroupSizeY = 4;
+
+        gemm.storeLDSD = false;
+
+        gemm.transB = "N";
+
+        basicGEMM<Half>(gemm);
+
+        std::string generatedCode = m_context->instructions()->toString();
+
+        EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 15);
+    }
+
+    TEST_P(GEMMJammedTestGPU, GPU_BasicGEMMFP16Jammed4x2UnrollKUseTailLoop)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
         GEMMProblem gemm;
