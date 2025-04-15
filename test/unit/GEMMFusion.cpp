@@ -77,7 +77,7 @@ namespace GEMMDriverTest
             AssertFatal(M % gemm.macM == 0, "MacroTile size mismatch (M)");
             AssertFatal(N % gemm.macN == 0, "MacroTile size mismatch (N)");
 
-            if(gemm.unrollK > 0)
+            if(gemm.unrollK > 0 && !gemm.tailLoops)
             {
                 AssertFatal(K % (gemm.macK * gemm.unrollK) == 0,
                             "MacroTile size mismatch (K unroll)");
