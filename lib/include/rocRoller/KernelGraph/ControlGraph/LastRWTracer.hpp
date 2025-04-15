@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/KernelGraph/ControlGraph/ControlFlowRWTracer.hpp>
 
 namespace rocRoller::KernelGraph
 {
-    class LastRWTracer : public ControlFlowRWTracer
+    class ROCROLLER_DECLSPEC LastRWTracer : public ControlFlowRWTracer
     {
     public:
         LastRWTracer(KernelGraph const& graph, int start = -1, bool trackConnections = false)

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <unordered_map>
 
 #include <rocRoller/Context.hpp>
@@ -46,7 +48,7 @@ namespace rocRoller
             Count
         };
 
-        struct LivenessHistoryEntry
+        struct ROCROLLER_DECLSPEC LivenessHistoryEntry
         {
             std::string instruction;
             std::unordered_map<Register::Type, std::unordered_map<size_t, RegisterLiveState>>
@@ -57,7 +59,7 @@ namespace rocRoller
             size_t      lineNumber = 0;
         };
 
-        class RegisterLivenessObserver
+        class ROCROLLER_DECLSPEC RegisterLivenessObserver
         {
         public:
             RegisterLivenessObserver() {}
@@ -150,8 +152,9 @@ namespace rocRoller
             std::string livenessString() const;
         };
 
-        std::string   toString(RegisterLiveState const& rls);
-        std::ostream& operator<<(std::ostream& stream, RegisterLiveState const& rls);
+        ROCROLLER_DECLSPEC std::string toString(RegisterLiveState const& rls);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&            stream,
+                                                    RegisterLiveState const& rls);
 
         static_assert(CObserverRuntime<RegisterLivenessObserver>);
     }

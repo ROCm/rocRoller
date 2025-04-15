@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,13 +35,14 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::BitwiseNegate>>
-        GetGenerator<Expression::BitwiseNegate>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::BitwiseNegate>>
+                       GetGenerator<Expression::BitwiseNegate>(Register::ValuePtr dst,
                                                 Register::ValuePtr arg,
                                                 Expression::BitwiseNegate const&);
 
     // Templated Generator class based on the return type.
-    class BitwiseNegateGenerator : public UnaryArithmeticGenerator<Expression::BitwiseNegate>
+    class ROCROLLER_DECLSPEC BitwiseNegateGenerator
+        : public UnaryArithmeticGenerator<Expression::BitwiseNegate>
     {
     public:
         BitwiseNegateGenerator(ContextPtr c)

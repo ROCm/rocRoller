@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,15 +35,15 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::Divide>>
-        GetGenerator<Expression::Divide>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::Divide>>
+                       GetGenerator<Expression::Divide>(Register::ValuePtr dst,
                                          Register::ValuePtr lhs,
                                          Register::ValuePtr rhs,
                                          Expression::Divide const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class DivideGenerator : public BinaryArithmeticGenerator<Expression::Divide>
+    class ROCROLLER_DECLSPEC DivideGenerator : public BinaryArithmeticGenerator<Expression::Divide>
     {
     public:
         DivideGenerator(ContextPtr c)

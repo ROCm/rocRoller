@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -49,7 +51,8 @@ namespace rocRoller
          * NOTE: If soffset argument is an SGPR, no NOPs required
          *
          */
-        class BufferStoreDwordXXRead : public WaitStateObserver<BufferStoreDwordXXRead>
+        class ROCROLLER_DECLSPEC BufferStoreDwordXXRead
+            : public WaitStateObserver<BufferStoreDwordXXRead>
         {
         public:
             BufferStoreDwordXXRead() {}

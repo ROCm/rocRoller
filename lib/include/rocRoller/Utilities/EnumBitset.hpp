@@ -25,6 +25,8 @@
  *******************************************************************************/
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <bitset>
 
 #include <rocRoller/Utilities/Concepts.hpp>
@@ -32,7 +34,7 @@
 namespace rocRoller
 {
     /**
-     * Bitset which uses an enum (class) as an indexer. Has the interface of std::bitset, and can be
+     * Bitset which uses an enum (class ROCROLLER_DECLSPEC) as an indexer. Has the interface of std::bitset, and can be
      * indexed by the enum.
      *
      * All new interfaces are constexpr so it can be used in concepts and to limit template instantiation.
@@ -42,7 +44,7 @@ namespace rocRoller
      * - Count must be <= 64.
      */
     template <CCountedEnum Enum>
-    class EnumBitset : public std::bitset<static_cast<size_t>(Enum::Count)>
+    class ROCROLLER_DECLSPEC EnumBitset : public std::bitset<static_cast<size_t>(Enum::Count)>
     {
     public:
         static constexpr size_t Size = static_cast<size_t>(Enum::Count);
@@ -69,10 +71,10 @@ namespace rocRoller
     };
 
     template <CCountedEnum Enum>
-    std::string toString(EnumBitset<Enum> const& bs);
+    ROCROLLER_DECLSPEC std::string toString(EnumBitset<Enum> const& bs);
 
     template <CCountedEnum Enum>
-    std::ostream& operator<<(std::ostream& stream, EnumBitset<Enum> const& bs);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, EnumBitset<Enum> const& bs);
 }
 
 #include <rocRoller/Utilities/EnumBitset_impl.hpp>

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <source_location>
 #include <stdexcept>
@@ -39,7 +41,7 @@
 
 namespace rocRoller
 {
-    struct Error : public std::runtime_error
+    struct ROCROLLER_DECLSPEC Error : public std::runtime_error
     {
         using std::runtime_error::runtime_error;
 
@@ -56,23 +58,23 @@ namespace rocRoller
         std::string m_annotatedMessage;
     };
 
-    struct FatalError : public Error
+    struct ROCROLLER_DECLSPEC FatalError : public Error
     {
         using Error::Error;
     };
 
-    struct RecoverableError : public Error
+    struct ROCROLLER_DECLSPEC RecoverableError : public Error
     {
         using Error::Error;
     };
 
     template <class T_Exception, typename... Ts>
-    [[noreturn]] void Throw(Ts const&...);
+    [[noreturn]] ROCROLLER_DECLSPEC void Throw(Ts const&...);
 
     /**
      * Initiates a segfault.  This can be useful for debugging purposes.
      */
-    [[noreturn]] void Crash();
+    [[noreturn]] ROCROLLER_DECLSPEC void Crash();
 
     int* GetNullPointer();
 

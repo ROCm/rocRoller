@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -44,7 +46,7 @@ namespace rocRoller
          * multiplied by each coefficient to arrive at the cost of a particular
          * function.
          */
-        struct Weights
+        struct ROCROLLER_DECLSPEC Weights
         {
             /// Does the instruction require a nop before it?
             /// One per nop.
@@ -135,7 +137,7 @@ namespace rocRoller
         /**
          * LinearWeightedCost: Orders the instructions based on a linear combination of a number of factors.
          */
-        class LinearWeightedCost : public Cost
+        class ROCROLLER_DECLSPEC LinearWeightedCost : public Cost
         {
         public:
             LinearWeightedCost(ContextPtr);

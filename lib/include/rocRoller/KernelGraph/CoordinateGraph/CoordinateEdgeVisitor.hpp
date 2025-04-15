@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <vector>
 
 #include <rocRoller/Expression.hpp>
@@ -41,7 +43,7 @@ namespace rocRoller
         concept CTUndefinedEdge = std::is_same<ConstructMacroTile, T>::value || std::
             is_same<DestructMacroTile, T>::value || std::is_same<Forget, T>::value;
 
-        struct BaseEdgeVisitor
+        struct ROCROLLER_DECLSPEC BaseEdgeVisitor
         {
             // index expressions for the dimensions
             std::vector<Expression::ExpressionPtr> indexes;
@@ -62,7 +64,7 @@ namespace rocRoller
             }
         };
 
-        struct ForwardEdgeVisitor : public BaseEdgeVisitor
+        struct ROCROLLER_DECLSPEC ForwardEdgeVisitor : public BaseEdgeVisitor
         {
             std::vector<Expression::ExpressionPtr> operator()(Flatten const& e)
             {
@@ -158,7 +160,7 @@ namespace rocRoller
             }
         };
 
-        struct ReverseEdgeVisitor : public BaseEdgeVisitor
+        struct ROCROLLER_DECLSPEC ReverseEdgeVisitor : public BaseEdgeVisitor
         {
             std::vector<Expression::ExpressionPtr> operator()(Flatten const& e)
             {
@@ -255,7 +257,7 @@ namespace rocRoller
         /*
          * Diff edge visitors.
          */
-        struct BaseEdgeDiffVisitor : public BaseEdgeVisitor
+        struct ROCROLLER_DECLSPEC BaseEdgeDiffVisitor : public BaseEdgeVisitor
         {
             Expression::ExpressionPtr zero;
 
@@ -286,7 +288,7 @@ namespace rocRoller
             }
         };
 
-        struct ForwardEdgeDiffVisitor : public BaseEdgeDiffVisitor
+        struct ROCROLLER_DECLSPEC ForwardEdgeDiffVisitor : public BaseEdgeDiffVisitor
         {
             using BaseEdgeDiffVisitor::BaseEdgeDiffVisitor;
 
@@ -422,7 +424,7 @@ namespace rocRoller
             }
         };
 
-        struct ReverseEdgeDiffVisitor : public BaseEdgeDiffVisitor
+        struct ROCROLLER_DECLSPEC ReverseEdgeDiffVisitor : public BaseEdgeDiffVisitor
         {
             using BaseEdgeDiffVisitor::BaseEdgeDiffVisitor;
 

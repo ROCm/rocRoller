@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -42,7 +44,8 @@ namespace rocRoller
          * | 94x  | v_* write VCC | v_div_fmas | 4    |
          *
          */
-        class VALUWriteVCCVDIVFMAS : public WaitStateObserver<VALUWriteVCCVDIVFMAS>
+        class ROCROLLER_DECLSPEC VALUWriteVCCVDIVFMAS
+            : public WaitStateObserver<VALUWriteVCCVDIVFMAS>
         {
         public:
             VALUWriteVCCVDIVFMAS() {}

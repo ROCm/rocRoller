@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -38,7 +40,7 @@ namespace rocRoller
          * lifetimes.  Deallocate operations are added when registers
          * are no longer needed.
          */
-        class AddDeallocate : public GraphTransform
+        class ROCROLLER_DECLSPEC AddDeallocate : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

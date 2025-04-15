@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -46,7 +48,7 @@
 
 namespace rocRoller
 {
-    class GPUArchitectureLibrary : public LazySingleton<GPUArchitectureLibrary>
+    class ROCROLLER_DECLSPEC GPUArchitectureLibrary : public LazySingleton<GPUArchitectureLibrary>
     {
     public:
         bool               HasCapability(GPUArchitectureTarget const&, GPUCapability const&);

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <functional>
 #include <optional>
 
@@ -38,7 +40,7 @@ namespace rocRoller
     namespace KernelGraph
     {
         // Return value of colourByUnrollValue.  A colour-mapping is...
-        struct UnrollColouring
+        struct ROCROLLER_DECLSPEC UnrollColouring
         {
             std::map<int, std::map<int, int>>
                 operationColour; //< Mapping: operation tag to colour-mapping.
@@ -47,51 +49,50 @@ namespace rocRoller
             std::set<int> separators; //< Separator edges in the control graph
         };
 
-        std::string toString(UnrollColouring const&);
+        ROCROLLER_DECLSPEC std::string toString(UnrollColouring const&);
 
         /**
          * @brief
          */
-        UnrollColouring colourByUnrollValue(KernelGraph const&             kgraph,
-                                            int                            topOp   = -1,
-                                            std::unordered_set<int> const& exclude = {});
+        ROCROLLER_DECLSPEC UnrollColouring colourByUnrollValue(
+            KernelGraph const& kgraph, int topOp = -1, std::unordered_set<int> const& exclude = {});
 
         /**
         * @brief Return DataFlowTag of LHS of binary expression in Assign node.
         */
         template <Expression::CBinary T>
-        std::tuple<int, Expression::ExpressionPtr> getBinaryLHS(KernelGraph const& kgraph,
-                                                                int                assign);
+        ROCROLLER_DECLSPEC std::tuple<int, Expression::ExpressionPtr>
+                           getBinaryLHS(KernelGraph const& kgraph, int assign);
 
         /**
         * @brief Return DataFlowTag of RHS of binary expression in Assign node.
         */
         template <Expression::CBinary T>
-        std::tuple<int, Expression::ExpressionPtr> getBinaryRHS(KernelGraph const& kgraph,
-                                                                int                assign);
+        ROCROLLER_DECLSPEC std::tuple<int, Expression::ExpressionPtr>
+                           getBinaryRHS(KernelGraph const& kgraph, int assign);
 
         /**
          * @brief Create a range-based for loop.
          *
          * returns {dimension, operation}
          */
-        std::pair<int, int> rangeFor(KernelGraph&              graph,
-                                     Expression::ExpressionPtr size,
-                                     const std::string&        name,
-                                     VariableType              vtype        = DataType::None,
-                                     int                       forLoopCoord = -1);
+        ROCROLLER_DECLSPEC std::pair<int, int> rangeFor(KernelGraph&              graph,
+                                                        Expression::ExpressionPtr size,
+                                                        const std::string&        name,
+                                                        VariableType vtype        = DataType::None,
+                                                        int          forLoopCoord = -1);
 
         /**
          * @brief Remove a range-based for loop created by rangeFor.
          */
-        void purgeFor(KernelGraph& graph, int tag);
+        ROCROLLER_DECLSPEC void purgeFor(KernelGraph& graph, int tag);
 
         /**
          * @brief Create a clone of a ForLoopOp. This new ForLoopOp
          * will use the same ForLoop Dimension as the original
          * ForLoopOp.
         */
-        int cloneForLoop(KernelGraph& graph, int tag);
+        ROCROLLER_DECLSPEC int cloneForLoop(KernelGraph& graph, int tag);
 
         /**
          * @brief Remove a node and all of its children from the control graph
@@ -101,21 +102,21 @@ namespace rocRoller
          * @param kgraph
          * @param node
          */
-        void purgeNodeAndChildren(KernelGraph& kgraph, int node);
+        ROCROLLER_DECLSPEC void purgeNodeAndChildren(KernelGraph& kgraph, int node);
 
         template <std::ranges::forward_range Range = std::initializer_list<int>>
-        void purgeNodes(KernelGraph& kgraph, Range nodes);
+        ROCROLLER_DECLSPEC void purgeNodes(KernelGraph& kgraph, Range nodes);
 
-        bool isHardwareCoordinate(int tag, KernelGraph const& kgraph);
-        bool isLoopishCoordinate(int tag, KernelGraph const& kgraph);
-        bool isStorageCoordinate(int tag, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC bool isHardwareCoordinate(int tag, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC bool isLoopishCoordinate(int tag, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC bool isStorageCoordinate(int tag, KernelGraph const& kgraph);
 
         /**
          * @brief Filter coordinates by type.
          */
         template <typename T>
-        std::unordered_set<int> filterCoordinates(auto const&        candidates,
-                                                  KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::unordered_set<int> filterCoordinates(auto const&        candidates,
+                                                                     KernelGraph const& kgraph);
 
         /**
          * @brief Find storage neighbour in either direction.
@@ -128,19 +129,20 @@ namespace rocRoller
          *
          * Tries upstream first.
          */
-        std::optional<std::pair<int, Graph::Direction>>
-            findStorageNeighbour(int tag, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::optional<std::pair<int, Graph::Direction>>
+                           findStorageNeighbour(int tag, KernelGraph const& kgraph);
 
         /**
          * @brief Return Unroll coordinate beside (as part of a Split
          * edge) the ForLoop coordinate.
          */
-        std::optional<int> findUnrollNeighbour(KernelGraph const& kgraph, int forLoopCoord);
+        ROCROLLER_DECLSPEC std::optional<int> findUnrollNeighbour(KernelGraph const& kgraph,
+                                                                  int                forLoopCoord);
 
         /**
         * @brief Return DataFlowTag of DEST of Assign node.
         */
-        int getDEST(KernelGraph const& kgraph, int assign);
+        ROCROLLER_DECLSPEC int getDEST(KernelGraph const& kgraph, int assign);
 
         /**
          * @brief Return target coordinate for load/store operation.
@@ -151,7 +153,8 @@ namespace rocRoller
          * For stores, the target is the destination (User or LDS) of
          * the store.
          */
-        std::pair<int, Graph::Direction> getOperationTarget(int tag, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::pair<int, Graph::Direction>
+                           getOperationTarget(int tag, KernelGraph const& kgraph);
 
         /**
          * Returns the true coordinate that should be the target of a
@@ -160,7 +163,7 @@ namespace rocRoller
          * For now this will just follow any Duplicate edge leaving
          * `storageTarget`.
          */
-        int getTransformTarget(int storageTarget, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC int getTransformTarget(int storageTarget, KernelGraph const& kgraph);
 
         /**
          * @brief Find all required coordintes needed to compute
@@ -169,30 +172,33 @@ namespace rocRoller
          * @return Pair of: vector required coordinates; set of
          * coordinates in the connecting path.
          */
-        std::pair<std::vector<int>, std::unordered_set<int>> findRequiredCoordinates(
-            int target, Graph::Direction direction, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::pair<std::vector<int>, std::unordered_set<int>>
+                           findRequiredCoordinates(int                target,
+                                                   Graph::Direction   direction,
+                                                   KernelGraph const& kgraph);
 
-        std::pair<std::vector<int>, std::unordered_set<int>>
-            findRequiredCoordinates(int                      target,
-                                    Graph::Direction         direction,
-                                    std::function<bool(int)> fullStop,
-                                    KernelGraph const&       kgraph);
+        ROCROLLER_DECLSPEC std::pair<std::vector<int>, std::unordered_set<int>>
+                           findRequiredCoordinates(int                      target,
+                                                   Graph::Direction         direction,
+                                                   std::function<bool(int)> fullStop,
+                                                   KernelGraph const&       kgraph);
 
-        std::pair<std::unordered_set<int>, std::unordered_set<int>>
-            findAllRequiredCoordinates(int op, KernelGraph const& graph);
+        ROCROLLER_DECLSPEC std::pair<std::unordered_set<int>, std::unordered_set<int>>
+                           findAllRequiredCoordinates(int op, KernelGraph const& graph);
 
         /**
          * @brief Find the operation of type T that contains the
          * candidate load/store operation.
          */
         template <typename T>
-        std::optional<int> findContainingOperation(int candidate, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::optional<int> findContainingOperation(int                candidate,
+                                                                      KernelGraph const& kgraph);
 
         /**
          * @brief Reconnect incoming/outgoing edges from op to newop.
          */
         template <Graph::Direction direction>
-        void reconnect(KernelGraph& graph, int newop, int op);
+        ROCROLLER_DECLSPEC void reconnect(KernelGraph& graph, int newop, int op);
 
         /**
          * @brief Find the operation of type T that contains the
@@ -200,7 +206,8 @@ namespace rocRoller
          * body of that operation.
          */
         template <typename T>
-        std::optional<int> findTopOfContainingOperation(int candidate, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::optional<int>
+                           findTopOfContainingOperation(int candidate, KernelGraph const& kgraph);
 
         /**
          * @brief Create a new coordinate representing data within the scratch space. This will return a
@@ -212,7 +219,7 @@ namespace rocRoller
          * @param context
          * @return User
          */
-        rocRoller::KernelGraph::CoordinateGraph::User newScratchCoordinate(
+        ROCROLLER_DECLSPEC rocRoller::KernelGraph::CoordinateGraph::User newScratchCoordinate(
             Expression::ExpressionPtr size, VariableType varType, ContextPtr context);
 
         /**
@@ -223,47 +230,51 @@ namespace rocRoller
          *
          * Does not delete the original operation.
          */
-        int replaceWith(KernelGraph& graph, int op, int newOp, bool includeBody = true);
+        ROCROLLER_DECLSPEC int
+            replaceWith(KernelGraph& graph, int op, int newOp, bool includeBody = true);
 
         /**
          * @brief Insert chain (from top to bottom) above operation.
          *
          * Bottom is attached to op via a Sequence edge.
          */
-        void insertBefore(KernelGraph& graph, int op, int top, int bottom);
+        ROCROLLER_DECLSPEC void insertBefore(KernelGraph& graph, int op, int top, int bottom);
 
         /**
          * @brief Insert chain (from top to bottom) above operation.
          *
          * Top is attached to op via a Sequence edge.
          */
-        void insertAfter(KernelGraph& graph, int op, int top, int bottom);
+        ROCROLLER_DECLSPEC void insertAfter(KernelGraph& graph, int op, int top, int bottom);
 
         /**
          * @brief Replace operation with a new operation.
          */
-        void insertWithBody(KernelGraph& graph, int op, int newOp);
+        ROCROLLER_DECLSPEC void insertWithBody(KernelGraph& graph, int op, int newOp);
 
         /**
          * @brief Find load/store operations that need their indexes
          * precomputed by ComputeIndex.
          */
-        std::vector<int> findComputeIndexCandidates(KernelGraph const& kgraph, int start);
+        ROCROLLER_DECLSPEC std::vector<int> findComputeIndexCandidates(KernelGraph const& kgraph,
+                                                                       int                start);
 
         /**
          * Removes all CommandArgruments found within an expression
          * with the appropriate AssemblyKernel Argument.
          */
-        Expression::ExpressionPtr cleanArguments(Expression::ExpressionPtr, AssemblyKernelPtr);
+        ROCROLLER_DECLSPEC Expression::ExpressionPtr cleanArguments(Expression::ExpressionPtr,
+                                                                    AssemblyKernelPtr);
 
         /**
          * @brief Get ForLoop and increment (Linear) dimensions
          * assciated with ForLoopOp.
          */
-        std::pair<int, int> getForLoopCoords(int forLoopOp, KernelGraph const& kgraph);
+        ROCROLLER_DECLSPEC std::pair<int, int> getForLoopCoords(int                forLoopOp,
+                                                                KernelGraph const& kgraph);
 
         template <CForwardRangeOf<int> Range>
-        std::optional<int>
+        ROCROLLER_DECLSPEC std::optional<int>
             getForLoopCoord(std::optional<int> forLoopOp, KernelGraph const& kgraph, Range within);
 
         /**
@@ -282,21 +293,21 @@ namespace rocRoller
          * @param forLoop
          * @return std::pair<ExpressionPtr, ExpressionPtr>
          */
-        std::pair<Expression::ExpressionPtr, Expression::ExpressionPtr>
-            getForLoopIncrement(KernelGraph const& graph, int forLoop);
+        ROCROLLER_DECLSPEC std::pair<Expression::ExpressionPtr, Expression::ExpressionPtr>
+                           getForLoopIncrement(KernelGraph const& graph, int forLoop);
 
-        void duplicateMacroTile(KernelGraph& graph, int tag);
+        ROCROLLER_DECLSPEC void duplicateMacroTile(KernelGraph& graph, int tag);
 
-        int duplicateControlNode(KernelGraph& graph, int tag);
+        ROCROLLER_DECLSPEC int duplicateControlNode(KernelGraph& graph, int tag);
 
         /**
          * Updates the threadtile size for enabling the use of long dword instructions
          */
-        void updateThreadTileForLongDwords(int& t_m,
-                                           int& t_n,
-                                           int  maxWidth,
-                                           uint macTileFastMovingDimSize,
-                                           int  numDwordsPerElement);
+        ROCROLLER_DECLSPEC void updateThreadTileForLongDwords(int& t_m,
+                                                              int& t_n,
+                                                              int  maxWidth,
+                                                              uint macTileFastMovingDimSize,
+                                                              int  numDwordsPerElement);
 
         /**
          * @brief Get the tag of the highest SetCoordinate directly upstream from load.
@@ -305,7 +316,7 @@ namespace rocRoller
          * @param load
          * @return int
          */
-        int getTopSetCoordinate(KernelGraph const& graph, int load);
+        ROCROLLER_DECLSPEC int getTopSetCoordinate(KernelGraph const& graph, int load);
 
         /**
          * @brief Get the unique tags of the highest SetCoordinate nodes directly upstream from each load.
@@ -314,7 +325,8 @@ namespace rocRoller
          * @param loads
          * @return std::set<int>
          */
-        std::set<int> getTopSetCoordinates(KernelGraph& graph, std::vector<int> loads);
+        ROCROLLER_DECLSPEC std::set<int> getTopSetCoordinates(KernelGraph&     graph,
+                                                              std::vector<int> loads);
 
         /**
          * @brief Get the SetCoordinate object upstream from load that sets the
@@ -325,7 +337,7 @@ namespace rocRoller
          * @param load
          * @return int
          */
-        int getSetCoordinateForDim(KernelGraph const& graph, int dim, int load);
+        ROCROLLER_DECLSPEC int getSetCoordinateForDim(KernelGraph const& graph, int dim, int load);
 
         /**
          * @brief Determine whether a matching SetCoordinate object exists upstream
@@ -337,16 +349,17 @@ namespace rocRoller
          * @param coordTag
          * @return bool
          */
-        bool hasExistingSetCoordinate(KernelGraph const& graph,
-                                      int                op,
-                                      int                coordValue,
-                                      int                coordTag);
+        ROCROLLER_DECLSPEC bool hasExistingSetCoordinate(KernelGraph const& graph,
+                                                         int                op,
+                                                         int                coordValue,
+                                                         int                coordTag);
 
         /**
          * Gets the unroll coordinate value that is set by a SetCoordinate node upstream
          * from the operation op, for the dimension unrollDim.
          */
-        unsigned int getUnrollValueForOp(KernelGraph const& graph, int unrollDim, int op);
+        ROCROLLER_DECLSPEC unsigned int
+            getUnrollValueForOp(KernelGraph const& graph, int unrollDim, int op);
 
         /**
          * @brief Create duplicates of all of the nodes downstream of the provided
@@ -362,15 +375,16 @@ namespace rocRoller
          * @return New start nodes for the duplicated sub-graph.
          */
         template <std::predicate<int> Predicate>
-        std::vector<int> duplicateControlNodes(KernelGraph&                    graph,
-                                               std::shared_ptr<GraphReindexer> reindexer,
-                                               std::vector<int> const&         startNodes,
-                                               Predicate                       dontDuplicate);
+        ROCROLLER_DECLSPEC std::vector<int>
+                           duplicateControlNodes(KernelGraph&                    graph,
+                                                 std::shared_ptr<GraphReindexer> reindexer,
+                                                 std::vector<int> const&         startNodes,
+                                                 Predicate                       dontDuplicate);
 
         /**
          * @brief Return VariableType of load/store operation.
          */
-        VariableType getVariableType(KernelGraph const& graph, int opTag);
+        ROCROLLER_DECLSPEC VariableType getVariableType(KernelGraph const& graph, int opTag);
 
         /**
          * @brief Add coordinate-transforms for storing a MacroTile
@@ -378,61 +392,62 @@ namespace rocRoller
          *
          * Implemented in LowerTile.cpp.
          */
-        void storeMacroTile_VGPR(KernelGraph&                     graph,
-                                 std::vector<DeferredConnection>& connections,
-                                 int                              userTag,
-                                 int                              macTileTag,
-                                 std::vector<int> const&          sdim,
-                                 std::vector<unsigned int> const& jammedTiles,
-                                 CommandParametersPtr             params,
-                                 ContextPtr                       context);
+        ROCROLLER_DECLSPEC void storeMacroTile_VGPR(KernelGraph&                     graph,
+                                                    std::vector<DeferredConnection>& connections,
+                                                    int                              userTag,
+                                                    int                              macTileTag,
+                                                    std::vector<int> const&          sdim,
+                                                    std::vector<unsigned int> const& jammedTiles,
+                                                    CommandParametersPtr             params,
+                                                    ContextPtr                       context);
 
         /**
          * @brief Add coordinate-transforms for loading a MacroTile
          * from global into a ThreadTile.
          */
-        void loadMacroTile_VGPR(KernelGraph&                     graph,
-                                std::vector<DeferredConnection>& connections,
-                                int                              userTag,
-                                int                              macTileTag,
-                                std::vector<int> const&          sdim,
-                                std::vector<unsigned int> const& jammedTiles,
-                                CommandParametersPtr             params,
-                                ContextPtr                       context,
-                                bool                             isDirect2LDS = false);
+        ROCROLLER_DECLSPEC void loadMacroTile_VGPR(KernelGraph&                     graph,
+                                                   std::vector<DeferredConnection>& connections,
+                                                   int                              userTag,
+                                                   int                              macTileTag,
+                                                   std::vector<int> const&          sdim,
+                                                   std::vector<unsigned int> const& jammedTiles,
+                                                   CommandParametersPtr             params,
+                                                   ContextPtr                       context,
+                                                   bool isDirect2LDS = false);
 
         /**
          * @brief Store version of addLoadThreadTileCT.
          */
-        void addStoreThreadTileCT(KernelGraph&                       graph,
-                                  std::vector<DeferredConnection>&   connections,
-                                  int                                macTileTag,
-                                  int                                iMacX,
-                                  int                                iMacY,
-                                  std::array<unsigned int, 3> const& workgroupSizes,
-                                  std::vector<unsigned int> const&   jammedTiles,
-                                  bool                               useSwappedAccess,
-                                  bool                               isDirect2LDS = false);
+        ROCROLLER_DECLSPEC void
+            addStoreThreadTileCT(KernelGraph&                       graph,
+                                 std::vector<DeferredConnection>&   connections,
+                                 int                                macTileTag,
+                                 int                                iMacX,
+                                 int                                iMacY,
+                                 std::array<unsigned int, 3> const& workgroupSizes,
+                                 std::vector<unsigned int> const&   jammedTiles,
+                                 bool                               useSwappedAccess,
+                                 bool                               isDirect2LDS = false);
 
         /**
          * @brief Store version of addLoadMacroTileCT.
          */
-        std::tuple<int, int, int, int>
-            addStoreMacroTileCT(KernelGraph&                     graph,
-                                std::vector<DeferredConnection>& connections,
-                                int                              macTileTag,
-                                std::vector<int> const&          sdim,
-                                std::vector<unsigned int> const& jammedTiles = {1, 1});
+        ROCROLLER_DECLSPEC std::tuple<int, int, int, int>
+                           addStoreMacroTileCT(KernelGraph&                     graph,
+                                               std::vector<DeferredConnection>& connections,
+                                               int                              macTileTag,
+                                               std::vector<int> const&          sdim,
+                                               std::vector<unsigned int> const& jammedTiles = {1, 1});
 
         /**
          * @brief Store version of addLoad1DMacroTileCT.
          */
-        std::tuple<int, int, int>
-            addStore1DMacroTileCT(KernelGraph&                     graph,
-                                  std::vector<DeferredConnection>& connections,
-                                  int                              macTileTag,
-                                  std::vector<int> const&          sdim,
-                                  std::vector<unsigned int> const& jammedTiles = {1, 1});
+        ROCROLLER_DECLSPEC std::tuple<int, int, int>
+                           addStore1DMacroTileCT(KernelGraph&                     graph,
+                                                 std::vector<DeferredConnection>& connections,
+                                                 int                              macTileTag,
+                                                 std::vector<int> const&          sdim,
+                                                 std::vector<unsigned int> const& jammedTiles = {1, 1});
 
         /**
          * @brief Add coordinate-transforms for tiling two
@@ -448,11 +463,11 @@ namespace rocRoller
          * @return Tuple of: row MacroTileNumber, row MacroTileIndex,
          * column MacroTileNumber, column MacroTileIndex.
          */
-        std::tuple<int, int, int, int>
-            addLoadMacroTileCT(KernelGraph&                     graph,
-                               std::vector<DeferredConnection>& connections,
-                               int                              macTileTag,
-                               std::vector<int> const&          sdim);
+        ROCROLLER_DECLSPEC std::tuple<int, int, int, int>
+                           addLoadMacroTileCT(KernelGraph&                     graph,
+                                              std::vector<DeferredConnection>& connections,
+                                              int                              macTileTag,
+                                              std::vector<int> const&          sdim);
 
         /**
          * @brief Add coordinate-transforms for tiling the X
@@ -470,10 +485,11 @@ namespace rocRoller
          * @return Tuple of: row MacroTileNumber, row MacroTileIndex,
          * column MacroTileIndex.
          */
-        std::tuple<int, int, int> addLoad1DMacroTileCT(KernelGraph&                     graph,
-                                                       std::vector<DeferredConnection>& connections,
-                                                       int                              macTileTag,
-                                                       std::vector<int> const&          sdim);
+        ROCROLLER_DECLSPEC std::tuple<int, int, int>
+                           addLoad1DMacroTileCT(KernelGraph&                     graph,
+                                                std::vector<DeferredConnection>& connections,
+                                                int                              macTileTag,
+                                                std::vector<int> const&          sdim);
 
         /**
          * @brief Add coordinate-transforms for loading a ThreadTile
@@ -498,26 +514,27 @@ namespace rocRoller
          * Required (deferred) connections are appended to
          * `connections`.
          */
-        void addLoadThreadTileCT(KernelGraph&                       graph,
-                                 std::vector<DeferredConnection>&   connections,
-                                 int                                macTileTag,
-                                 int                                iMacX,
-                                 int                                iMacY,
-                                 std::array<unsigned int, 3> const& workgroupSizes,
-                                 std::vector<unsigned int> const&   jammedTiles,
-                                 bool                               useSwappedAccess,
-                                 bool                               isDirect2LDS = false);
+        ROCROLLER_DECLSPEC void
+            addLoadThreadTileCT(KernelGraph&                       graph,
+                                std::vector<DeferredConnection>&   connections,
+                                int                                macTileTag,
+                                int                                iMacX,
+                                int                                iMacY,
+                                std::array<unsigned int, 3> const& workgroupSizes,
+                                std::vector<unsigned int> const&   jammedTiles,
+                                bool                               useSwappedAccess,
+                                bool                               isDirect2LDS = false);
 
         /**
          * @brief Create an internal tile backed by a ThreadTile.
          *
          * Implemented in LowerTile.cpp.
          */
-        int createInternalTile(KernelGraph&         graph,
-                               VariableType         varType,
-                               int                  macTileTag,
-                               CommandParametersPtr params,
-                               ContextPtr           context);
+        ROCROLLER_DECLSPEC int createInternalTile(KernelGraph&         graph,
+                                                  VariableType         varType,
+                                                  int                  macTileTag,
+                                                  CommandParametersPtr params,
+                                                  ContextPtr           context);
 
         /**
          * @brief Create an internal tile backed by a ThreadTile.  The
@@ -525,13 +542,13 @@ namespace rocRoller
          *
          * Implemented in LowerTile.cpp.
          */
-        int createInternalTile(KernelGraph&                     graph,
-                               VariableType                     varType,
-                               int                              macTileTag,
-                               std::vector<unsigned int> const& numWaveTiles,
-                               bool                             splitStore,
-                               CommandParametersPtr             params,
-                               ContextPtr                       context);
+        ROCROLLER_DECLSPEC int createInternalTile(KernelGraph&                     graph,
+                                                  VariableType                     varType,
+                                                  int                              macTileTag,
+                                                  std::vector<unsigned int> const& numWaveTiles,
+                                                  bool                             splitStore,
+                                                  CommandParametersPtr             params,
+                                                  ContextPtr                       context);
 
         /**
          * @brief Order all input pairs of memory nodes in graph.
@@ -540,9 +557,9 @@ namespace rocRoller
          * @param pairs Pairs of memory nodes to be ordered.
          * @param ordered If true, the pairs are passed in order.
          */
-        void orderMemoryNodes(KernelGraph&                         graph,
-                              std::set<std::pair<int, int>> const& pairs,
-                              bool                                 ordered);
+        ROCROLLER_DECLSPEC void orderMemoryNodes(KernelGraph&                         graph,
+                                                 std::set<std::pair<int, int>> const& pairs,
+                                                 bool                                 ordered);
 
         /**
          * @brief Order all memory nodes in srcs with respect to all memory nodes in dests.
@@ -552,10 +569,10 @@ namespace rocRoller
          * @param dests
          * @param ordered If true, all orderings will be src -> dest.
          */
-        void orderMemoryNodes(KernelGraph&         graph,
-                              std::set<int> const& srcs,
-                              std::set<int> const& dests,
-                              bool                 ordered);
+        ROCROLLER_DECLSPEC void orderMemoryNodes(KernelGraph&         graph,
+                                                 std::set<int> const& srcs,
+                                                 std::set<int> const& dests,
+                                                 bool                 ordered);
 
         /**
          * @brief Order all input nodes with respect to each other.
@@ -564,16 +581,17 @@ namespace rocRoller
          * @param nodes
          * @param ordered If true, all orderings will be nodes[i-1] -> nodes[i].
          */
-        void orderMemoryNodes(KernelGraph& graph, std::vector<int> const& nodes, bool ordered);
+        ROCROLLER_DECLSPEC void
+            orderMemoryNodes(KernelGraph& graph, std::vector<int> const& nodes, bool ordered);
 
         /**
          * Replace the use of an old macrotile in the given control
          * nodes with a new macrotile.
          */
-        void replaceMacroTile(KernelGraph&                   graph,
-                              std::unordered_set<int> const& ops,
-                              int                            oldMacTileTag,
-                              int                            newMacTileTag);
+        ROCROLLER_DECLSPEC void replaceMacroTile(KernelGraph&                   graph,
+                                                 std::unordered_set<int> const& ops,
+                                                 int                            oldMacTileTag,
+                                                 int                            newMacTileTag);
 
         /**
          * @brief
@@ -583,7 +601,8 @@ namespace rocRoller
          * @param opTag2 LoadTileDirect2LDS operation
          *
          */
-        void moveConnections(rocRoller::KernelGraph::KernelGraph& kgraph, int opTag1, int opTag2);
+        ROCROLLER_DECLSPEC void
+            moveConnections(rocRoller::KernelGraph::KernelGraph& kgraph, int opTag1, int opTag2);
 
         /**
         * @brief ceil(a/b) = (a+b-1)/b
@@ -592,7 +611,8 @@ namespace rocRoller
         * @param tileSize MacroTile size
         *
         */
-        Expression::ExpressionPtr tileCeilDivide(Expression::ExpressionPtr sdSize, int tileSize);
+        ROCROLLER_DECLSPEC Expression::ExpressionPtr
+                           tileCeilDivide(Expression::ExpressionPtr sdSize, int tileSize);
 
         /**
         * @brief Identifies whether a registerTag has an associated deallocate node.
@@ -601,7 +621,7 @@ namespace rocRoller
         * @param registerTag
         *
         */
-        bool hasDeallocate(const KernelGraph& graph, int tag);
+        ROCROLLER_DECLSPEC bool hasDeallocate(const KernelGraph& graph, int tag);
     }
 }
 

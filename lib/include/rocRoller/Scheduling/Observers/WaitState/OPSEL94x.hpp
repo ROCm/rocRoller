@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -41,7 +43,7 @@ namespace rocRoller
          * | 94x  | v_* using SDWA  | v_* read | 1    |
          *
          */
-        class OPSEL94x : public WaitStateObserver<OPSEL94x>
+        class ROCROLLER_DECLSPEC OPSEL94x : public WaitStateObserver<OPSEL94x>
         {
         public:
             OPSEL94x() {}

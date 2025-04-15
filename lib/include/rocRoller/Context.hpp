@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -57,11 +59,11 @@
 #include <rocRoller/Scheduling/Scheduling_fwd.hpp>
 #include <rocRoller/Utilities/Random_fwd.hpp>
 
-class ContextFixture;
+class ROCROLLER_DECLSPEC ContextFixture;
 
 namespace rocRoller
 {
-    class Context : public std::enable_shared_from_this<Context>
+    class ROCROLLER_DECLSPEC Context : public std::enable_shared_from_this<Context>
     {
     public:
         Context();
@@ -184,7 +186,7 @@ namespace rocRoller
         KernelOptions m_kernelOptions;
     };
 
-    std::ostream& operator<<(std::ostream&, ContextPtr const&);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, ContextPtr const&);
 }
 
 #include <rocRoller/Context_impl.hpp>

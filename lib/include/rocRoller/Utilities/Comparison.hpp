@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <type_traits>
 
 namespace rocRoller
@@ -85,7 +87,7 @@ namespace rocRoller
  *  -  1: rhs is lesser
  */
     template <typename T, typename U = T>
-    struct Comparison
+    struct ROCROLLER_DECLSPEC Comparison
     {
         enum
         {
@@ -187,7 +189,7 @@ namespace rocRoller
     }
 
     template <size_t N, class... Types>
-    struct tuple_hash
+    struct ROCROLLER_DECLSPEC tuple_hash
     {
         using MyTuple = std::tuple<Types...>;
         using TypeN   = typename std::tuple_element<N, MyTuple>::type;
@@ -201,7 +203,7 @@ namespace rocRoller
     };
 
     template <class... Types>
-    struct tuple_hash<0, Types...>
+    struct ROCROLLER_DECLSPEC tuple_hash<0, Types...>
     {
         using MyTuple = std::tuple<Types...>;
         using Type0   = typename std::tuple_element<0, MyTuple>::type;
@@ -225,7 +227,7 @@ namespace rocRoller
 namespace std
 {
     template <class... Types>
-    struct hash<tuple<Types...>>
+    struct ROCROLLER_DECLSPEC hash<tuple<Types...>>
     {
         inline size_t operator()(tuple<Types...> const& tup) const
         {

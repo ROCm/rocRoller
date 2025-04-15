@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/InstructionValues/Register.hpp>
 
-class RegisterTest_RegisterToString_Test;
+class ROCROLLER_DECLSPEC RegisterTest_RegisterToString_Test;
 
 namespace rocRoller
 {
@@ -42,10 +44,10 @@ namespace rocRoller
             Count,
         };
 
-        std::string   toString(AllocatorScheme a);
-        std::ostream& operator<<(std::ostream&, AllocatorScheme const&);
+        ROCROLLER_DECLSPEC std::string toString(AllocatorScheme a);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, AllocatorScheme const&);
 
-        class Allocator : public std::enable_shared_from_this<Allocator>
+        class ROCROLLER_DECLSPEC Allocator : public std::enable_shared_from_this<Allocator>
         {
         public:
             Allocator(Type            regType,

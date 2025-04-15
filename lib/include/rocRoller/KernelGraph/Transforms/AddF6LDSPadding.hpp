@@ -25,8 +25,10 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -51,7 +53,7 @@ namespace rocRoller
          *     transpose loads have their new needsPadding field set to indicate
          *     to CodeGen that padding is required.
          */
-        class AddF6LDSPadding : public GraphTransform
+        class ROCROLLER_DECLSPEC AddF6LDSPadding : public GraphTransform
         {
         public:
             AddF6LDSPadding(ContextPtr context)

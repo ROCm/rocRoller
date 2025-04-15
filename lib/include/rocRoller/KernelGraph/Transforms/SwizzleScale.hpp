@@ -25,8 +25,10 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -35,7 +37,7 @@ namespace rocRoller
         /**
          * @brief Swizzle the scale loads.
          */
-        class SwizzleScale : public GraphTransform
+        class ROCROLLER_DECLSPEC SwizzleScale : public GraphTransform
         {
         public:
             SwizzleScale(CommandParametersPtr params, ContextPtr context)

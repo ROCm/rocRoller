@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    class LabelAllocator;
+    class ROCROLLER_DECLSPEC LabelAllocator;
     using LabelAllocatorPtr = std::shared_ptr<LabelAllocator>;
 }

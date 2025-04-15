@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ namespace rocRoller
          * The same random seed should produce the same program, regardless of addition or
          * removal of comment-only instructions. Respects the locking rules.
          */
-        class RandomScheduler : public Scheduler
+        class ROCROLLER_DECLSPEC RandomScheduler : public Scheduler
         {
         public:
             RandomScheduler(ContextPtr);

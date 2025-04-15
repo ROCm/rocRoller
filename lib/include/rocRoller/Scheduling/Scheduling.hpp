@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -47,7 +49,7 @@ namespace rocRoller
          * 1. Have a neutral default value, either in the declaration or in the constructor
          * 2. Be added to the combine() function which is used to merge values from different observers.
          */
-        struct InstructionStatus
+        struct ROCROLLER_DECLSPEC InstructionStatus
         {
             unsigned int stallCycles = 0;
             WaitCount    waitCount;
@@ -124,7 +126,7 @@ namespace rocRoller
                 } -> std::convertible_to<bool>;
         };
 
-        struct IObserver
+        struct ROCROLLER_DECLSPEC IObserver
         {
             virtual ~IObserver();
 

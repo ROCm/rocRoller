@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <unordered_set>
 #include <vector>
@@ -55,7 +57,7 @@ namespace rocRoller::KernelGraph
      * register already exists.  If not, the register is added to the
      * current scope.
      */
-    class ScopeManager
+    class ROCROLLER_DECLSPEC ScopeManager
     {
     public:
         ScopeManager() = delete;

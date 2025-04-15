@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -36,7 +38,7 @@
 
 namespace rocRoller
 {
-    class KernelArguments
+    class ROCROLLER_DECLSPEC KernelArguments
     {
     public:
         explicit KernelArguments(bool log = true, size_t bytes = 0);
@@ -71,7 +73,7 @@ namespace rocRoller
 
         using ArgPair = std::pair<void const*, size_t>;
 
-        class const_iterator
+        class ROCROLLER_DECLSPEC const_iterator
         {
         public:
             using iterator_category = std::input_iterator_tag;
@@ -136,8 +138,9 @@ namespace rocRoller
         bool m_log;
     };
 
-    std::ostream& operator<<(std::ostream& stream, const KernelArguments& t);
-    std::ostream& operator<<(std::ostream& stream, const KernelArguments::const_iterator& iter);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, const KernelArguments& t);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                          stream,
+                                                const KernelArguments::const_iterator& iter);
 
 } // namespace rocRoller
 

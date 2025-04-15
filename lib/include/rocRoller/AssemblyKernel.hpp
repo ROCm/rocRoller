@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -43,7 +45,7 @@
 
 namespace rocRoller
 {
-    class AssemblyKernel
+    class ROCROLLER_DECLSPEC AssemblyKernel
     {
     public:
         AssemblyKernel(ContextPtr context, std::string const& kernelName);
@@ -231,7 +233,7 @@ namespace rocRoller
         CommandPtr                  m_command;
     };
 
-    struct AssemblyKernels
+    struct ROCROLLER_DECLSPEC AssemblyKernels
     {
         constexpr std::array<int, 2> hsa_version()
         {

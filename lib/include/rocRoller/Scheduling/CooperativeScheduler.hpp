@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ namespace rocRoller
          * the minimum cost, and yielding from that stream until an
          * instruction with a non-zero cost is encountered.
          */
-        class CooperativeScheduler : public Scheduler
+        class ROCROLLER_DECLSPEC CooperativeScheduler : public Scheduler
         {
         public:
             CooperativeScheduler(ContextPtr, CostFunction);

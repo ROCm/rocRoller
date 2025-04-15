@@ -38,7 +38,7 @@ namespace rocRoller
     }
 
     template <typename T_Exception, typename... Ts>
-    [[noreturn]] void Throw(Ts const&... message)
+    inline void Throw(Ts const&... message)
     {
         bool var = Error::BreakOnThrow();
         if(var)

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -44,7 +46,7 @@ namespace rocRoller
          *
          * Must also follow the locking rules.
          */
-        class RoundRobinScheduler : public Scheduler
+        class ROCROLLER_DECLSPEC RoundRobinScheduler : public Scheduler
         {
         public:
             RoundRobinScheduler(ContextPtr);

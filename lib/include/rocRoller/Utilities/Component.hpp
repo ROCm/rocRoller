@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <functional>
 #include <iostream>
@@ -47,10 +49,10 @@ namespace rocRoller
         };
 
         /**
-         * @brief A `ComponentBase` is a base class for a category of components.
+         * @brief A `ComponentBase` is a base class ROCROLLER_DECLSPEC for a category of components.
          *
          *  - It defines the interface for accessing the implementations.
-         *  - All subclasses should provide interchangeable functionality.
+         *  - All subclass ROCROLLER_DECLSPECes should provide interchangeable functionality.
          *
          */
         template <typename T>
@@ -75,19 +77,19 @@ namespace rocRoller
         /**
          * A function to match whether a given component is appropriate for the situation.
          *
-         * Only one subclass should match any given situation.
+         * Only one subclass ROCROLLER_DECLSPEC should match any given situation.
          */
         template <ComponentBase Base>
         using Matcher = std::function<bool(typename Base::Argument)>;
 
         /**
-         * A factory function to create an instance of a particular subclass.
+         * A factory function to create an instance of a particular subclass ROCROLLER_DECLSPEC.
          */
         template <ComponentBase Base>
         using Builder = std::function<std::shared_ptr<Base>(typename Base::Argument)>;
 
         /**
-         * A concrete subclass which fulfils the required functionality in a subset of situations.
+         * A concrete subclass ROCROLLER_DECLSPEC which fulfils the required functionality in a subset of situations.
          */
         template <typename T>
         concept Component = requires(T a)
@@ -118,7 +120,7 @@ namespace rocRoller
         };
 
         /**
-         * @brief Returns an object of the appropriate subclass of `Base`, based on `ctx`.
+         * @brief Returns an object of the appropriate subclass ROCROLLER_DECLSPEC of `Base`, based on `ctx`.
          * May be the same object from one call to the next.
          */
         template <ComponentBase Base>
@@ -140,7 +142,7 @@ namespace rocRoller
         // clang-format on
 
         /**
-         * @brief Returns a new instance object of the appropriate subclass of `Base`, based
+         * @brief Returns a new instance object of the appropriate subclass ROCROLLER_DECLSPEC of `Base`, based
          * on `ctx`.
          */
         template <ComponentBase Base>
@@ -184,7 +186,7 @@ namespace rocRoller
             = rocRoller::Component::RegisterComponentImpl<component<types>>(); \
     }
 
-        class ComponentFactoryBase
+        class ROCROLLER_DECLSPEC ComponentFactoryBase
         {
         public:
             static void ClearAllCaches();
@@ -198,12 +200,12 @@ namespace rocRoller
         };
 
         template <ComponentBase Base>
-        class ComponentFactory : public ComponentFactoryBase
+        class ROCROLLER_DECLSPEC ComponentFactory : public ComponentFactoryBase
         {
         public:
             using Argument = typename Base::Argument;
 
-            struct Entry
+            struct ROCROLLER_DECLSPEC Entry
             {
                 std::string   name;
                 Matcher<Base> matcher;
@@ -236,7 +238,7 @@ namespace rocRoller
             std::vector<Entry> m_entries;
 
             /**
-             * Finds an entry among the registered entries (classes).  This is the fallback for if there
+             * Finds an entry among the registered entries (class ROCROLLER_DECLSPECes).  This is the fallback for if there
              * is no entry in the cache.
              */
             template <typename T, bool Debug = false>

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
 
@@ -36,15 +38,15 @@ namespace rocRoller
         /**
          * @brief Simplify a graph by removing redundant edges.
          */
-        class Simplify : public GraphTransform
+        class ROCROLLER_DECLSPEC Simplify : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;
             std::string name() const override;
         };
 
-        void removeRedundantSequenceEdges(KernelGraph& graph);
-        void removeRedundantBodyEdges(KernelGraph& graph);
-        void removeRedundantNOPs(KernelGraph& graph);
+        ROCROLLER_DECLSPEC void removeRedundantSequenceEdges(KernelGraph& graph);
+        ROCROLLER_DECLSPEC void removeRedundantBodyEdges(KernelGraph& graph);
+        ROCROLLER_DECLSPEC void removeRedundantNOPs(KernelGraph& graph);
     }
 }

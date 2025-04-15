@@ -26,14 +26,16 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    class CommandParameters;
-    class CommandLaunchParameters;
-    class CommandKernel;
-    class CommandSolution;
+    class ROCROLLER_DECLSPEC CommandParameters;
+    class ROCROLLER_DECLSPEC CommandLaunchParameters;
+    class ROCROLLER_DECLSPEC CommandKernel;
+    class ROCROLLER_DECLSPEC CommandSolution;
 
     using CommandParametersPtr       = std::shared_ptr<CommandParameters>;
     using CommandKernelPtr           = std::shared_ptr<CommandKernel>;

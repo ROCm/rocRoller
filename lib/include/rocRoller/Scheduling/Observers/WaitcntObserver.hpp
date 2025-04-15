@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context.hpp>
 #include <rocRoller/GPUArchitecture/GPUInstructionInfo.hpp>
 #include <rocRoller/Scheduling/Scheduling.hpp>
@@ -43,7 +45,7 @@ namespace rocRoller
          * @brief This struct is used to store the _unallocated_ state of the waitcnt queues.
          *
          */
-        struct WaitcntState
+        struct ROCROLLER_DECLSPEC WaitcntState
         {
         public:
             WaitcntState();
@@ -74,7 +76,7 @@ namespace rocRoller
             WaitQueueMap<GPUWaitQueueType> m_typeInQueue;
         };
 
-        class WaitcntObserver
+        class ROCROLLER_DECLSPEC WaitcntObserver
         {
         public:
             WaitcntObserver();

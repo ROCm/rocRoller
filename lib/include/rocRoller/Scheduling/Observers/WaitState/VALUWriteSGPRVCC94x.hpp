@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -57,7 +59,7 @@ namespace rocRoller
          * NOTE: If the SGPR/VCC is read as a carry in these cases, 0 NOPs are required.
          *
          */
-        class VALUWriteSGPRVCC94x : public WaitStateObserver<VALUWriteSGPRVCC94x>
+        class ROCROLLER_DECLSPEC VALUWriteSGPRVCC94x : public WaitStateObserver<VALUWriteSGPRVCC94x>
         {
         public:
             VALUWriteSGPRVCC94x() {}

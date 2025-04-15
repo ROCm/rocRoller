@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <stdlib.h>
@@ -39,7 +41,7 @@ namespace rocRoller
 {
     namespace Scheduling
     {
-        class FileWritingObserver
+        class ROCROLLER_DECLSPEC FileWritingObserver
         {
         public:
             FileWritingObserver() {}

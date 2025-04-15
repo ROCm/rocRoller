@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <optional>
 
@@ -104,7 +106,7 @@ namespace rocRoller
         };
 
         template <class DerivedObserver>
-        class WaitStateObserver
+        class ROCROLLER_DECLSPEC WaitStateObserver
         {
         public:
             WaitStateObserver() {}

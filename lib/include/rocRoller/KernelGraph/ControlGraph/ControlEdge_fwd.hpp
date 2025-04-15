@@ -26,18 +26,20 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 
 namespace rocRoller
 {
     namespace KernelGraph::ControlGraph
     {
-        struct Sequence;
-        struct Body; // Of kernel, for loop, if, etc.
-        struct Else; // Alternative body for false conditional
+        struct ROCROLLER_DECLSPEC Sequence;
+        struct ROCROLLER_DECLSPEC Body; // Of kernel, for loop, if, etc.
+        struct ROCROLLER_DECLSPEC Else; // Alternative body for false conditional
 
-        struct Initialize;
-        struct ForLoopIncrement;
+        struct ROCROLLER_DECLSPEC Initialize;
+        struct ROCROLLER_DECLSPEC ForLoopIncrement;
 
         using ControlEdge = std::variant<Sequence, Initialize, ForLoopIncrement, Body, Else>;
 

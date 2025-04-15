@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 
 namespace rocRoller
@@ -36,31 +38,31 @@ namespace rocRoller
          * Nodes (Dimensions)
          */
 
-        struct ForLoop;
-        struct Adhoc;
-        struct ElementNumber;
-        struct Lane;
-        struct Linear;
-        struct LDS;
-        struct MacroTile;
-        struct MacroTileIndex;
-        struct MacroTileNumber;
-        struct SubDimension;
-        struct ThreadTile;
-        struct ThreadTileIndex;
-        struct ThreadTileNumber;
-        struct Unroll;
-        struct User;
-        struct VGPR;
-        struct VGPRBlockNumber;
-        struct VGPRBlockIndex;
-        struct WaveTile;
-        struct WaveTileIndex;
-        struct WaveTileNumber;
-        struct JammedWaveTileNumber;
-        struct Wavefront;
-        struct Workgroup;
-        struct Workitem;
+        struct ROCROLLER_DECLSPEC ForLoop;
+        struct ROCROLLER_DECLSPEC Adhoc;
+        struct ROCROLLER_DECLSPEC ElementNumber;
+        struct ROCROLLER_DECLSPEC Lane;
+        struct ROCROLLER_DECLSPEC Linear;
+        struct ROCROLLER_DECLSPEC LDS;
+        struct ROCROLLER_DECLSPEC MacroTile;
+        struct ROCROLLER_DECLSPEC MacroTileIndex;
+        struct ROCROLLER_DECLSPEC MacroTileNumber;
+        struct ROCROLLER_DECLSPEC SubDimension;
+        struct ROCROLLER_DECLSPEC ThreadTile;
+        struct ROCROLLER_DECLSPEC ThreadTileIndex;
+        struct ROCROLLER_DECLSPEC ThreadTileNumber;
+        struct ROCROLLER_DECLSPEC Unroll;
+        struct ROCROLLER_DECLSPEC User;
+        struct ROCROLLER_DECLSPEC VGPR;
+        struct ROCROLLER_DECLSPEC VGPRBlockNumber;
+        struct ROCROLLER_DECLSPEC VGPRBlockIndex;
+        struct ROCROLLER_DECLSPEC WaveTile;
+        struct ROCROLLER_DECLSPEC WaveTileIndex;
+        struct ROCROLLER_DECLSPEC WaveTileNumber;
+        struct ROCROLLER_DECLSPEC JammedWaveTileNumber;
+        struct ROCROLLER_DECLSPEC Wavefront;
+        struct ROCROLLER_DECLSPEC Workgroup;
+        struct ROCROLLER_DECLSPEC Workitem;
 
         using Dimension = std::variant<ForLoop,
                                        Adhoc,

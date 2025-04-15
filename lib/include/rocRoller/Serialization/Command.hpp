@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -47,13 +49,13 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO>
-        struct SequenceTraits<std::vector<CommandArgumentPtr>, IO>
+        struct ROCROLLER_DECLSPEC SequenceTraits<std::vector<CommandArgumentPtr>, IO>
             : public DefaultSequenceTraits<std::vector<CommandArgumentPtr>, IO, false>
         {
         };
 
         template <>
-        struct KeyConversion<ArgumentOffsetMap::key_type>
+        struct ROCROLLER_DECLSPEC KeyConversion<ArgumentOffsetMap::key_type>
         {
             static std::string toString(ArgumentOffsetMap::key_type const& value)
             {
@@ -80,13 +82,13 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct CustomMappingTraits<ArgumentOffsetMap, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<ArgumentOffsetMap, IO>
             : public DefaultCustomMappingTraits<ArgumentOffsetMap, IO, false, false>
         {
         };
 
         template <typename IO>
-        struct MappingTraits<Command, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<Command, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -110,7 +112,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<CommandPtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<CommandPtr, IO, Context>
             : public SharedPointerMappingTraits<CommandPtr, IO, Context, true>
         {
         };

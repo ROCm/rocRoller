@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <type_traits>
 
 #include <rocRoller/DataTypes/DataTypes.hpp>
@@ -40,7 +42,7 @@ namespace rocRoller
          * i.e. provides a Count value and toString (fromString() uses toString).
          */
         template <CCountedEnum Enum>
-        struct ScalarTraits<Enum>
+        struct ROCROLLER_DECLSPEC ScalarTraits<Enum>
         {
             static std::string output(const Enum& value)
             {

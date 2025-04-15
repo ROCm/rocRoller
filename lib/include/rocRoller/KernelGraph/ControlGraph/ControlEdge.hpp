@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 #include <rocRoller/KernelGraph/ControlGraph/ControlEdge_fwd.hpp>

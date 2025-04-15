@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <tuple>
 
@@ -36,7 +38,7 @@ namespace rocRoller
 {
     namespace InstructionGenerators
     {
-        struct MatrixMultiply
+        struct ROCROLLER_DECLSPEC MatrixMultiply
         {
             /**
              * Context, accumulation type, input type.
@@ -65,7 +67,7 @@ namespace rocRoller
                 = 0;
         };
 
-        struct MatrixMultiplyGenerator : public MatrixMultiply
+        struct ROCROLLER_DECLSPEC MatrixMultiplyGenerator : public MatrixMultiply
         {
             using Base = MatrixMultiply;
 

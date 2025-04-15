@@ -26,30 +26,32 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Serialization
     {
         template <typename IO>
-        struct IOTraits;
+        struct ROCROLLER_DECLSPEC IOTraits;
 
         template <typename T, typename IO, typename Context>
-        struct MappingTraits;
+        struct ROCROLLER_DECLSPEC MappingTraits;
 
         template <typename T, typename IO>
-        struct EnumTraits;
+        struct ROCROLLER_DECLSPEC EnumTraits;
 
         template <typename T, typename IO>
-        struct CustomMappingTraits;
+        struct ROCROLLER_DECLSPEC CustomMappingTraits;
 
         template <typename T, typename IO>
-        struct SequenceTraits;
+        struct ROCROLLER_DECLSPEC SequenceTraits;
 
         template <typename T, typename IO>
-        struct EnumTraits;
+        struct ROCROLLER_DECLSPEC EnumTraits;
 
         template <typename Object, typename IO, typename Context>
-        struct EmptyMappingTraits;
+        struct ROCROLLER_DECLSPEC EmptyMappingTraits;
     }
 
 }

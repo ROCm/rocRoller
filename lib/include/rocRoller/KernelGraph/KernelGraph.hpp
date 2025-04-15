@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/AssemblyKernel_fwd.hpp>
 #include <rocRoller/CommandSolution_fwd.hpp>
 #include <rocRoller/Context.hpp>
@@ -52,7 +54,7 @@ namespace rocRoller
          * @brief Kernel graph container: control and coordinate graphs, control-to-coordinate mapper.
          * @ingroup KernelGraph
          */
-        class KernelGraph
+        class ROCROLLER_DECLSPEC KernelGraph
         {
             std::vector<GraphConstraint> m_constraints{
                 &NoDanglingMappings, &SingleControlRoot, &NoRedundantSetCoordinates};
@@ -119,17 +121,17 @@ namespace rocRoller
          *
          * @ingroup KernelGraph
          */
-        KernelGraph translate(CommandPtr);
+        ROCROLLER_DECLSPEC KernelGraph translate(CommandPtr);
 
         /**
          * Generate assembly from a KernelGraph.
          *
          * @ingroup KernelGraph
          */
-        Generator<Instruction> generate(KernelGraph, AssemblyKernelPtr);
+        ROCROLLER_DECLSPEC Generator<Instruction> generate(KernelGraph, AssemblyKernelPtr);
 
-        std::string toYAML(KernelGraph const& g);
-        KernelGraph fromYAML(std::string const& str);
+        ROCROLLER_DECLSPEC std::string toYAML(KernelGraph const& g);
+        ROCROLLER_DECLSPEC KernelGraph fromYAML(std::string const& str);
 
     }
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <map>
 #include <memory>
 
@@ -42,7 +44,7 @@ namespace rocRoller
      *
      * See also: LoadStoreTileGenerator::generateStride.
      */
-    struct RegisterExpressionAttributes
+    struct ROCROLLER_DECLSPEC RegisterExpressionAttributes
     {
         DataType dataType   = DataType::None; //< Desired result type of the expression
         bool     unitStride = false; //< Expression corresponds to a unitary (=1) element-stride.
@@ -54,7 +56,7 @@ namespace rocRoller
 
         auto operator<=>(RegisterExpressionAttributes const& other) const = default;
     };
-    std::string toString(RegisterExpressionAttributes const& attrs);
+    ROCROLLER_DECLSPEC std::string toString(RegisterExpressionAttributes const& attrs);
 
     /**
      * @brief Register Tag Manager - Keeps track of data flow tags
@@ -71,7 +73,7 @@ namespace rocRoller
      * using the associated data flow tag.
      *
      */
-    class RegisterTagManager
+    class ROCROLLER_DECLSPEC RegisterTagManager
     {
     public:
         RegisterTagManager(ContextPtr context);

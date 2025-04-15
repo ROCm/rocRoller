@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Serialization/Base.hpp>
 
 #include <cstddef>
@@ -35,7 +37,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename T, T>
-        struct SameType;
+        struct ROCROLLER_DECLSPEC SameType;
 
         template <typename T, typename IO, typename Context = EmptyContext>
         concept CMappedType = requires(T& obj, IO& io, Context& ctx)
@@ -50,13 +52,13 @@ namespace rocRoller
         };
 
         template <typename T, typename IO, typename Context = EmptyContext>
-        struct has_MappingTraits
+        struct ROCROLLER_DECLSPEC has_MappingTraits
         {
             static const bool value = CMappedType<T, IO, Context>;
         };
 
         template <typename T, typename IO, typename Context = EmptyContext>
-        struct has_EmptyMappingTraits
+        struct ROCROLLER_DECLSPEC has_EmptyMappingTraits
         {
             static const bool value
                 = std::same_as<Context, EmptyContext> && CEmptyMappedType<T, IO, Context>;
@@ -67,7 +69,7 @@ namespace rocRoller
             value && !has_MappingTraits<T, IO, Context>::value;
 
         template <typename T, typename IO>
-        class has_EnumTraits
+        class ROCROLLER_DECLSPEC has_EnumTraits
         {
             using enumeration = void (*)(IO&, T&);
 
@@ -96,7 +98,7 @@ namespace rocRoller
         };
 
         template <typename T, typename IO>
-        class has_SequenceTraits
+        class ROCROLLER_DECLSPEC has_SequenceTraits
         {
             using size = size_t (*)(IO&, T&);
 
@@ -114,7 +116,7 @@ namespace rocRoller
         concept SequenceType = has_SequenceTraits<T, IO>::value;
 
         template <typename T, typename IO>
-        class has_CustomMappingTraits
+        class ROCROLLER_DECLSPEC has_CustomMappingTraits
         {
             using inputOne = void (*)(IO&, std::string const&, T&);
             using output   = void (*)(IO&, T&);
@@ -134,7 +136,7 @@ namespace rocRoller
         concept CustomMappingType = has_CustomMappingTraits<T, IO>::value;
 
         template <typename T, typename IO>
-        struct has_SerializationTraits
+        struct ROCROLLER_DECLSPEC has_SerializationTraits
         {
             static const bool value0
                 = has_EmptyMappingTraits<T, IO>::value || has_MappingTraits<T, IO>::value;
@@ -165,13 +167,13 @@ namespace rocRoller
         };
 
         template <typename T>
-        struct HasFlowValue
+        struct ROCROLLER_DECLSPEC HasFlowValue
         {
             static const bool flow = false;
         };
 
         template <CHasFlowMember T>
-        struct HasFlowValue<T>
+        struct ROCROLLER_DECLSPEC HasFlowValue<T>
         {
             static const bool flow = T::flow;
         };

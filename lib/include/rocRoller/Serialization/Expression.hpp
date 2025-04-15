@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/AssemblyKernelArgument.hpp>
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Expression.hpp>
@@ -41,21 +43,21 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::ExpressionPtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::ExpressionPtr, IO, Context>
             : public SharedPointerMappingTraits<Expression::ExpressionPtr, IO, Context, true>
         {
             static const bool flow = true;
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::Expression, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::Expression, IO, Context>
             : public DefaultVariantMappingTraits<Expression::Expression, IO, Context>
         {
             static const bool flow = true;
         };
 
         template <Expression::CBinary TExp, typename IO, typename Context>
-        struct MappingTraits<TExp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TExp, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -76,7 +78,7 @@ namespace rocRoller
         };
 
         template <Expression::CUnary TExp, typename IO, typename Context>
-        struct MappingTraits<TExp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TExp, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -96,7 +98,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::Convert, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::Convert, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -117,7 +119,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::BitFieldExtract, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::BitFieldExtract, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -140,7 +142,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::ScaledMatrixMultiply, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::ScaledMatrixMultiply, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -163,7 +165,7 @@ namespace rocRoller
         };
 
         template <Expression::CTernary TExp, typename IO, typename Context>
-        struct MappingTraits<TExp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TExp, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -186,7 +188,7 @@ namespace rocRoller
 
         static_assert(CNamedVariant<CommandArgumentValue>);
         template <typename IO, typename Context>
-        struct MappingTraits<CommandArgumentValue, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<CommandArgumentValue, IO, Context>
             : public DefaultVariantMappingTraits<CommandArgumentValue, IO, Context>
         {
             static const bool flow = true;
@@ -236,7 +238,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<CommandArgumentPtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<CommandArgumentPtr, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -281,7 +283,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<VariableType, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<VariableType, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -302,7 +304,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Register::Value, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Register::Value, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -335,14 +337,14 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Register::ValuePtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Register::ValuePtr, IO, Context>
             : public SharedPointerMappingTraits<Register::ValuePtr, IO, Context, true>
         {
             static const bool flow = true;
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<AssemblyKernelArgumentPtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<AssemblyKernelArgumentPtr, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -370,7 +372,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::DataFlowTag, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::DataFlowTag, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -392,7 +394,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Expression::WaveTilePtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Expression::WaveTilePtr, IO, Context>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;

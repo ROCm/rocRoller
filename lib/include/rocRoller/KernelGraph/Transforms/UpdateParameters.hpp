@@ -25,8 +25,10 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -36,7 +38,7 @@ namespace rocRoller
          * @brief Updates dimension parameters within the coordinate
          * graph based on the command parameters.
          */
-        class UpdateParameters : public GraphTransform
+        class ROCROLLER_DECLSPEC UpdateParameters : public GraphTransform
         {
         public:
             UpdateParameters(CommandParametersPtr params)
@@ -54,7 +56,7 @@ namespace rocRoller
             CommandParametersPtr m_params;
         };
 
-        class UpdateWavefrontParameters : public GraphTransform
+        class ROCROLLER_DECLSPEC UpdateWavefrontParameters : public GraphTransform
         {
         public:
             UpdateWavefrontParameters(CommandParametersPtr params)
@@ -72,7 +74,7 @@ namespace rocRoller
             CommandParametersPtr m_params;
         };
 
-        class SetWorkitemCount : public GraphTransform
+        class ROCROLLER_DECLSPEC SetWorkitemCount : public GraphTransform
         {
         public:
             SetWorkitemCount(ContextPtr context)

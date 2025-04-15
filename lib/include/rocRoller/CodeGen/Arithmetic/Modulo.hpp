@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,15 +35,15 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::Modulo>>
-        GetGenerator<Expression::Modulo>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::Modulo>>
+                       GetGenerator<Expression::Modulo>(Register::ValuePtr dst,
                                          Register::ValuePtr lhs,
                                          Register::ValuePtr rhs,
                                          Expression::Modulo const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class ModuloGenerator : public BinaryArithmeticGenerator<Expression::Modulo>
+    class ROCROLLER_DECLSPEC ModuloGenerator : public BinaryArithmeticGenerator<Expression::Modulo>
     {
     public:
         ModuloGenerator(ContextPtr c)

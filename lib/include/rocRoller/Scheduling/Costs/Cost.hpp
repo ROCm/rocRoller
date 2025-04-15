@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ namespace rocRoller
          *
          * - This class should be able to be made into `ComponentBase` class
          */
-        class Cost
+        class ROCROLLER_DECLSPEC Cost
         {
         public:
             using Argument = std::tuple<CostFunction, rocRoller::ContextPtr>;
@@ -84,7 +86,7 @@ namespace rocRoller
             std::weak_ptr<rocRoller::Context> m_ctx;
         };
 
-        std::ostream& operator<<(std::ostream&, CostFunction);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, CostFunction);
     }
 }
 

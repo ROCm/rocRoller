@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/BufferInstructionOptions.hpp>
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Graph/Hypergraph.hpp>
@@ -43,13 +45,13 @@ namespace rocRoller
     {
         template <typename T, typename IO, typename Context>
         requires(std::constructible_from<KernelGraph::ControlGraph::ControlEdge,
-                                         T>) struct MappingTraits<T, IO, Context>
+                                         T>) struct ROCROLLER_DECLSPEC MappingTraits<T, IO, Context>
             : public EmptyMappingTraits<T, IO, Context>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<BufferInstructionOptions, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<BufferInstructionOptions, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, BufferInstructionOptions& opt, Context&)
@@ -71,7 +73,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::SetCoordinate, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::SetCoordinate, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::SetCoordinate& op, Context& ctx)
@@ -95,7 +98,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ForLoopOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::ForLoopOp, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::ForLoopOp& op, Context&)
@@ -120,7 +123,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ConditionalOp, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::ConditionalOp, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::ConditionalOp& op, Context&)
@@ -145,7 +149,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::AssertOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::AssertOp, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::AssertOp& op, Context&)
@@ -170,7 +174,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::DoWhileOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::DoWhileOp, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::DoWhileOp& op, Context&)
@@ -195,7 +199,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::UnrollOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::UnrollOp, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::UnrollOp& op, Context&)
@@ -219,7 +223,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::SeedPRNG, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::SeedPRNG, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::SeedPRNG& op, Context&)
@@ -243,7 +247,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::Assign, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::Assign, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::Assign& op, Context&)
@@ -269,7 +273,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ComputeIndex, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::ComputeIndex, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::ComputeIndex& op, Context&)
@@ -290,15 +295,15 @@ namespace rocRoller
         };
 
         template <typename Op, typename IO, typename Context>
-        requires(
-            CIsAnyOf<Op,
-                     KernelGraph::ControlGraph::Exchange,
-                     KernelGraph::ControlGraph::LoadLinear,
-                     KernelGraph::ControlGraph::LoadTiled,
-                     KernelGraph::ControlGraph::LoadVGPR,
-                     KernelGraph::ControlGraph::LoadSGPR,
-                     KernelGraph::ControlGraph::LoadTileDirect2LDS,
-                     KernelGraph::ControlGraph::LoadLDSTile>) struct MappingTraits<Op, IO, Context>
+        requires(CIsAnyOf<Op,
+                          KernelGraph::ControlGraph::Exchange,
+                          KernelGraph::ControlGraph::LoadLinear,
+                          KernelGraph::ControlGraph::LoadTiled,
+                          KernelGraph::ControlGraph::LoadVGPR,
+                          KernelGraph::ControlGraph::LoadSGPR,
+                          KernelGraph::ControlGraph::LoadTileDirect2LDS,
+                          KernelGraph::ControlGraph::LoadLDSTile>) struct ROCROLLER_DECLSPEC
+            MappingTraits<Op, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, Op& op, Context&)
@@ -337,7 +342,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::Multiply, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::Multiply, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::Multiply& op, Context&)
@@ -356,11 +361,11 @@ namespace rocRoller
         };
 
         template <typename Op, typename IO, typename Context>
-        requires(
-            CIsAnyOf<Op,
-                     KernelGraph::ControlGraph::StoreTiled,
-                     KernelGraph::ControlGraph::StoreSGPR,
-                     KernelGraph::ControlGraph::StoreLDSTile>) struct MappingTraits<Op, IO, Context>
+        requires(CIsAnyOf<Op,
+                          KernelGraph::ControlGraph::StoreTiled,
+                          KernelGraph::ControlGraph::StoreSGPR,
+                          KernelGraph::ControlGraph::StoreLDSTile>) struct ROCROLLER_DECLSPEC
+            MappingTraits<Op, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, Op& op, Context&)
@@ -386,7 +391,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::TensorContraction, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::TensorContraction, IO, Context>
         {
             using iot = IOTraits<IO>;
             static void mapping(IO& io, KernelGraph::ControlGraph::TensorContraction& op, Context&)
@@ -410,14 +416,14 @@ namespace rocRoller
 
         template <typename T, typename IO, typename Context>
         requires(std::constructible_from<KernelGraph::ControlGraph::Operation, T>&& T::HasValue
-                 == false) struct MappingTraits<T, IO, Context>
+                 == false) struct ROCROLLER_DECLSPEC MappingTraits<T, IO, Context>
             : public EmptyMappingTraits<T, IO, Context>
         {
         };
 
         static_assert(CNamedVariant<KernelGraph::ControlGraph::ControlEdge>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ControlEdge, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::ControlEdge, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::ControlGraph::ControlEdge,
                                                  IO,
                                                  Context>
@@ -426,14 +432,15 @@ namespace rocRoller
 
         static_assert(CNamedVariant<KernelGraph::ControlGraph::Operation>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::Operation, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlGraph::Operation, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::ControlGraph::Operation, IO, Context>
         {
         };
 
         static_assert(CNamedVariant<KernelGraph::ControlGraph::ControlGraph::Element>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ControlGraph::Element, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::ControlGraph::Element, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::ControlGraph::ControlGraph::Element,
                                                  IO,
                                                  Context>
@@ -475,12 +482,12 @@ namespace rocRoller
         }
 
         template <typename IO>
-        struct CustomMappingTraits<CompressedTable, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<CompressedTable, IO>
             : public DefaultCustomMappingTraits<CompressedTable, IO, false, false>
         {
         };
         template <typename IO>
-        struct CustomMappingTraits<CompressedTableEntry, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<CompressedTableEntry, IO>
             : public DefaultCustomMappingTraits<CompressedTableEntry, IO, false, false>
         {
         };
@@ -491,7 +498,8 @@ namespace rocRoller
 #endif
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlGraph::ControlGraph, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlGraph::ControlGraph, IO, Context>
         {
             using iot = IOTraits<IO>;
             using HG  = typename KernelGraph::ControlGraph::ControlGraph::Base;

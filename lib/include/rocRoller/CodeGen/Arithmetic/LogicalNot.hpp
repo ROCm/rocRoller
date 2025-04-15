@@ -26,20 +26,23 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::LogicalNot>>
-        GetGenerator<Expression::LogicalNot>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::LogicalNot>>
+                       GetGenerator<Expression::LogicalNot>(Register::ValuePtr dst,
                                              Register::ValuePtr arg,
                                              Expression::LogicalNot const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class LogicalNotGenerator : public UnaryArithmeticGenerator<Expression::LogicalNot>
+    class ROCROLLER_DECLSPEC LogicalNotGenerator
+        : public UnaryArithmeticGenerator<Expression::LogicalNot>
     {
     public:
         LogicalNotGenerator(ContextPtr c)

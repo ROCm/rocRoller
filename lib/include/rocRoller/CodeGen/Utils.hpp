@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 namespace rocRoller
@@ -37,7 +39,7 @@ namespace rocRoller
    *
    * @param elementBits number of bits of variable type to load.
    */
-    uint bitsPerTransposeLoad(uint elementBits);
+    ROCROLLER_DECLSPEC uint bitsPerTransposeLoad(uint elementBits);
 
     /**
    * @brief Returns extra number of bytes required to fulfill 128b alignment requirement of 6-bit transpose loads.
@@ -46,7 +48,7 @@ namespace rocRoller
    *
    * @param elementBits number of bits of variable type to load.
    */
-    uint extraLDSBytesPerElementBlock(uint elementBits);
+    ROCROLLER_DECLSPEC uint extraLDSBytesPerElementBlock(uint elementBits);
 
-    std::string transposeLoadMnemonic(uint elementBits);
+    ROCROLLER_DECLSPEC std::string transposeLoadMnemonic(uint elementBits);
 } // rocRoller

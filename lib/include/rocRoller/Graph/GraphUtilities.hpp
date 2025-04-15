@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 
 #include <rocRoller/Graph/Hypergraph.hpp>
@@ -43,7 +45,7 @@ namespace rocRoller
          * source, only following edges that satisfy edgePredicate.
          */
         template <CCalmGraph AGraph, std::predicate<int> EdgePredicate>
-        void removeRedundantEdges(AGraph& graph, EdgePredicate edgePredicate);
+        ROCROLLER_DECLSPEC void removeRedundantEdges(AGraph& graph, EdgePredicate edgePredicate);
 
         /**
          * `graph` must be an instantiation of Hypergraph which is calm (i.e.
@@ -54,7 +56,8 @@ namespace rocRoller
          * source, only following edges that satisfy edgePredicate.
          */
         template <CCalmGraph AGraph, std::predicate<int> EdgePredicate>
-        Generator<int> findRedundantEdges(AGraph const& graph, EdgePredicate edgePredicate);
+        ROCROLLER_DECLSPEC Generator<int> findRedundantEdges(AGraph const& graph,
+                                                             EdgePredicate edgePredicate);
     }
 }
 

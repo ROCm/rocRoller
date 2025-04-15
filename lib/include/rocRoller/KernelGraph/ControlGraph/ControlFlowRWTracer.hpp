@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 #include <vector>
 
@@ -44,7 +46,7 @@ namespace rocRoller::KernelGraph
      * recorded trace for all operations in the control graph that
      * access or modify a coordinate.
      */
-    class ControlFlowRWTracer
+    class ROCROLLER_DECLSPEC ControlFlowRWTracer
     {
     public:
         enum ReadWrite
@@ -56,7 +58,7 @@ namespace rocRoller::KernelGraph
             Count
         };
 
-        struct ReadWriteRecord
+        struct ROCROLLER_DECLSPEC ReadWriteRecord
         {
             int       control, coordinate;
             ReadWrite rw;
@@ -146,10 +148,11 @@ namespace rocRoller::KernelGraph
         void trace(int start);
     };
 
-    std::string toString(ControlFlowRWTracer::ReadWrite rw);
+    ROCROLLER_DECLSPEC std::string toString(ControlFlowRWTracer::ReadWrite rw);
 
-    std::string toString(ControlFlowRWTracer::ReadWriteRecord const& record);
+    ROCROLLER_DECLSPEC std::string toString(ControlFlowRWTracer::ReadWriteRecord const& record);
 
-    std::ostream& operator<<(std::ostream& stream, ControlFlowRWTracer::ReadWrite rw);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                  stream,
+                                                ControlFlowRWTracer::ReadWrite rw);
 
 }

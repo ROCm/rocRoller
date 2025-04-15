@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    struct KernelInvocation;
-    class ExecutableKernel;
+    struct ROCROLLER_DECLSPEC KernelInvocation;
+    class ROCROLLER_DECLSPEC  ExecutableKernel;
 }

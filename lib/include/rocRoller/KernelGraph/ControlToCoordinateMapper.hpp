@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <map>
 #include <sstream>
 #include <string>
@@ -50,14 +52,14 @@ namespace rocRoller::KernelGraph
      */
     namespace Connections
     {
-        struct JustNaryArgument
+        struct ROCROLLER_DECLSPEC JustNaryArgument
         {
             NaryArgument argument;
 
             auto operator<=>(JustNaryArgument const&) const = default;
         };
 
-        struct TypeAndSubDimension
+        struct ROCROLLER_DECLSPEC TypeAndSubDimension
         {
             std::string id;
             int         subdimension;
@@ -70,7 +72,7 @@ namespace rocRoller::KernelGraph
             return a.id < b.id;
         }
 
-        struct TypeAndNaryArgument
+        struct ROCROLLER_DECLSPEC TypeAndNaryArgument
         {
             std::string  id;
             NaryArgument argument;
@@ -101,10 +103,10 @@ namespace rocRoller::KernelGraph
             Count
         };
 
-        std::string   toString(ComputeIndexArgument cia);
-        std::ostream& operator<<(std::ostream&, ComputeIndexArgument const&);
+        ROCROLLER_DECLSPEC std::string toString(ComputeIndexArgument cia);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, ComputeIndexArgument const&);
 
-        struct ComputeIndex
+        struct ROCROLLER_DECLSPEC ComputeIndex
         {
             ComputeIndexArgument argument;
             int                  index = 0;
@@ -123,13 +125,13 @@ namespace rocRoller::KernelGraph
                                             TypeAndSubDimension,
                                             TypeAndNaryArgument>;
 
-        std::string   name(ConnectionSpec const& cs);
-        std::string   toString(ConnectionSpec const& cs);
-        std::ostream& operator<<(std::ostream& stream, ConnectionSpec const& cs);
+        ROCROLLER_DECLSPEC std::string name(ConnectionSpec const& cs);
+        ROCROLLER_DECLSPEC std::string toString(ConnectionSpec const& cs);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, ConnectionSpec const& cs);
 
     }
 
-    struct DeferredConnection
+    struct ROCROLLER_DECLSPEC DeferredConnection
     {
         Connections::ConnectionSpec connectionSpec;
         int                         coordinate;
@@ -156,14 +158,14 @@ namespace rocRoller::KernelGraph
      * coordinates.  To accomplish this, connection specifiers (see
      * ConnectionSpec) are used.
      */
-    class ControlToCoordinateMapper
+    class ROCROLLER_DECLSPEC ControlToCoordinateMapper
     {
         // key_type is:
         //  control graph index, connection specification
         using key_type = std::tuple<int, Connections::ConnectionSpec>;
 
     public:
-        struct Connection
+        struct ROCROLLER_DECLSPEC Connection
         {
             int                         control;
             int                         coordinate;

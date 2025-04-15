@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,9 +37,9 @@
 
 namespace rocRoller
 {
-    std::ostream& operator<<(std::ostream&, AssemblerType);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, AssemblerType);
 
-    class Assembler
+    class ROCROLLER_DECLSPEC Assembler
     {
     public:
         using Argument = AssemblerType;

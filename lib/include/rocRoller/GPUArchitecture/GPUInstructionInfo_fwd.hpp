@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class GPUInstructionInfo;
-    class GPUWaitQueueType;
+    class ROCROLLER_DECLSPEC GPUInstructionInfo;
+    class ROCROLLER_DECLSPEC GPUWaitQueueType;
 }

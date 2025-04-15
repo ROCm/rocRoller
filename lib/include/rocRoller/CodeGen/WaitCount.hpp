@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 #include <vector>
 
@@ -44,7 +46,7 @@ namespace rocRoller
      *
      * Internally represents -1 as not having to wait for a particular counter.
      */
-    class WaitCount
+    class ROCROLLER_DECLSPEC WaitCount
     {
     public:
         WaitCount() = default;
@@ -144,5 +146,5 @@ namespace rocRoller
         bool m_hasEXPCnt      = false;
     };
 
-    std::ostream& operator<<(std::ostream& stream, WaitCount const& wait);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, WaitCount const& wait);
 }

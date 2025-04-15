@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    struct GPUArchitectureTarget;
+    struct ROCROLLER_DECLSPEC GPUArchitectureTarget;
 }

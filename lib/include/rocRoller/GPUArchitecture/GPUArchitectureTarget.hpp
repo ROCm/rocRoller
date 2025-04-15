@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -70,12 +72,12 @@ namespace rocRoller
 
         Count,
     };
-    std::string toString(GPUArchitectureGFX const& gfx);
-    std::string name(GPUArchitectureGFX const& gfx);
+    ROCROLLER_DECLSPEC std::string toString(GPUArchitectureGFX const& gfx);
+    ROCROLLER_DECLSPEC std::string name(GPUArchitectureGFX const& gfx);
 
-    std::ostream& operator<<(std::ostream&, GPUArchitectureGFX const& gfx);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, GPUArchitectureGFX const& gfx);
 
-    struct GPUArchitectureFeatures
+    struct ROCROLLER_DECLSPEC GPUArchitectureFeatures
     {
     public:
         bool sramecc = false;
@@ -91,7 +93,7 @@ namespace rocRoller
         auto operator<=>(const GPUArchitectureFeatures&) const = default;
     };
 
-    struct GPUArchitectureTarget
+    struct ROCROLLER_DECLSPEC GPUArchitectureTarget
     {
     public:
         GPUArchitectureGFX      gfx      = GPUArchitectureGFX::UNKNOWN;

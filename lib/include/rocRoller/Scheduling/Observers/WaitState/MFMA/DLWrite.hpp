@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -45,7 +47,7 @@ namespace rocRoller
          * | 94x  | v_dot* write | Different opcode            | 3    |
          *
          */
-        class DLWrite : public WaitStateObserver<DLWrite>
+        class ROCROLLER_DECLSPEC DLWrite : public WaitStateObserver<DLWrite>
         {
         public:
             DLWrite() {}

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Serialization/Base.hpp>
 #include <rocRoller/Utilities/Utils.hpp>
 
@@ -37,7 +39,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename Key>
-        struct KeyConversion
+        struct ROCROLLER_DECLSPEC KeyConversion
         {
             static std::string toString(Key const& value)
             {
@@ -55,7 +57,7 @@ namespace rocRoller
         };
 
         template <>
-        struct KeyConversion<std::string>
+        struct ROCROLLER_DECLSPEC KeyConversion<std::string>
         {
             static std::string const& toString(std::string const& value)
             {
@@ -69,7 +71,7 @@ namespace rocRoller
         };
 
         template <typename Map, typename IO, bool Sort, bool Flow>
-        struct DefaultCustomMappingTraits
+        struct ROCROLLER_DECLSPEC DefaultCustomMappingTraits
         {
             using iot         = IOTraits<IO>;
             using key_type    = typename Map::key_type;
@@ -116,25 +118,25 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<std::string, std::string>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<std::string, std::string>, IO>
             : public DefaultCustomMappingTraits<std::map<std::string, std::string>, IO, false, true>
         {
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<std::string, double>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<std::string, double>, IO>
             : public DefaultCustomMappingTraits<std::map<std::string, double>, IO, false, true>
         {
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<int, double>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<int, double>, IO>
             : public DefaultCustomMappingTraits<std::map<int, double>, IO, false, true>
         {
         };
 
         template <typename Seq, typename IO, bool Flow>
-        struct DefaultSequenceTraits
+        struct ROCROLLER_DECLSPEC DefaultSequenceTraits
         {
             using Value = typename Seq::value_type;
 
@@ -158,13 +160,13 @@ namespace rocRoller
 
 #define ROCROLLER_SERIALIZE_VECTOR(flow, ...)                              \
     template <typename IO>                                                 \
-    struct SequenceTraits<std::vector<__VA_ARGS__>, IO>                    \
+    struct ROCROLLER_DECLSPEC SequenceTraits<std::vector<__VA_ARGS__>, IO> \
         : public DefaultSequenceTraits<std::vector<__VA_ARGS__>, IO, flow> \
     {                                                                      \
     }
 
         template <typename T, size_t N, typename IO>
-        struct SequenceTraits<std::array<T, N>, IO>
+        struct ROCROLLER_DECLSPEC SequenceTraits<std::array<T, N>, IO>
         {
             static const bool flow = true;
 

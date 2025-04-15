@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cassert>
 #include <concepts>
 
@@ -33,7 +35,7 @@ namespace rocRoller
 {
     namespace Register
     {
-        class Allocator;
+        class ROCROLLER_DECLSPEC Allocator;
     }
 
 }

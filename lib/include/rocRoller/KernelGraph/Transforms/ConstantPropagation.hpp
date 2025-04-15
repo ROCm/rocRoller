@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
 
@@ -36,7 +38,7 @@ namespace rocRoller
         /**
          * @brief Propagate constant to prune unneeded Load and Assign operations. Only support for beta==0 for now.
          */
-        class ConstantPropagation : public GraphTransform
+        class ROCROLLER_DECLSPEC ConstantPropagation : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

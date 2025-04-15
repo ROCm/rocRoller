@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 namespace rocRoller
@@ -53,9 +55,7 @@ namespace rocRoller
 
     std::string toString(F8Mode);
 
-    F8Mode getDefaultF8ModeForCurrentHipDevice();
+    ROCROLLER_DECLSPEC F8Mode getDefaultF8ModeForCurrentHipDevice();
 
-    const char* getDefaultArchitectureFilePath();
-
-    class Settings;
+    class ROCROLLER_DECLSPEC Settings;
 }

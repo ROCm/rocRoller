@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -48,7 +50,7 @@ namespace rocRoller
          * comments from the beginning of new streams, for the purpose of finding
          * and running Deallocate nodes as soon as they are available.
          */
-        class SequentialScheduler : public Scheduler
+        class ROCROLLER_DECLSPEC SequentialScheduler : public Scheduler
         {
         public:
             SequentialScheduler(ContextPtr);

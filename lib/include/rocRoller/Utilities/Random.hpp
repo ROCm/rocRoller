@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cstdlib>
 #include <random>
 #include <vector>
@@ -48,7 +50,7 @@ namespace rocRoller
      * A seed may be set programmatically (at any time) by calling
      * seed().
      */
-    class RandomGenerator
+    class ROCROLLER_DECLSPEC RandomGenerator
     {
     public:
         explicit RandomGenerator(int seedNumber);

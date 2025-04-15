@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/GPUArchitecture/GPUArchitecture.hpp>
 #include <rocRoller/GPUArchitecture/GPUArchitectureTarget.hpp>
 #include <rocRoller/GPUArchitecture/GPUCapability.hpp>
@@ -40,7 +42,7 @@ namespace msgpack
         namespace adaptor
         {
             template <>
-            struct convert<rocRoller::GPUArchitecture>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUArchitecture>
             {
                 msgpack::object const& operator()(msgpack::object const&      o,
                                                   rocRoller::GPUArchitecture& v) const
@@ -64,7 +66,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUArchitecture>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUArchitecture>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&          o,
@@ -79,7 +81,7 @@ namespace msgpack
             };
 
             template <>
-            struct convert<rocRoller::GPUArchitectureTarget>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUArchitectureTarget>
             {
                 msgpack::object const& operator()(msgpack::object const&            o,
                                                   rocRoller::GPUArchitectureTarget& v) const
@@ -99,7 +101,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUArchitectureTarget>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUArchitectureTarget>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&                o,
@@ -112,7 +114,7 @@ namespace msgpack
             };
 
             template <>
-            struct convert<rocRoller::GPUArchitectureGFX>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUArchitectureGFX>
             {
                 msgpack::object const& operator()(msgpack::object const&         o,
                                                   rocRoller::GPUArchitectureGFX& v) const
@@ -131,7 +133,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUArchitectureGFX>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUArchitectureGFX>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&             o,
@@ -144,7 +146,7 @@ namespace msgpack
             };
 
             template <>
-            struct convert<rocRoller::GPUCapability>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUCapability>
             {
                 msgpack::object const& operator()(msgpack::object const&    o,
                                                   rocRoller::GPUCapability& v) const
@@ -163,7 +165,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUCapability>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUCapability>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&        o,
@@ -176,7 +178,7 @@ namespace msgpack
             };
 
             template <>
-            struct convert<rocRoller::GPUInstructionInfo>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUInstructionInfo>
             {
                 msgpack::object const& operator()(msgpack::object const&         o,
                                                   rocRoller::GPUInstructionInfo& v) const
@@ -202,7 +204,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUInstructionInfo>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUInstructionInfo>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&             o,
@@ -221,7 +223,7 @@ namespace msgpack
             };
 
             template <>
-            struct convert<rocRoller::GPUWaitQueueType>
+            struct ROCROLLER_DECLSPEC convert<rocRoller::GPUWaitQueueType>
             {
                 msgpack::object const& operator()(msgpack::object const&       o,
                                                   rocRoller::GPUWaitQueueType& v) const
@@ -240,7 +242,7 @@ namespace msgpack
             };
 
             template <>
-            struct pack<rocRoller::GPUWaitQueueType>
+            struct ROCROLLER_DECLSPEC pack<rocRoller::GPUWaitQueueType>
             {
                 template <typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>&           o,

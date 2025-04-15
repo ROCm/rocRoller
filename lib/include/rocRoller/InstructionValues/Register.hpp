@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <bit>
 #include <cassert>
 #include <concepts>
@@ -64,7 +66,7 @@ namespace rocRoller
 
             Count = 255,
         };
-        struct AllocationOptions
+        struct ROCROLLER_DECLSPEC AllocationOptions
         {
             /// In units of registers
             int contiguousChunkWidth = VALUE_CONTIGUOUS;
@@ -78,7 +80,7 @@ namespace rocRoller
             auto operator<=>(AllocationOptions const& other) const = default;
         };
 
-        struct RegisterId
+        struct ROCROLLER_DECLSPEC RegisterId
         {
             RegisterId(Type regType, int index)
                 : regType(regType)
@@ -91,12 +93,12 @@ namespace rocRoller
             std::string toString() const;
         };
 
-        std::string toString(RegisterId const& regId);
+        ROCROLLER_DECLSPEC std::string toString(RegisterId const& regId);
 
         // For some reason, GCC will not find the operator declared in Utils.hpp.
-        std::ostream& operator<<(std::ostream& stream, RegisterId const& regId);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, RegisterId const& regId);
 
-        struct RegisterIdHash
+        struct ROCROLLER_DECLSPEC RegisterIdHash
         {
             size_t operator()(RegisterId const& regId) const noexcept
             {
@@ -141,7 +143,7 @@ namespace rocRoller
          * Maintains a `shared_ptr` reference to the `Allocation` object.
          *
          */
-        struct Value : public std::enable_shared_from_this<Value>
+        struct ROCROLLER_DECLSPEC Value : public std::enable_shared_from_this<Value>
         {
         public:
             Value();
@@ -451,7 +453,7 @@ namespace rocRoller
          *
          * TODO: Make not copyable, enforce construction through shared_ptr
          */
-        struct Allocation : public std::enable_shared_from_this<Allocation>
+        struct ROCROLLER_DECLSPEC Allocation : public std::enable_shared_from_this<Allocation>
         {
             Allocation(ContextPtr        context,
                        Type              regType,
@@ -525,8 +527,9 @@ namespace rocRoller
             void setRegisterCount();
         };
 
-        std::string   toString(AllocationOptions const& opts);
-        std::ostream& operator<<(std::ostream& stream, AllocationOptions const& opts);
+        ROCROLLER_DECLSPEC std::string toString(AllocationOptions const& opts);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&            stream,
+                                                    AllocationOptions const& opts);
     }
 }
 

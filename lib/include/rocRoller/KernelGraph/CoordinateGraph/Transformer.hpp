@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/CoordinateGraph.hpp>
@@ -41,7 +43,7 @@ namespace rocRoller
          * Workgroup and Workitem (work coordinates) are implicitly
          * set if a context is passed to the constructor.
          */
-        class Transformer
+        class ROCROLLER_DECLSPEC Transformer
         {
         public:
             Transformer() = delete;

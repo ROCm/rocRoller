@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution_fwd.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Reindexer.hpp>
@@ -43,7 +45,7 @@ namespace rocRoller
          * @param start
          * @return std::string
          */
-        std::string getForLoopName(KernelGraph& graph, int start);
+        ROCROLLER_DECLSPEC std::string getForLoopName(KernelGraph& graph, int start);
 
         /**
          * @brief Determine how many times to unroll the loop.
@@ -51,7 +53,7 @@ namespace rocRoller
          * A value of 0 or 1 means do not unroll it.
          * Use getForLoopName to determine which forLoop we are attempting to unroll
          */
-        unsigned int
+        ROCROLLER_DECLSPEC unsigned int
             getUnrollAmount(KernelGraph& graph, int loopTag, CommandParametersPtr const& params);
 
         /**
@@ -60,7 +62,7 @@ namespace rocRoller
          * Unrolls every loop that does not have a previous iteration
          * dependency by a value of 2.
          */
-        class UnrollLoops : public GraphTransform
+        class ROCROLLER_DECLSPEC UnrollLoops : public GraphTransform
         {
         public:
             UnrollLoops(CommandParametersPtr params, ContextPtr context);

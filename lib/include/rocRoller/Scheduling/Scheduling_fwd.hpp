@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Scheduling
     {
-        struct InstructionStatus;
-        struct IObserver;
+        struct ROCROLLER_DECLSPEC InstructionStatus;
+        struct ROCROLLER_DECLSPEC IObserver;
     }
 
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -42,7 +44,7 @@ namespace rocRoller
          * | 90a  | v_mfma* read SrcC (16 pass) | v_* write | 19   |
          *
          */
-        class XDLReadSrcC90a : public WaitStateObserver<XDLReadSrcC90a>
+        class ROCROLLER_DECLSPEC XDLReadSrcC90a : public WaitStateObserver<XDLReadSrcC90a>
         {
         public:
             XDLReadSrcC90a() {}

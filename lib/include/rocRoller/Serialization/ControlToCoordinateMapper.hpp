@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Graph/Hypergraph.hpp>
 #include <rocRoller/KernelGraph/ControlToCoordinateMapper.hpp>
@@ -41,13 +43,14 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO, typename Context>
-        struct MappingTraits<std::monostate, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<std::monostate, IO, Context>
             : public EmptyMappingTraits<std::monostate, IO, Context>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::Connections::JustNaryArgument, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::Connections::JustNaryArgument, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -66,7 +69,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::Connections::TypeAndSubDimension, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::Connections::TypeAndSubDimension, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -87,7 +91,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::Connections::TypeAndNaryArgument, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::Connections::TypeAndNaryArgument, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -108,7 +113,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::Connections::ComputeIndex, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::Connections::ComputeIndex, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -130,7 +135,8 @@ namespace rocRoller
         static_assert(CNamedVariant<KernelGraph::Connections::ConnectionSpec>);
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::Connections::ConnectionSpec, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::Connections::ConnectionSpec, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::Connections::ConnectionSpec,
                                                  IO,
                                                  Context>
@@ -139,7 +145,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlToCoordinateMapper::Connection, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::ControlToCoordinateMapper::Connection, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -163,7 +170,7 @@ namespace rocRoller
         ROCROLLER_SERIALIZE_VECTOR(false, KernelGraph::ControlToCoordinateMapper::Connection);
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::ControlToCoordinateMapper, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::ControlToCoordinateMapper, IO, Context>
         {
             using iot = IOTraits<IO>;
 

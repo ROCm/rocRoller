@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Utilities/Component.hpp>
@@ -37,7 +39,7 @@ namespace rocRoller
      * Co-yields `mov` instructions automatically from a `src` to `dest`
      * if the copy is valid.
      */
-    class CopyGenerator
+    class ROCROLLER_DECLSPEC CopyGenerator
     {
     public:
         CopyGenerator(ContextPtr);

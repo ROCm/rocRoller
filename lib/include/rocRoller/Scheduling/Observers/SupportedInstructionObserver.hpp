@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Scheduling/Scheduling.hpp>
 #include <rocRoller/Utilities/Settings.hpp>
@@ -42,7 +44,7 @@ namespace rocRoller
          * present in the GPUArchitecture, then an exception is thrown.
          *
          */
-        class SupportedInstructionObserver
+        class ROCROLLER_DECLSPEC SupportedInstructionObserver
         {
         public:
             SupportedInstructionObserver() {}

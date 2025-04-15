@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
@@ -41,7 +43,7 @@ namespace llvm
 {
     namespace yaml
     {
-        struct EmptyContext;
+        struct ROCROLLER_DECLSPEC EmptyContext;
     }
 }
 #endif
@@ -53,19 +55,19 @@ namespace rocRoller
 #ifdef ROCROLLER_USE_LLVM
         using EmptyContext = llvm::yaml::EmptyContext;
 #else
-        struct EmptyContext
+        struct ROCROLLER_DECLSPEC EmptyContext
         {
         };
 #endif
 
         /**
-         * Override this struct for a type to use a custom constructor.
+         * Override this struct ROCROLLER_DECLSPEC for a type to use a custom constructor.
          *
          * Useful for Variant and SharedPointer is the types default
          * contructor has been explicitly deleted.
          */
         template <typename T, typename U>
-        struct DefaultConstruct
+        struct ROCROLLER_DECLSPEC DefaultConstruct
         {
             static T call()
             {
@@ -74,7 +76,7 @@ namespace rocRoller
         };
 
         /**
-         * Override this struct for a type to use a custom string serialization.
+         * Override this struct ROCROLLER_DECLSPEC for a type to use a custom string serialization.
          *
          * You must implement:
          * 1. static std::string output(T)
@@ -89,41 +91,41 @@ namespace rocRoller
          *
          */
         template <typename T>
-        struct ScalarTraits
+        struct ROCROLLER_DECLSPEC ScalarTraits
         {
         };
 
         template <typename IO>
-        struct IOTraits
+        struct ROCROLLER_DECLSPEC IOTraits
         {
         };
 
         template <typename T, typename IO, typename Context = EmptyContext>
-        struct MappingTraits
+        struct ROCROLLER_DECLSPEC MappingTraits
         {
             static const bool flow = false;
         };
 
         template <typename T, typename IO>
-        struct CustomMappingTraits
+        struct ROCROLLER_DECLSPEC CustomMappingTraits
         {
             static const bool flow = false;
         };
 
         template <typename T, typename IO>
-        struct SequenceTraits
+        struct ROCROLLER_DECLSPEC SequenceTraits
         {
             using Value            = int;
             static const bool flow = false;
         };
 
         template <typename T, typename IO>
-        struct EnumTraits
+        struct ROCROLLER_DECLSPEC EnumTraits
         {
         };
 
         template <typename Object, typename IO, typename Context = EmptyContext>
-        struct EmptyMappingTraits
+        struct ROCROLLER_DECLSPEC EmptyMappingTraits
         {
             using iot = IOTraits<IO>;
             // static_assert(Object::HasValue == false,
@@ -135,7 +137,7 @@ namespace rocRoller
         };
 
         template <typename Object, typename IO>
-        struct ValueMappingTraits
+        struct ROCROLLER_DECLSPEC ValueMappingTraits
         {
             using iot = IOTraits<IO>;
             static_assert(Object::HasValue == true,
@@ -149,7 +151,7 @@ namespace rocRoller
         };
 
         template <typename Object, typename IO>
-        struct IndexMappingTraits
+        struct ROCROLLER_DECLSPEC IndexMappingTraits
         {
             using iot = IOTraits<IO>;
             static_assert(Object::HasIndex == true,
@@ -163,7 +165,7 @@ namespace rocRoller
         };
 
         template <typename Object, typename IO>
-        struct IndexValueMappingTraits
+        struct ROCROLLER_DECLSPEC IndexValueMappingTraits
         {
             using iot = IOTraits<IO>;
             static_assert(Object::HasIndex == true && Object::HasValue == true,
@@ -181,44 +183,47 @@ namespace rocRoller
                   typename IO,
                   bool HasIndex = Object::HasIndex,
                   bool HasValue = Object::HasValue>
-        struct AutoMappingTraits
+        struct ROCROLLER_DECLSPEC AutoMappingTraits
         {
         };
 
         template <typename Object, typename IO>
-        struct AutoMappingTraits<Object, IO, false, false> : public EmptyMappingTraits<Object, IO>
+        struct ROCROLLER_DECLSPEC AutoMappingTraits<Object, IO, false, false>
+            : public EmptyMappingTraits<Object, IO>
         {
         };
 
         template <typename Object, typename IO>
-        struct AutoMappingTraits<Object, IO, false, true> : public ValueMappingTraits<Object, IO>
+        struct ROCROLLER_DECLSPEC AutoMappingTraits<Object, IO, false, true>
+            : public ValueMappingTraits<Object, IO>
         {
         };
 
         template <typename Object, typename IO>
-        struct AutoMappingTraits<Object, IO, true, false> : public IndexMappingTraits<Object, IO>
+        struct ROCROLLER_DECLSPEC AutoMappingTraits<Object, IO, true, false>
+            : public IndexMappingTraits<Object, IO>
         {
         };
 
         template <typename Object, typename IO>
-        struct AutoMappingTraits<Object, IO, true, true>
+        struct ROCROLLER_DECLSPEC AutoMappingTraits<Object, IO, true, true>
             : public IndexValueMappingTraits<Object, IO>
         {
         };
 
         template <typename T, typename IO, typename Context = EmptyContext>
-        struct SubclassMappingTraits
+        struct ROCROLLER_DECLSPEC SubclassMappingTraits
         {
         };
 
         template <typename Subclass, typename IO, typename Context = EmptyContext>
-        struct PointerMappingTraits;
+        struct ROCROLLER_DECLSPEC PointerMappingTraits;
 
         /**
          * Used by AutoMappingTraits to serialize an object via a std::shared_ptr<Base> where the object is of a type derived from Base.
          */
         template <typename SubclassPtr, typename IO, typename Context>
-        struct PointerMappingTraits
+        struct ROCROLLER_DECLSPEC PointerMappingTraits
         {
             using Subclass = typename SubclassPtr::element_type;
             using iot      = IOTraits<IO>;
@@ -264,7 +269,7 @@ namespace rocRoller
          * Set Nullable to true to allow serializing `nullptr`.
          */
         template <typename SharedPtr, typename IO, typename Context, bool Nullable = false>
-        struct SharedPointerMappingTraits
+        struct ROCROLLER_DECLSPEC SharedPointerMappingTraits
         {
             using Element = typename SharedPtr::element_type;
             using iot     = IOTraits<IO>;
@@ -309,7 +314,7 @@ namespace rocRoller
         };
 
         template <typename T, typename IO, bool Flow>
-        struct BaseClassMappingTraits
+        struct ROCROLLER_DECLSPEC BaseClassMappingTraits
         {
             using iot = IOTraits<IO>;
 
@@ -330,10 +335,10 @@ namespace rocRoller
         };
 
         template <typename CRTP_Traits, typename T, typename IO, typename Context = EmptyContext>
-        struct DefaultSubclassMappingTraits;
+        struct ROCROLLER_DECLSPEC DefaultSubclassMappingTraits;
 
         template <typename CRTP_Traits, typename T, typename IO, typename Context>
-        struct DefaultSubclassMappingTraits
+        struct ROCROLLER_DECLSPEC DefaultSubclassMappingTraits
         {
             using iot         = IOTraits<IO>;
             using SubclassFn  = bool(IO&, typename std::shared_ptr<T>&, Context&);
@@ -357,7 +362,7 @@ namespace rocRoller
         };
 
         template <typename CRTP_Traits, typename T, typename IO>
-        struct DefaultSubclassMappingTraits<CRTP_Traits, T, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC DefaultSubclassMappingTraits<CRTP_Traits, T, IO, EmptyContext>
         {
             using iot         = IOTraits<IO>;
             using SubclassFn  = bool(IO&, typename std::shared_ptr<T>&);

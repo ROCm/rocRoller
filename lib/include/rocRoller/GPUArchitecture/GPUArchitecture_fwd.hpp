@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class GPUArchitecture;
+    class ROCROLLER_DECLSPEC GPUArchitecture;
 }

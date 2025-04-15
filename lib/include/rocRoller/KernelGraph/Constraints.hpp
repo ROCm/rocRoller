@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/KernelGraph/KernelGraph_fwd.hpp>
 
 namespace rocRoller
@@ -36,7 +38,7 @@ namespace rocRoller
          * @brief Return value for any function that applies constraints to the KernelGraph.
          *
          */
-        struct ConstraintStatus
+        struct ROCROLLER_DECLSPEC ConstraintStatus
         {
             bool        satisfied   = true;
             std::string explanation = "";
@@ -57,9 +59,9 @@ namespace rocRoller
             }
         };
 
-        ConstraintStatus NoDanglingMappings(const KernelGraph& k);
-        ConstraintStatus SingleControlRoot(const KernelGraph& k);
-        ConstraintStatus NoRedundantSetCoordinates(const KernelGraph& k);
+        ROCROLLER_DECLSPEC ConstraintStatus NoDanglingMappings(const KernelGraph& k);
+        ROCROLLER_DECLSPEC ConstraintStatus SingleControlRoot(const KernelGraph& k);
+        ROCROLLER_DECLSPEC ConstraintStatus NoRedundantSetCoordinates(const KernelGraph& k);
 
         using GraphConstraint = ConstraintStatus (*)(const KernelGraph& k);
     }

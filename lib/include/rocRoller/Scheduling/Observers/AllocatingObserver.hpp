@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context.hpp>
 #include <rocRoller/GPUArchitecture/GPUInstructionInfo.hpp>
 #include <rocRoller/Scheduling/Scheduling.hpp>
@@ -34,7 +36,7 @@ namespace rocRoller
 {
     namespace Scheduling
     {
-        class AllocatingObserver
+        class ROCROLLER_DECLSPEC AllocatingObserver
         {
         public:
             AllocatingObserver() {}

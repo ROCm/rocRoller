@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
 
-    class CrashKernelGenerator;
+    class ROCROLLER_DECLSPEC CrashKernelGenerator;
 
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -51,7 +53,7 @@ namespace rocRoller
         std::shared_ptr<Scheduling::IObserver> createObserver(ContextPtr const& ctx);
 
         template <CObserver... Types>
-        struct PotentialObservers
+        struct ROCROLLER_DECLSPEC PotentialObservers
         {
         };
 

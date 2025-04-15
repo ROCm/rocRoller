@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,14 +35,15 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::BitwiseOr>>
-        GetGenerator<Expression::BitwiseOr>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::BitwiseOr>>
+                       GetGenerator<Expression::BitwiseOr>(Register::ValuePtr dst,
                                             Register::ValuePtr lhs,
                                             Register::ValuePtr rhs,
                                             Expression::BitwiseOr const&);
 
     // Generator for all register types and datatypes.
-    class BitwiseOrGenerator : public BinaryArithmeticGenerator<Expression::BitwiseOr>
+    class ROCROLLER_DECLSPEC BitwiseOrGenerator
+        : public BinaryArithmeticGenerator<Expression::BitwiseOr>
     {
     public:
         BitwiseOrGenerator(ContextPtr c)

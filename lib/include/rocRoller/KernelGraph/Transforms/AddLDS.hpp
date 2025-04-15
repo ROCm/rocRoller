@@ -25,8 +25,10 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -48,7 +50,7 @@ namespace rocRoller
          *
          * @ingroup Transformations
          */
-        class AddLDS : public GraphTransform
+        class ROCROLLER_DECLSPEC AddLDS : public GraphTransform
         {
         public:
             AddLDS(CommandParametersPtr params, ContextPtr context)
@@ -77,7 +79,7 @@ namespace rocRoller
          * Modifies the coordinate and control graphs to add LDS
          * information.
          */
-        class AddPrefetch : public GraphTransform
+        class ROCROLLER_DECLSPEC AddPrefetch : public GraphTransform
         {
         public:
             AddPrefetch(CommandParametersPtr params, ContextPtr context)

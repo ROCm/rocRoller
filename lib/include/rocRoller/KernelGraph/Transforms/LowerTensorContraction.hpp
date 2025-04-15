@@ -25,9 +25,11 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -39,7 +41,7 @@ namespace rocRoller
          * Currently supports matrix-matrix products.  The contraction
          * is lowered using a "data-parallel" decomposition.
          */
-        class LowerTensorContraction : public GraphTransform
+        class ROCROLLER_DECLSPEC LowerTensorContraction : public GraphTransform
         {
         public:
             LowerTensorContraction(CommandParametersPtr params, ContextPtr context)

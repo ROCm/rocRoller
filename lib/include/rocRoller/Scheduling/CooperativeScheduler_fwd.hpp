@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Scheduling
     {
-        class CooperativeScheduler;
+        class ROCROLLER_DECLSPEC CooperativeScheduler;
     }
 }

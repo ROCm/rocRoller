@@ -26,19 +26,22 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::RandomNumber>>
-        GetGenerator<Expression::RandomNumber>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::RandomNumber>>
+                       GetGenerator<Expression::RandomNumber>(Register::ValuePtr dst,
                                                Register::ValuePtr arg,
                                                Expression::RandomNumber const&);
 
     // Templated Generator class based on the register type and datatype.
-    class RandomNumberGenerator : public UnaryArithmeticGenerator<Expression::RandomNumber>
+    class ROCROLLER_DECLSPEC RandomNumberGenerator
+        : public UnaryArithmeticGenerator<Expression::RandomNumber>
     {
     public:
         RandomNumberGenerator(ContextPtr c)

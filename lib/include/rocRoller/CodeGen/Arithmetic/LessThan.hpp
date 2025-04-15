@@ -26,21 +26,24 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::LessThan>>
-        GetGenerator<Expression::LessThan>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::LessThan>>
+                       GetGenerator<Expression::LessThan>(Register::ValuePtr dst,
                                            Register::ValuePtr lhs,
                                            Register::ValuePtr rhs,
                                            Expression::LessThan const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class LessThanGenerator : public BinaryArithmeticGenerator<Expression::LessThan>
+    class ROCROLLER_DECLSPEC LessThanGenerator
+        : public BinaryArithmeticGenerator<Expression::LessThan>
     {
     public:
         LessThanGenerator(ContextPtr c)

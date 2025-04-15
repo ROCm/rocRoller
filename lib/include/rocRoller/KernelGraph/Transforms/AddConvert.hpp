@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -38,7 +40,7 @@ namespace rocRoller
          * datatype of the arguments to the multiply and adds control
          * nodes that will perform the appropriate type conversion.
          */
-        class AddConvert : public GraphTransform
+        class ROCROLLER_DECLSPEC AddConvert : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

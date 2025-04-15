@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Scheduling
     {
-        class PriorityScheduler;
+        class ROCROLLER_DECLSPEC PriorityScheduler;
     }
 }

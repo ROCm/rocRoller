@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -114,7 +116,7 @@ namespace rocRoller
          * Hyper-edges describe how to transform coordinates and/or
          * apply operations.
          */
-        class CoordinateGraph : public Graph::Hypergraph<Dimension, Edge>
+        class ROCROLLER_DECLSPEC CoordinateGraph : public Graph::Hypergraph<Dimension, Edge>
         {
         public:
             using Base = Graph::Hypergraph<Dimension, Edge>;

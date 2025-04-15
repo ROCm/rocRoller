@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class LDSAllocation;
-    class LDSAllocator;
+    class ROCROLLER_DECLSPEC LDSAllocation;
+    class ROCROLLER_DECLSPEC LDSAllocator;
 }

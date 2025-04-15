@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/AssertOpKinds_fwd.hpp>
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Context_fwd.hpp>
@@ -34,7 +36,7 @@
 
 namespace rocRoller
 {
-    class CrashKernelGenerator
+    class ROCROLLER_DECLSPEC CrashKernelGenerator
     {
     public:
         CrashKernelGenerator(ContextPtr);

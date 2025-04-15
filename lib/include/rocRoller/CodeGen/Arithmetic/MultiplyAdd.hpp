@@ -26,19 +26,22 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     template <>
-    std::shared_ptr<TernaryArithmeticGenerator<Expression::MultiplyAdd>>
-        GetGenerator<Expression::MultiplyAdd>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<TernaryArithmeticGenerator<Expression::MultiplyAdd>>
+                       GetGenerator<Expression::MultiplyAdd>(Register::ValuePtr dst,
                                               Register::ValuePtr a,
                                               Register::ValuePtr x,
                                               Register::ValuePtr y,
                                               Expression::MultiplyAdd const&);
 
-    struct MultiplyAddGenerator : public TernaryArithmeticGenerator<Expression::MultiplyAdd>
+    struct ROCROLLER_DECLSPEC MultiplyAddGenerator
+        : public TernaryArithmeticGenerator<Expression::MultiplyAdd>
     {
         MultiplyAddGenerator(ContextPtr c)
             : TernaryArithmeticGenerator<Expression::MultiplyAdd>(c)

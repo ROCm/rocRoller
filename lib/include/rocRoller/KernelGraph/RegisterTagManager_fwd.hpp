@@ -28,11 +28,13 @@
  */
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    class RegisterTagManager;
+    class ROCROLLER_DECLSPEC RegisterTagManager;
 
     using RegTagManPtr = std::shared_ptr<RegisterTagManager>;
 }

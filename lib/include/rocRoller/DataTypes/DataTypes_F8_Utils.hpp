@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DataTypes_Half.hpp>
 #include <rocRoller/Utilities/Error.hpp>
 
@@ -415,13 +417,13 @@ namespace rocRoller
 
     inline constexpr int8_t F8_ZERO_VALUE = 0x0;
 
-    struct FP8;
-    float fp8_to_float(const FP8 v);
-    FP8   float_to_fp8(const float v);
+    struct ROCROLLER_DECLSPEC FP8;
+    ROCROLLER_DECLSPEC float  fp8_to_float(const FP8 v);
+    ROCROLLER_DECLSPEC FP8    float_to_fp8(const float v);
 
-    struct BF8;
-    float bf8_to_float(const BF8 v);
-    BF8   float_to_bf8(const float v);
+    struct ROCROLLER_DECLSPEC BF8;
+    ROCROLLER_DECLSPEC float  bf8_to_float(const BF8 v);
+    ROCROLLER_DECLSPEC BF8    float_to_bf8(const float v);
 
     inline float scaleToFloat(uint8_t scale)
     {
@@ -430,7 +432,7 @@ namespace rocRoller
 
     inline uint8_t floatToScale(float value)
     {
-        struct
+        struct ROCROLLER_DECLSPEC
         {
             uint mantissa : 23;
             uint exponent : 8;

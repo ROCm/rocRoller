@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -43,7 +45,7 @@ namespace rocRoller
     {
 
         template <Operations::CUnaryXOp TOp, typename IO, typename Context>
-        struct MappingTraits<TOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TOp, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -62,7 +64,7 @@ namespace rocRoller
         };
 
         template <Operations::CBinaryXOp TOp, typename IO, typename Context>
-        struct MappingTraits<TOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TOp, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -82,7 +84,7 @@ namespace rocRoller
         };
 
         template <Operations::CTernaryXOp TOp, typename IO, typename Context>
-        struct MappingTraits<TOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<TOp, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -103,7 +105,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Neg>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Neg>
         {
             static Operations::XOp call()
             {
@@ -112,7 +114,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Abs>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Abs>
         {
             static Operations::XOp call()
             {
@@ -121,7 +123,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Not>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Not>
         {
             static Operations::XOp call()
             {
@@ -130,7 +132,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Cvt>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Cvt>
         {
             static Operations::XOp call()
             {
@@ -139,7 +141,8 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_StochasticRoundingCvt>
+        struct ROCROLLER_DECLSPEC
+            DefaultConstruct<Operations::XOp, Operations::E_StochasticRoundingCvt>
         {
             static Operations::XOp call()
             {
@@ -149,7 +152,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Add>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Add>
         {
             static Operations::XOp call()
             {
@@ -159,7 +162,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Sub>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Sub>
         {
             static Operations::XOp call()
             {
@@ -169,7 +172,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Mul>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Mul>
         {
             static Operations::XOp call()
             {
@@ -179,7 +182,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Div>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Div>
         {
             static Operations::XOp call()
             {
@@ -189,7 +192,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_And>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_And>
         {
             static Operations::XOp call()
             {
@@ -199,7 +202,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Or>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Or>
         {
             static Operations::XOp call()
             {
@@ -208,7 +211,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_GreaterThan>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_GreaterThan>
         {
             static Operations::XOp call()
             {
@@ -218,7 +221,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_Conditional>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_Conditional>
         {
             static Operations::XOp call()
             {
@@ -229,7 +232,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::XOp, Operations::E_RandomNumber>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::XOp, Operations::E_RandomNumber>
         {
             static Operations::XOp call()
             {
@@ -238,13 +241,13 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::XOp, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::XOp, IO, Context>
             : public DefaultVariantMappingTraits<Operations::XOp, IO, Context>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<std::shared_ptr<Operations::XOp>, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<std::shared_ptr<Operations::XOp>, IO, Context>
         {
             using TOp = std::shared_ptr<Operations::XOp>;
             using iot = IOTraits<IO>;
@@ -267,7 +270,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct SequenceTraits<std::vector<std::shared_ptr<Operations::XOp>>, IO>
+        struct ROCROLLER_DECLSPEC SequenceTraits<std::vector<std::shared_ptr<Operations::XOp>>, IO>
             : public DefaultSequenceTraits<std::vector<std::shared_ptr<Operations::XOp>>, IO, false>
         {
         };

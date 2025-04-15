@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 namespace rocRoller
 {
     namespace Version
     {
-        std::string Git();
+        ROCROLLER_DECLSPEC std::string Git();
     }
 }

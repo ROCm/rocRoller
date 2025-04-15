@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -41,7 +43,7 @@ namespace rocRoller
         /**
          * MinNopsCost: Orders the instructions based on the number of Nops.
          */
-        class MinNopsCost : public Cost
+        class ROCROLLER_DECLSPEC MinNopsCost : public Cost
         {
         public:
             MinNopsCost(ContextPtr);

@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    class Context;
+    class ROCROLLER_DECLSPEC Context;
 
     using ContextPtr = std::shared_ptr<Context>;
 }

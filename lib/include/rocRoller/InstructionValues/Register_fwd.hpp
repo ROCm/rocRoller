@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cassert>
 #include <concepts>
 #include <memory>
@@ -67,20 +69,20 @@ namespace rocRoller
             Count
         };
 
-        struct RegisterId;
-        struct RegisterIdHash;
+        struct ROCROLLER_DECLSPEC RegisterId;
+        struct ROCROLLER_DECLSPEC RegisterIdHash;
 
-        class Allocation;
-        struct Value;
+        class ROCROLLER_DECLSPEC  Allocation;
+        struct ROCROLLER_DECLSPEC Value;
 
         using AllocationPtr = std::shared_ptr<Allocation>;
         using ValuePtr      = std::shared_ptr<Value>;
 
-        std::string   toString(Type t);
-        std::ostream& operator<<(std::ostream& stream, Type t);
+        ROCROLLER_DECLSPEC std::string toString(Type t);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Type t);
 
-        std::string   toString(AllocationState state);
-        std::ostream& operator<<(std::ostream& stream, AllocationState state);
+        ROCROLLER_DECLSPEC std::string toString(AllocationState state);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, AllocationState state);
     }
 
 }

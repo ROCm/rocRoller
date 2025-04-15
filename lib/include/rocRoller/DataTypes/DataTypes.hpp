@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cassert>
 #include <complex>
 #include <cstdlib>
@@ -70,8 +72,8 @@ namespace rocRoller
         Count
     };
 
-    std::string   toString(DataDirection dir);
-    std::ostream& operator<<(std::ostream& stream, DataDirection dir);
+    ROCROLLER_DECLSPEC std::string toString(DataDirection dir);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, DataDirection dir);
 
     /**
      * \ingroup DataTypes
@@ -121,10 +123,10 @@ namespace rocRoller
         Count
     };
 
-    std::string   toString(DataType d);
-    std::string   TypeAbbrev(DataType d);
-    std::ostream& operator<<(std::ostream& stream, DataType const& t);
-    std::istream& operator>>(std::istream& stream, DataType& t);
+    ROCROLLER_DECLSPEC std::string toString(DataType d);
+    ROCROLLER_DECLSPEC std::string TypeAbbrev(DataType d);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, DataType const& t);
+    ROCROLLER_DECLSPEC std::istream& operator>>(std::istream& stream, DataType& t);
 
     /**
      * Pointer Type
@@ -159,8 +161,8 @@ namespace rocRoller
         Count
     };
 
-    std::string   toString(MemoryType m);
-    std::ostream& operator<<(std::ostream& stream, MemoryType const& m);
+    ROCROLLER_DECLSPEC std::string toString(MemoryType m);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, MemoryType const& m);
 
     /**
      * Layout of wavetile for MFMA instructions.
@@ -175,8 +177,8 @@ namespace rocRoller
         Count
     };
 
-    std::string   toString(LayoutType l);
-    std::ostream& operator<<(std::ostream& stream, LayoutType l);
+    ROCROLLER_DECLSPEC std::string toString(LayoutType l);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, LayoutType l);
 
     enum class NaryArgument : int
     {
@@ -190,8 +192,8 @@ namespace rocRoller
         None = Count
     };
 
-    std::string   toString(NaryArgument n);
-    std::ostream& operator<<(std::ostream& stream, NaryArgument n);
+    ROCROLLER_DECLSPEC std::string toString(NaryArgument n);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, NaryArgument n);
 
     inline constexpr DataType getIntegerType(bool isSigned, int sizeBytes)
     {
@@ -275,7 +277,7 @@ namespace rocRoller
     /**
      * VariableType
      */
-    struct VariableType
+    struct ROCROLLER_DECLSPEC VariableType
     {
         constexpr VariableType()
             : dataType()
@@ -368,18 +370,18 @@ namespace rocRoller
         static VariableType Promote(VariableType lhs, VariableType rhs);
     };
 
-    std::string   toString(PointerType const& p);
-    std::ostream& operator<<(std::ostream& stream, PointerType const& p);
+    ROCROLLER_DECLSPEC std::string toString(PointerType const& p);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, PointerType const& p);
 
-    std::string   toString(VariableType const& v);
-    std::string   TypeAbbrev(VariableType const& v);
-    std::ostream& operator<<(std::ostream& stream, VariableType const& v);
+    ROCROLLER_DECLSPEC std::string toString(VariableType const& v);
+    ROCROLLER_DECLSPEC std::string TypeAbbrev(VariableType const& v);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, VariableType const& v);
 
     /**
      * \ingroup DataTypes
      * \brief Runtime accessible data type metadata
      */
-    struct DataTypeInfo
+    struct ROCROLLER_DECLSPEC DataTypeInfo
     {
         static DataTypeInfo const& Get(int index);
         static DataTypeInfo const& Get(DataType t);
@@ -428,7 +430,7 @@ namespace rocRoller
      * \brief Compile-time accessible data type metadata.
      */
     template <typename T>
-    struct TypeInfo
+    struct ROCROLLER_DECLSPEC TypeInfo
     {
     };
 
@@ -442,7 +444,7 @@ namespace rocRoller
               bool        T_IsComplex,
               bool        T_IsIntegral,
               bool        T_IsSigned>
-    struct BaseTypeInfo
+    struct ROCROLLER_DECLSPEC BaseTypeInfo
     {
         using Type = T;
 
@@ -643,19 +645,19 @@ namespace rocRoller
                                 T_IsIntegral,
                                 T_IsSigned>::IsIntegral;
 
-#define DeclareDefaultValueTypeInfo(dtype, enumVal)                         \
-    template <>                                                             \
-    struct TypeInfo<dtype> : public BaseTypeInfo<dtype,                     \
-                                                 DataType::enumVal,         \
-                                                 DataType::enumVal,         \
-                                                 PointerType::Value,        \
-                                                 1,                         \
-                                                 1,                         \
-                                                 sizeof(dtype) * 8,         \
-                                                 false,                     \
-                                                 std::is_integral_v<dtype>, \
-                                                 std::is_signed_v<dtype>>   \
-    {                                                                       \
+#define DeclareDefaultValueTypeInfo(dtype, enumVal)                                            \
+    template <>                                                                                \
+    struct ROCROLLER_DECLSPEC TypeInfo<dtype> : public BaseTypeInfo<dtype,                     \
+                                                                    DataType::enumVal,         \
+                                                                    DataType::enumVal,         \
+                                                                    PointerType::Value,        \
+                                                                    1,                         \
+                                                                    1,                         \
+                                                                    sizeof(dtype) * 8,         \
+                                                                    false,                     \
+                                                                    std::is_integral_v<dtype>, \
+                                                                    std::is_signed_v<dtype>>   \
+    {                                                                                          \
     }
 
     DeclareDefaultValueTypeInfo(float, Float);
@@ -671,214 +673,216 @@ namespace rocRoller
 #undef DeclareDefaultValueTypeInfo
 
     template <>
-    struct TypeInfo<uint64_t> : public BaseTypeInfo<uint64_t,
-                                                    DataType::UInt64,
-                                                    DataType::UInt64,
-                                                    PointerType::Value,
-                                                    1,
-                                                    2,
-                                                    64,
-                                                    false,
-                                                    true,
-                                                    false>
+    struct ROCROLLER_DECLSPEC TypeInfo<uint64_t> : public BaseTypeInfo<uint64_t,
+                                                                       DataType::UInt64,
+                                                                       DataType::UInt64,
+                                                                       PointerType::Value,
+                                                                       1,
+                                                                       2,
+                                                                       64,
+                                                                       false,
+                                                                       true,
+                                                                       false>
     {
     };
 
     template <>
-    struct TypeInfo<int64_t> : public BaseTypeInfo<int64_t,
-                                                   DataType::Int64,
-                                                   DataType::Int64,
-                                                   PointerType::Value,
-                                                   1,
-                                                   2,
-                                                   64,
-                                                   false,
-                                                   true,
-                                                   true>
+    struct ROCROLLER_DECLSPEC TypeInfo<int64_t> : public BaseTypeInfo<int64_t,
+                                                                      DataType::Int64,
+                                                                      DataType::Int64,
+                                                                      PointerType::Value,
+                                                                      1,
+                                                                      2,
+                                                                      64,
+                                                                      false,
+                                                                      true,
+                                                                      true>
     {
     };
 
     template <>
-    struct TypeInfo<double> : public BaseTypeInfo<double,
-                                                  DataType::Double,
-                                                  DataType::Double,
-                                                  PointerType::Value,
-                                                  1,
-                                                  2,
-                                                  64,
-                                                  false,
-                                                  false,
-                                                  true>
+    struct ROCROLLER_DECLSPEC TypeInfo<double> : public BaseTypeInfo<double,
+                                                                     DataType::Double,
+                                                                     DataType::Double,
+                                                                     PointerType::Value,
+                                                                     1,
+                                                                     2,
+                                                                     64,
+                                                                     false,
+                                                                     false,
+                                                                     true>
     {
     };
 
     template <>
-    struct TypeInfo<std::complex<float>> : public BaseTypeInfo<std::complex<float>,
-                                                               DataType::ComplexFloat,
-                                                               DataType::ComplexFloat,
-                                                               PointerType::Value,
-                                                               1,
-                                                               2,
-                                                               64,
-                                                               true,
-                                                               false,
-                                                               true>
+    struct ROCROLLER_DECLSPEC TypeInfo<std::complex<float>>
+        : public BaseTypeInfo<std::complex<float>,
+                              DataType::ComplexFloat,
+                              DataType::ComplexFloat,
+                              PointerType::Value,
+                              1,
+                              2,
+                              64,
+                              true,
+                              false,
+                              true>
     {
     };
 
     template <>
-    struct TypeInfo<std::complex<double>> : public BaseTypeInfo<std::complex<double>,
-                                                                DataType::ComplexDouble,
-                                                                DataType::ComplexDouble,
-                                                                PointerType::Value,
-                                                                1,
-                                                                4,
-                                                                128,
-                                                                true,
-                                                                false,
-                                                                true>
+    struct ROCROLLER_DECLSPEC TypeInfo<std::complex<double>>
+        : public BaseTypeInfo<std::complex<double>,
+                              DataType::ComplexDouble,
+                              DataType::ComplexDouble,
+                              PointerType::Value,
+                              1,
+                              4,
+                              128,
+                              true,
+                              false,
+                              true>
     {
     };
 
     template <>
-    struct TypeInfo<Int8x4> : public BaseTypeInfo<Int8x4,
-                                                  DataType::Int8x4,
-                                                  DataType::Int8,
-                                                  PointerType::Value,
-                                                  4,
-                                                  1,
-                                                  32,
-                                                  false,
-                                                  true,
-                                                  true>
+    struct ROCROLLER_DECLSPEC TypeInfo<Int8x4> : public BaseTypeInfo<Int8x4,
+                                                                     DataType::Int8x4,
+                                                                     DataType::Int8,
+                                                                     PointerType::Value,
+                                                                     4,
+                                                                     1,
+                                                                     32,
+                                                                     false,
+                                                                     true,
+                                                                     true>
     {
     };
 
     template <>
-    struct TypeInfo<UInt8x4> : public BaseTypeInfo<UInt8x4,
-                                                   DataType::UInt8x4,
-                                                   DataType::UInt8,
-                                                   PointerType::Value,
-                                                   4,
-                                                   1,
-                                                   32,
-                                                   false,
-                                                   true,
-                                                   false>
+    struct ROCROLLER_DECLSPEC TypeInfo<UInt8x4> : public BaseTypeInfo<UInt8x4,
+                                                                      DataType::UInt8x4,
+                                                                      DataType::UInt8,
+                                                                      PointerType::Value,
+                                                                      4,
+                                                                      1,
+                                                                      32,
+                                                                      false,
+                                                                      true,
+                                                                      false>
     {
     };
 
     template <>
-    struct TypeInfo<Half> : public BaseTypeInfo<Half,
-                                                DataType::Half,
-                                                DataType::Half,
-                                                PointerType::Value,
-                                                1,
-                                                1,
-                                                16,
-                                                false,
-                                                false,
-                                                true>
+    struct ROCROLLER_DECLSPEC TypeInfo<Half> : public BaseTypeInfo<Half,
+                                                                   DataType::Half,
+                                                                   DataType::Half,
+                                                                   PointerType::Value,
+                                                                   1,
+                                                                   1,
+                                                                   16,
+                                                                   false,
+                                                                   false,
+                                                                   true>
     {
     };
 
-    struct Halfx2 : public DistinctType<uint32_t, Halfx2>
-    {
-    };
-
-    template <>
-    struct TypeInfo<Halfx2> : public BaseTypeInfo<Halfx2,
-                                                  DataType::Halfx2,
-                                                  DataType::Half,
-                                                  PointerType::Value,
-                                                  2,
-                                                  1,
-                                                  32,
-                                                  false,
-                                                  false,
-                                                  true>
+    struct ROCROLLER_DECLSPEC Halfx2 : public DistinctType<uint32_t, Halfx2>
     {
     };
 
     template <>
-    struct TypeInfo<FP8> : public BaseTypeInfo<FP8,
-                                               DataType::FP8,
-                                               DataType::FP8,
-                                               PointerType::Value,
-                                               1,
-                                               1,
-                                               8,
-                                               false,
-                                               false,
-                                               true>
-    {
-    };
-
-    struct FP8x4 : public DistinctType<uint32_t, FP8x4>
+    struct ROCROLLER_DECLSPEC TypeInfo<Halfx2> : public BaseTypeInfo<Halfx2,
+                                                                     DataType::Halfx2,
+                                                                     DataType::Half,
+                                                                     PointerType::Value,
+                                                                     2,
+                                                                     1,
+                                                                     32,
+                                                                     false,
+                                                                     false,
+                                                                     true>
     {
     };
 
     template <>
-    struct TypeInfo<FP8x4> : public BaseTypeInfo<FP8x4,
-                                                 DataType::FP8x4,
-                                                 DataType::FP8,
-                                                 PointerType::Value,
-                                                 4,
-                                                 1,
-                                                 32,
-                                                 false,
-                                                 false,
-                                                 true>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP8> : public BaseTypeInfo<FP8,
+                                                                  DataType::FP8,
+                                                                  DataType::FP8,
+                                                                  PointerType::Value,
+                                                                  1,
+                                                                  1,
+                                                                  8,
+                                                                  false,
+                                                                  false,
+                                                                  true>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC FP8x4 : public DistinctType<uint32_t, FP8x4>
     {
     };
 
     template <>
-    struct TypeInfo<BF8> : public BaseTypeInfo<BF8,
-                                               DataType::BF8,
-                                               DataType::BF8,
-                                               PointerType::Value,
-                                               1,
-                                               1,
-                                               8,
-                                               false,
-                                               false,
-                                               true>
-    {
-    };
-
-    struct BF8x4 : public DistinctType<uint32_t, BF8x4>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP8x4> : public BaseTypeInfo<FP8x4,
+                                                                    DataType::FP8x4,
+                                                                    DataType::FP8,
+                                                                    PointerType::Value,
+                                                                    4,
+                                                                    1,
+                                                                    32,
+                                                                    false,
+                                                                    false,
+                                                                    true>
     {
     };
 
     template <>
-    struct TypeInfo<BF8x4> : public BaseTypeInfo<BF8x4,
-                                                 DataType::BF8x4,
-                                                 DataType::BF8,
-                                                 PointerType::Value,
-                                                 4,
-                                                 1,
-                                                 32,
-                                                 false,
-                                                 false,
-                                                 true>
+    struct ROCROLLER_DECLSPEC TypeInfo<BF8> : public BaseTypeInfo<BF8,
+                                                                  DataType::BF8,
+                                                                  DataType::BF8,
+                                                                  PointerType::Value,
+                                                                  1,
+                                                                  1,
+                                                                  8,
+                                                                  false,
+                                                                  false,
+                                                                  true>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC BF8x4 : public DistinctType<uint32_t, BF8x4>
     {
     };
 
     template <>
-    struct TypeInfo<FP6> : public BaseTypeInfo<FP6,
-                                               DataType::FP6,
-                                               DataType::FP6,
-                                               PointerType::Value,
-                                               1,
-                                               1,
-                                               6,
-                                               false,
-                                               false,
-                                               true>
+    struct ROCROLLER_DECLSPEC TypeInfo<BF8x4> : public BaseTypeInfo<BF8x4,
+                                                                    DataType::BF8x4,
+                                                                    DataType::BF8,
+                                                                    PointerType::Value,
+                                                                    4,
+                                                                    1,
+                                                                    32,
+                                                                    false,
+                                                                    false,
+                                                                    true>
     {
     };
 
-    struct FP6x16
+    template <>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP6> : public BaseTypeInfo<FP6,
+                                                                  DataType::FP6,
+                                                                  DataType::FP6,
+                                                                  PointerType::Value,
+                                                                  1,
+                                                                  1,
+                                                                  6,
+                                                                  false,
+                                                                  false,
+                                                                  true>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC FP6x16
     {
         uint32_t a;
         uint32_t b;
@@ -886,34 +890,34 @@ namespace rocRoller
     };
 
     template <>
-    struct TypeInfo<FP6x16> : public BaseTypeInfo<FP6x16,
-                                                  DataType::FP6x16,
-                                                  DataType::FP6,
-                                                  PointerType::Value,
-                                                  16,
-                                                  3,
-                                                  96,
-                                                  false,
-                                                  false,
-                                                  false>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP6x16> : public BaseTypeInfo<FP6x16,
+                                                                     DataType::FP6x16,
+                                                                     DataType::FP6,
+                                                                     PointerType::Value,
+                                                                     16,
+                                                                     3,
+                                                                     96,
+                                                                     false,
+                                                                     false,
+                                                                     false>
     {
     };
 
     template <>
-    struct TypeInfo<BF6> : public BaseTypeInfo<BF6,
-                                               DataType::BF6,
-                                               DataType::BF6,
-                                               PointerType::Value,
-                                               1,
-                                               1,
-                                               6,
-                                               false,
-                                               false,
-                                               true>
+    struct ROCROLLER_DECLSPEC TypeInfo<BF6> : public BaseTypeInfo<BF6,
+                                                                  DataType::BF6,
+                                                                  DataType::BF6,
+                                                                  PointerType::Value,
+                                                                  1,
+                                                                  1,
+                                                                  6,
+                                                                  false,
+                                                                  false,
+                                                                  true>
     {
     };
 
-    struct BF6x16
+    struct ROCROLLER_DECLSPEC BF6x16
     {
         uint32_t a;
         uint32_t b;
@@ -921,188 +925,190 @@ namespace rocRoller
     };
 
     template <>
-    struct TypeInfo<BF6x16> : public BaseTypeInfo<BF6x16,
-                                                  DataType::BF6x16,
-                                                  DataType::BF6,
-                                                  PointerType::Value,
-                                                  16,
-                                                  3,
-                                                  96,
-                                                  false,
-                                                  false,
-                                                  false>
+    struct ROCROLLER_DECLSPEC TypeInfo<BF6x16> : public BaseTypeInfo<BF6x16,
+                                                                     DataType::BF6x16,
+                                                                     DataType::BF6,
+                                                                     PointerType::Value,
+                                                                     16,
+                                                                     3,
+                                                                     96,
+                                                                     false,
+                                                                     false,
+                                                                     false>
     {
     };
 
     template <>
-    struct TypeInfo<FP4> : public BaseTypeInfo<FP4,
-                                               DataType::FP4,
-                                               DataType::FP4,
-                                               PointerType::Value,
-                                               1,
-                                               1,
-                                               4,
-                                               false,
-                                               false,
-                                               true>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP4> : public BaseTypeInfo<FP4,
+                                                                  DataType::FP4,
+                                                                  DataType::FP4,
+                                                                  PointerType::Value,
+                                                                  1,
+                                                                  1,
+                                                                  4,
+                                                                  false,
+                                                                  false,
+                                                                  true>
     {
     };
 
-    struct FP4x8 : public DistinctType<uint32_t, FP4x8>
-    {
-    };
-
-    template <>
-    struct TypeInfo<FP4x8> : public BaseTypeInfo<FP4x8,
-                                                 DataType::FP4x8,
-                                                 DataType::FP4,
-                                                 PointerType::Value,
-                                                 8,
-                                                 1,
-                                                 32,
-                                                 false,
-                                                 false,
-                                                 false>
+    struct ROCROLLER_DECLSPEC FP4x8 : public DistinctType<uint32_t, FP4x8>
     {
     };
 
     template <>
-    struct TypeInfo<BFloat16> : public BaseTypeInfo<BFloat16,
-                                                    DataType::BFloat16,
-                                                    DataType::BFloat16,
-                                                    PointerType::Value,
-                                                    1,
-                                                    1,
-                                                    16,
-                                                    false,
-                                                    false,
-                                                    true>
-    {
-    };
-
-    struct BFloat16x2 : public DistinctType<uint32_t, BFloat16x2>
+    struct ROCROLLER_DECLSPEC TypeInfo<FP4x8> : public BaseTypeInfo<FP4x8,
+                                                                    DataType::FP4x8,
+                                                                    DataType::FP4,
+                                                                    PointerType::Value,
+                                                                    8,
+                                                                    1,
+                                                                    32,
+                                                                    false,
+                                                                    false,
+                                                                    false>
     {
     };
 
     template <>
-    struct TypeInfo<BFloat16x2> : public BaseTypeInfo<BFloat16x2,
-                                                      DataType::BFloat16x2,
-                                                      DataType::BFloat16,
-                                                      PointerType::Value,
-                                                      2,
-                                                      1,
-                                                      32,
-                                                      false,
-                                                      false,
-                                                      true>
+    struct ROCROLLER_DECLSPEC TypeInfo<BFloat16> : public BaseTypeInfo<BFloat16,
+                                                                       DataType::BFloat16,
+                                                                       DataType::BFloat16,
+                                                                       PointerType::Value,
+                                                                       1,
+                                                                       1,
+                                                                       16,
+                                                                       false,
+                                                                       false,
+                                                                       true>
     {
     };
 
-    struct Raw32 : public DistinctType<uint32_t, Raw32>
-    {
-    };
-
-    template <>
-    struct TypeInfo<Raw32> : public BaseTypeInfo<Raw32,
-                                                 DataType::Raw32,
-                                                 DataType::Raw32,
-                                                 PointerType::Value,
-                                                 1,
-                                                 1,
-                                                 32,
-                                                 false,
-                                                 true,
-                                                 false>
+    struct ROCROLLER_DECLSPEC BFloat16x2 : public DistinctType<uint32_t, BFloat16x2>
     {
     };
 
     template <>
-    struct TypeInfo<bool> : public BaseTypeInfo<bool,
-                                                DataType::Bool,
-                                                DataType::Bool,
-                                                PointerType::Value,
-                                                1,
-                                                1,
-                                                1,
-                                                false,
-                                                true,
-                                                false>
+    struct ROCROLLER_DECLSPEC TypeInfo<BFloat16x2> : public BaseTypeInfo<BFloat16x2,
+                                                                         DataType::BFloat16x2,
+                                                                         DataType::BFloat16,
+                                                                         PointerType::Value,
+                                                                         2,
+                                                                         1,
+                                                                         32,
+                                                                         false,
+                                                                         false,
+                                                                         true>
     {
     };
 
-    struct Bool32 : public DistinctType<uint32_t, Bool32>
-    {
-    };
-
-    template <>
-    struct TypeInfo<Bool32> : public BaseTypeInfo<Bool32,
-                                                  DataType::Bool32,
-                                                  DataType::Bool32,
-                                                  PointerType::Value,
-                                                  1,
-                                                  1,
-                                                  32,
-                                                  false,
-                                                  false,
-                                                  false>
-    {
-    };
-
-    struct Bool64 : public DistinctType<uint64_t, Bool64>
+    struct ROCROLLER_DECLSPEC Raw32 : public DistinctType<uint32_t, Raw32>
     {
     };
 
     template <>
-    struct TypeInfo<Bool64> : public BaseTypeInfo<Bool64,
-                                                  DataType::Bool64,
-                                                  DataType::Bool64,
-                                                  PointerType::Value,
-                                                  1,
-                                                  2,
-                                                  64,
-                                                  false,
-                                                  false,
-                                                  false>
-    {
-    };
-
-    struct PointerLocal : public DistinctType<uint32_t, PointerLocal>
+    struct ROCROLLER_DECLSPEC TypeInfo<Raw32> : public BaseTypeInfo<Raw32,
+                                                                    DataType::Raw32,
+                                                                    DataType::Raw32,
+                                                                    PointerType::Value,
+                                                                    1,
+                                                                    1,
+                                                                    32,
+                                                                    false,
+                                                                    true,
+                                                                    false>
     {
     };
 
     template <>
-    struct TypeInfo<PointerLocal> : public BaseTypeInfo<PointerLocal,
-                                                        DataType::None,
-                                                        DataType::None,
-                                                        PointerType::PointerLocal,
-                                                        1,
-                                                        1,
-                                                        32,
-                                                        false,
-                                                        true,
-                                                        false>
+    struct ROCROLLER_DECLSPEC TypeInfo<bool> : public BaseTypeInfo<bool,
+                                                                   DataType::Bool,
+                                                                   DataType::Bool,
+                                                                   PointerType::Value,
+                                                                   1,
+                                                                   1,
+                                                                   1,
+                                                                   false,
+                                                                   true,
+                                                                   false>
     {
     };
 
-    struct PointerGlobal : public DistinctType<uint64_t, PointerGlobal>
+    struct ROCROLLER_DECLSPEC Bool32 : public DistinctType<uint32_t, Bool32>
     {
     };
 
     template <>
-    struct TypeInfo<PointerGlobal> : public BaseTypeInfo<PointerGlobal,
-                                                         DataType::None,
-                                                         DataType::None,
-                                                         PointerType::PointerGlobal,
-                                                         1,
-                                                         2,
-                                                         64,
-                                                         false,
-                                                         true,
-                                                         false>
+    struct ROCROLLER_DECLSPEC TypeInfo<Bool32> : public BaseTypeInfo<Bool32,
+                                                                     DataType::Bool32,
+                                                                     DataType::Bool32,
+                                                                     PointerType::Value,
+                                                                     1,
+                                                                     1,
+                                                                     32,
+                                                                     false,
+                                                                     false,
+                                                                     false>
     {
     };
 
-    struct Buffer
+    struct ROCROLLER_DECLSPEC Bool64 : public DistinctType<uint64_t, Bool64>
+    {
+    };
+
+    template <>
+    struct ROCROLLER_DECLSPEC TypeInfo<Bool64> : public BaseTypeInfo<Bool64,
+                                                                     DataType::Bool64,
+                                                                     DataType::Bool64,
+                                                                     PointerType::Value,
+                                                                     1,
+                                                                     2,
+                                                                     64,
+                                                                     false,
+                                                                     false,
+                                                                     false>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC PointerLocal : public DistinctType<uint32_t, PointerLocal>
+    {
+    };
+
+    template <>
+    struct ROCROLLER_DECLSPEC TypeInfo<PointerLocal>
+        : public BaseTypeInfo<PointerLocal,
+                              DataType::None,
+                              DataType::None,
+                              PointerType::PointerLocal,
+                              1,
+                              1,
+                              32,
+                              false,
+                              true,
+                              false>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC PointerGlobal : public DistinctType<uint64_t, PointerGlobal>
+    {
+    };
+
+    template <>
+    struct ROCROLLER_DECLSPEC TypeInfo<PointerGlobal>
+        : public BaseTypeInfo<PointerGlobal,
+                              DataType::None,
+                              DataType::None,
+                              PointerType::PointerGlobal,
+                              1,
+                              2,
+                              64,
+                              false,
+                              true,
+                              false>
+    {
+    };
+
+    struct ROCROLLER_DECLSPEC Buffer
     {
         uint32_t desc0;
         uint32_t desc1;
@@ -1111,28 +1117,28 @@ namespace rocRoller
     };
 
     template <>
-    struct TypeInfo<Buffer> : public BaseTypeInfo<Buffer,
-                                                  DataType::None,
-                                                  DataType::None,
-                                                  PointerType::Buffer,
-                                                  1,
-                                                  4,
-                                                  128,
-                                                  false,
-                                                  true,
-                                                  false>
+    struct ROCROLLER_DECLSPEC TypeInfo<Buffer> : public BaseTypeInfo<Buffer,
+                                                                     DataType::None,
+                                                                     DataType::None,
+                                                                     PointerType::Buffer,
+                                                                     1,
+                                                                     4,
+                                                                     128,
+                                                                     false,
+                                                                     true,
+                                                                     false>
     {
     };
 
     template <DataType T_DataType>
-    struct EnumTypeInfo
+    struct ROCROLLER_DECLSPEC EnumTypeInfo
     {
     };
 
-#define DeclareEnumTypeInfo(typeEnum, dtype)                         \
-    template <>                                                      \
-    struct EnumTypeInfo<DataType::typeEnum> : public TypeInfo<dtype> \
-    {                                                                \
+#define DeclareEnumTypeInfo(typeEnum, dtype)                                            \
+    template <>                                                                         \
+    struct ROCROLLER_DECLSPEC EnumTypeInfo<DataType::typeEnum> : public TypeInfo<dtype> \
+    {                                                                                   \
     }
 
     DeclareEnumTypeInfo(Float, float);
@@ -1201,7 +1207,7 @@ namespace rocRoller
 namespace std
 {
     template <>
-    struct hash<rocRoller::VariableType>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::VariableType>
     {
         inline size_t operator()(rocRoller::VariableType const& varType) const
         {

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -61,7 +63,7 @@ namespace rocRoller
          * generic enum serialization.
          */
         template <>
-        struct ScalarTraits<GPUWaitQueueType>
+        struct ROCROLLER_DECLSPEC ScalarTraits<GPUWaitQueueType>
         {
             static std::string output(const GPUWaitQueueType& value)
             {
@@ -75,7 +77,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<GPUCapability, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<GPUCapability, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -92,7 +94,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<GPUArchitectureTarget, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<GPUArchitectureTarget, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -111,7 +113,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<GPUInstructionInfo, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<GPUInstructionInfo, IO, EmptyContext>
         {
             static const bool flow = true;
             using iot              = IOTraits<IO>;
@@ -134,7 +136,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<GPUArchitecture, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<GPUArchitecture, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -153,7 +155,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<GPUArchitecturesStruct, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<GPUArchitecturesStruct, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -170,7 +172,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<std::string, GPUInstructionInfo>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<std::string, GPUInstructionInfo>, IO>
             : public DefaultCustomMappingTraits<std::map<std::string, GPUInstructionInfo>,
                                                 IO,
                                                 false,
@@ -179,13 +181,14 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<GPUCapability, int>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<GPUCapability, int>, IO>
             : public DefaultCustomMappingTraits<std::map<GPUCapability, int>, IO, false, true>
         {
         };
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<GPUArchitectureTarget, GPUArchitecture>, IO>
+        struct ROCROLLER_DECLSPEC
+            CustomMappingTraits<std::map<GPUArchitectureTarget, GPUArchitecture>, IO>
             : public DefaultCustomMappingTraits<std::map<GPUArchitectureTarget, GPUArchitecture>,
                                                 IO,
                                                 false,

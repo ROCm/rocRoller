@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include "DataTypes_F6_Utils.hpp"
 #include <cinttypes>
 #include <cmath>
@@ -43,7 +45,7 @@ namespace rocRoller
      * \ingroup DataTypes
      * @{
      */
-    struct BF6
+    struct ROCROLLER_DECLSPEC BF6
     {
         constexpr BF6()
             : data(F6_ZERO_VALUE)
@@ -226,12 +228,12 @@ namespace std
     }
 
     template <>
-    struct is_floating_point<rocRoller::BF6> : true_type
+    struct ROCROLLER_DECLSPEC is_floating_point<rocRoller::BF6> : true_type
     {
     };
 
     template <>
-    struct hash<rocRoller::BF6>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::BF6>
     {
         size_t operator()(const rocRoller::BF6& a) const
         {

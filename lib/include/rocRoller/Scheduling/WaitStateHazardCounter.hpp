@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
     namespace Scheduling
     {
-        class WaitStateHazardCounter
+        class ROCROLLER_DECLSPEC WaitStateHazardCounter
         {
         public:
             WaitStateHazardCounter() {}

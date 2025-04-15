@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Utilities/Component.hpp>
@@ -36,7 +38,7 @@ namespace rocRoller
     /**
      * @brief Generator for generating conditional and unconditional branches.
      */
-    class BranchGenerator
+    class ROCROLLER_DECLSPEC BranchGenerator
     {
     public:
         BranchGenerator(ContextPtr);

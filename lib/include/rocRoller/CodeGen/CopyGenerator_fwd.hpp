@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
 
-    class CopyGenerator;
+    class ROCROLLER_DECLSPEC CopyGenerator;
 
 }

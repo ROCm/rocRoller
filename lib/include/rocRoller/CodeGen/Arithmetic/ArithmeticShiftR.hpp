@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,14 +35,15 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::ArithmeticShiftR>>
-        GetGenerator<Expression::ArithmeticShiftR>(Register::ValuePtr                  dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::ArithmeticShiftR>>
+                       GetGenerator<Expression::ArithmeticShiftR>(Register::ValuePtr                  dst,
                                                    Register::ValuePtr                  lhs,
                                                    Register::ValuePtr                  rhs,
                                                    Expression::ArithmeticShiftR const& expr);
 
     // Generator for all register types and datatypes.
-    class ArithmeticShiftRGenerator : public BinaryArithmeticGenerator<Expression::ArithmeticShiftR>
+    class ROCROLLER_DECLSPEC ArithmeticShiftRGenerator
+        : public BinaryArithmeticGenerator<Expression::ArithmeticShiftR>
     {
     public:
         ArithmeticShiftRGenerator(ContextPtr c)

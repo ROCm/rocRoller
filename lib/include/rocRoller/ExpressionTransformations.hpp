@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Expression_fwd.hpp>
 
@@ -33,14 +35,15 @@ namespace rocRoller
 {
     namespace Expression
     {
-        ExpressionPtr identity(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr identity(ExpressionPtr expr);
 
         /**
          * Transform sub-expressions of `expr` into new kernel arguments
          *
          * Return value should be Translate time or KernelExecute time evaluable.
          */
-        ExpressionPtr launchTimeSubExpressions(ExpressionPtr expr, ContextPtr context);
+        ROCROLLER_DECLSPEC ExpressionPtr launchTimeSubExpressions(ExpressionPtr expr,
+                                                                  ContextPtr    context);
 
         /**
          * Restore any command arguments that have been cleaned (transformed from command
@@ -48,7 +51,7 @@ namespace rocRoller
          *
          * Return value should be Translate time or KernelLaunch time evaluable.
          */
-        ExpressionPtr restoreCommandArguments(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr restoreCommandArguments(ExpressionPtr expr);
 
         /**
          * @brief Attempt to replace division operations found within an expression with faster operations.
@@ -57,14 +60,14 @@ namespace rocRoller
          * @param context
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr fastDivision(ExpressionPtr expr, ContextPtr context);
+        ROCROLLER_DECLSPEC ExpressionPtr fastDivision(ExpressionPtr expr, ContextPtr context);
 
         /**
          * Ensures that the kernel arguments will include the magic constants required to divide/modulo
          * by `expr`.
          * Requires `expr` to have a type of either Int32 or Int64, and to be evaluable at kernel launch time.
          */
-        void enableDivideBy(ExpressionPtr expr, ContextPtr context);
+        ROCROLLER_DECLSPEC void enableDivideBy(ExpressionPtr expr, ContextPtr context);
 
         /**
          * @brief Attempt to replace multiplication operations found within an expression with faster operations.
@@ -72,13 +75,13 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr fastMultiplication(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr fastMultiplication(ExpressionPtr expr);
 
         /**
          * Attempt to combine multiple shifts:
          * - Opposite shifts by same amount: mask off bits that would be zeroed out.
          */
-        ExpressionPtr combineShifts(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr combineShifts(ExpressionPtr expr);
 
         /**
          * @brief Simplify expressions
@@ -86,7 +89,7 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr simplify(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr simplify(ExpressionPtr expr);
 
         /**
          * @brief Fuse binary expressions into ternaries.
@@ -94,7 +97,7 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr fuseTernary(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr fuseTernary(ExpressionPtr expr);
 
         /**
          * @brief Fuse binary expressions if one combination is able to be condensed by association
@@ -102,7 +105,7 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr fuseAssociative(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr fuseAssociative(ExpressionPtr expr);
 
         /**
          * Resolve all DataFlowTags in the given expression.
@@ -111,7 +114,8 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr dataFlowTagPropagation(ExpressionPtr expr, ContextPtr context);
+        ROCROLLER_DECLSPEC ExpressionPtr dataFlowTagPropagation(ExpressionPtr expr,
+                                                                ContextPtr    context);
 
         /**
          * @brief Attempt to compute e^x operations by using exp2(x * log2(e)).
@@ -119,7 +123,7 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr lowerExponential(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr lowerExponential(ExpressionPtr expr);
 
         /**
          * Helper (lambda/transducer) for applying all fast arithmetic transformations.
@@ -131,7 +135,7 @@ namespace rocRoller
          *
          * Can also be passed as an ExpressionTransducer.
          */
-        struct FastArithmetic
+        struct ROCROLLER_DECLSPEC FastArithmetic
         {
             FastArithmetic() = delete;
             explicit FastArithmetic(ContextPtr);
@@ -151,7 +155,7 @@ namespace rocRoller
          * @param context
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr lowerPRNG(ExpressionPtr exp, ContextPtr context);
+        ROCROLLER_DECLSPEC ExpressionPtr lowerPRNG(ExpressionPtr exp, ContextPtr context);
 
         /**
          * @brief Resolve all ValuePtr expressions that are bitfields into
@@ -160,6 +164,6 @@ namespace rocRoller
          * @param expr Input expression
          * @return ExpressionPtr Transformed expression
          */
-        ExpressionPtr lowerBitfieldValues(ExpressionPtr expr);
+        ROCROLLER_DECLSPEC ExpressionPtr lowerBitfieldValues(ExpressionPtr expr);
     }
 }

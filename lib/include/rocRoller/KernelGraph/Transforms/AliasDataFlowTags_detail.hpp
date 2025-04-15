@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/KernelGraph/Transforms/AliasDataFlowTags.hpp>
 
 #include <rocRoller/KernelGraph/ControlGraph/ControlFlowRWTracer.hpp>
@@ -39,7 +41,7 @@ namespace rocRoller
             using Record = ControlFlowRWTracer::ReadWriteRecord;
             using Edge   = ControlGraph::ControlEdge;
 
-            class TagRWGraph : public Graph::Hypergraph<Record, Edge, false>
+            class ROCROLLER_DECLSPEC TagRWGraph : public Graph::Hypergraph<Record, Edge, false>
             {
                 using Base = Graph::Hypergraph<Record, Edge, false>;
                 using Base::Hypergraph;
@@ -64,7 +66,7 @@ namespace rocRoller
              * have to be after all nodes in the `begin` set and before all
              * nodes in the `end` set.
              */
-            struct GraphExtent
+            struct ROCROLLER_DECLSPEC GraphExtent
             {
                 std::set<int> begin;
                 std::set<int> end;
@@ -77,14 +79,15 @@ namespace rocRoller
                 bool isWithin(KernelGraph const& kgraph, GraphExtent const& gap) const;
             };
 
-            std::ostream& operator<<(std::ostream& stream, GraphExtent const& extent);
+            ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&      stream,
+                                                        GraphExtent const& extent);
 
             /**
              * Represents the liveness of a given tag, including any gaps
              * where it would be acceptable for the registers to be
              * modified.
              */
-            struct TagExtent
+            struct ROCROLLER_DECLSPEC TagExtent
             {
                 using CategoryKey = std::tuple<MemoryType, LayoutType, DataType, int>;
 
@@ -123,26 +126,29 @@ namespace rocRoller
              * Returns a graph describing the relative ordering of each of the
              * control nodes in `records`.
              */
-            TagRWGraph getOrdering(KernelGraph const& kgraph, std::vector<Record> const& records);
+            ROCROLLER_DECLSPEC TagRWGraph getOrdering(KernelGraph const&         kgraph,
+                                                      std::vector<Record> const& records);
 
             /**
              * Returns a TagExtent with the metadata (but not the extent or
              * gaps) filled in.
              */
-            TagExtent getInfo(KernelGraph const& kgraph, std::vector<Record> const& records);
+            ROCROLLER_DECLSPEC TagExtent getInfo(KernelGraph const&         kgraph,
+                                                 std::vector<Record> const& records);
 
             /**
              * Returns a complete TagExtent representing the usage pattern
              * recorded in `records`.
              */
-            TagExtent getExtent(KernelGraph const& kgraph, std::vector<Record> const& records);
+            ROCROLLER_DECLSPEC TagExtent getExtent(KernelGraph const&         kgraph,
+                                                   std::vector<Record> const& records);
 
             /**
              * Returns a set of aliases inner -> outer where `inner` can borrow
              * the registers of `outer` without causing a correctness problem
              * for the kernel.
              */
-            std::map<int, int> findAliasCandidates(KernelGraph const& kgraph);
+            ROCROLLER_DECLSPEC std::map<int, int> findAliasCandidates(KernelGraph const& kgraph);
 
         }
     }

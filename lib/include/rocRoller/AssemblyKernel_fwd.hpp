@@ -29,10 +29,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    class AssemblyKernel;
+    class ROCROLLER_DECLSPEC AssemblyKernel;
     using AssemblyKernelPtr = std::shared_ptr<AssemblyKernel>;
 }

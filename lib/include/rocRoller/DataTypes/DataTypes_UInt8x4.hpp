@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cstdint>
 
 namespace rocRoller
 {
-    struct UInt8x4
+    struct ROCROLLER_DECLSPEC UInt8x4
     {
         UInt8x4()
             : a(0)

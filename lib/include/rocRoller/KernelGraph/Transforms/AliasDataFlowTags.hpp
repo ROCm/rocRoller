@@ -25,8 +25,10 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -59,7 +61,7 @@ namespace rocRoller
          *
          * @ingroup Transformations
          */
-        class AliasDataFlowTags : public GraphTransform
+        class ROCROLLER_DECLSPEC AliasDataFlowTags : public GraphTransform
         {
         public:
             AliasDataFlowTags() = default;

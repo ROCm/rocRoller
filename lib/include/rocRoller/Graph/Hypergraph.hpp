@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/key.hpp>
 #include <boost/multi_index/member.hpp>
@@ -80,11 +82,11 @@ namespace rocRoller
             Count
         };
 
-        std::string toString(GraphModification m);
+        ROCROLLER_DECLSPEC std::string toString(GraphModification m);
 
         namespace mi = boost::multi_index;
 
-        struct HypergraphIncident
+        struct ROCROLLER_DECLSPEC HypergraphIncident
         {
             int src;
             int dst;
@@ -92,7 +94,7 @@ namespace rocRoller
         };
 
         template <typename Node, typename Edge, bool Hyper = true>
-        class Hypergraph
+        class ROCROLLER_DECLSPEC Hypergraph
         {
         public:
             using Element = std::variant<Node, Edge>;
@@ -106,7 +108,7 @@ namespace rocRoller
             /**
              *
              */
-            struct Location
+            struct ROCROLLER_DECLSPEC Location
             {
                 int              index;
                 std::vector<int> incoming;
@@ -421,13 +423,13 @@ namespace rocRoller
             // TODO: May need to replace with multi_index for in-place rewriting.
             std::map<int, Element> m_elements;
 
-            struct BySrc
+            struct ROCROLLER_DECLSPEC BySrc
             {
             };
-            struct ByDst
+            struct ROCROLLER_DECLSPEC ByDst
             {
             };
-            struct BySrcDst
+            struct ROCROLLER_DECLSPEC BySrcDst
             {
             };
 
@@ -449,10 +451,11 @@ namespace rocRoller
         };
 
         template <typename Node, typename Edge, bool Hyper>
-        std::ostream& operator<<(std::ostream& stream, Hypergraph<Node, Edge, Hyper> const& graph);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                        stream,
+                                                    Hypergraph<Node, Edge, Hyper> const& graph);
 
         template <typename Cls>
-        std::string variantToString(Cls const& el)
+        ROCROLLER_DECLSPEC std::string variantToString(Cls const& el)
         {
             return std::visit([](auto const& v) { return toString(v); }, el);
         }
@@ -471,11 +474,12 @@ namespace rocRoller
          * @param destNodePredicate Only yield nodes that satisfy this predicate.
          */
         template <Graph::Direction Dir, typename Node, typename Edge, bool Hyper>
-        Generator<int> reachableNodes(Graph::Hypergraph<Node, Edge, Hyper> const& graph,
-                                      int                                         start,
-                                      auto                                        nodePredicate,
-                                      auto                                        edgePredicate,
-                                      auto destNodePredicate);
+        ROCROLLER_DECLSPEC Generator<int>
+                           reachableNodes(Graph::Hypergraph<Node, Edge, Hyper> const& graph,
+                                          int                                         start,
+                                          auto                                        nodePredicate,
+                                          auto                                        edgePredicate,
+                                          auto                                        destNodePredicate);
 
         template <typename T>
         concept CCalmGraph = !T::IsHyper;

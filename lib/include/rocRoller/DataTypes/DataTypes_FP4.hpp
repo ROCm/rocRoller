@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cinttypes>
 #include <cmath>
 #include <iostream>
@@ -38,7 +40,7 @@
 
 namespace rocRoller
 {
-    typedef struct
+    typedef struct ROCROLLER_DECLSPEC
     {
         uint32_t val : 4;
     } uint4_t;
@@ -330,7 +332,7 @@ namespace rocRoller
      * @{
      */
 
-    struct FP4
+    struct ROCROLLER_DECLSPEC FP4
     {
         constexpr FP4()
             : data(FP4_ZERO_VALUE)
@@ -531,12 +533,12 @@ namespace std
     }
 
     template <>
-    struct is_floating_point<rocRoller::FP4> : true_type
+    struct ROCROLLER_DECLSPEC is_floating_point<rocRoller::FP4> : true_type
     {
     };
 
     template <>
-    struct hash<rocRoller::FP4>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::FP4>
     {
         size_t operator()(const rocRoller::FP4& a) const
         {

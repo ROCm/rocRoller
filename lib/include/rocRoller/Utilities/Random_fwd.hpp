@@ -30,7 +30,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class RandomGenerator;
+    class ROCROLLER_DECLSPEC RandomGenerator;
 }

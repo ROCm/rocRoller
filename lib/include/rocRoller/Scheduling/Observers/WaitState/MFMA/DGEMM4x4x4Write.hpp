@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -55,7 +57,7 @@ namespace rocRoller
          * | 94x  | v_mfma_f64_4x4x4f64 write | flat* read overlapped              | 9    |
          *
          */
-        class DGEMM4x4x4Write : public WaitStateObserver<DGEMM4x4x4Write>
+        class ROCROLLER_DECLSPEC DGEMM4x4x4Write : public WaitStateObserver<DGEMM4x4x4Write>
         {
         public:
             DGEMM4x4x4Write() {}

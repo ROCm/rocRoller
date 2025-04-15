@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <functional>
 #include <memory>
@@ -44,54 +46,54 @@ namespace rocRoller
 {
     namespace Expression
     {
-        struct Add;
-        struct MatrixMultiply;
-        struct ScaledMatrixMultiply;
-        struct Multiply;
-        struct MultiplyAdd;
-        struct MultiplyHigh;
-        struct Subtract;
-        struct Divide;
-        struct Modulo;
-        struct ShiftL;
-        struct LogicalShiftR;
-        struct ArithmeticShiftR;
-        struct BitwiseNegate;
-        struct BitwiseAnd;
-        struct BitwiseOr;
-        struct BitwiseXor;
-        struct GreaterThan;
-        struct GreaterThanEqual;
-        struct LessThan;
-        struct LessThanEqual;
-        struct Equal;
-        struct NotEqual;
-        struct LogicalAnd;
-        struct LogicalOr;
-        struct LogicalNot;
+        struct ROCROLLER_DECLSPEC Add;
+        struct ROCROLLER_DECLSPEC MatrixMultiply;
+        struct ROCROLLER_DECLSPEC ScaledMatrixMultiply;
+        struct ROCROLLER_DECLSPEC Multiply;
+        struct ROCROLLER_DECLSPEC MultiplyAdd;
+        struct ROCROLLER_DECLSPEC MultiplyHigh;
+        struct ROCROLLER_DECLSPEC Subtract;
+        struct ROCROLLER_DECLSPEC Divide;
+        struct ROCROLLER_DECLSPEC Modulo;
+        struct ROCROLLER_DECLSPEC ShiftL;
+        struct ROCROLLER_DECLSPEC LogicalShiftR;
+        struct ROCROLLER_DECLSPEC ArithmeticShiftR;
+        struct ROCROLLER_DECLSPEC BitwiseNegate;
+        struct ROCROLLER_DECLSPEC BitwiseAnd;
+        struct ROCROLLER_DECLSPEC BitwiseOr;
+        struct ROCROLLER_DECLSPEC BitwiseXor;
+        struct ROCROLLER_DECLSPEC GreaterThan;
+        struct ROCROLLER_DECLSPEC GreaterThanEqual;
+        struct ROCROLLER_DECLSPEC LessThan;
+        struct ROCROLLER_DECLSPEC LessThanEqual;
+        struct ROCROLLER_DECLSPEC Equal;
+        struct ROCROLLER_DECLSPEC NotEqual;
+        struct ROCROLLER_DECLSPEC LogicalAnd;
+        struct ROCROLLER_DECLSPEC LogicalOr;
+        struct ROCROLLER_DECLSPEC LogicalNot;
 
-        struct Exponential2;
-        struct Exponential;
+        struct ROCROLLER_DECLSPEC Exponential2;
+        struct ROCROLLER_DECLSPEC Exponential;
 
-        struct MagicMultiple;
-        struct MagicShifts;
-        struct MagicSign;
-        struct Negate;
+        struct ROCROLLER_DECLSPEC MagicMultiple;
+        struct ROCROLLER_DECLSPEC MagicShifts;
+        struct ROCROLLER_DECLSPEC MagicSign;
+        struct ROCROLLER_DECLSPEC Negate;
 
-        struct RandomNumber;
+        struct ROCROLLER_DECLSPEC RandomNumber;
 
-        struct BitFieldExtract;
+        struct ROCROLLER_DECLSPEC BitFieldExtract;
 
-        struct AddShiftL;
-        struct ShiftLAdd;
-        struct Conditional;
+        struct ROCROLLER_DECLSPEC AddShiftL;
+        struct ROCROLLER_DECLSPEC ShiftLAdd;
+        struct ROCROLLER_DECLSPEC Conditional;
 
-        struct Convert;
+        struct ROCROLLER_DECLSPEC Convert;
 
         template <DataType DATATYPE>
-        struct SRConvert;
+        struct ROCROLLER_DECLSPEC SRConvert;
 
-        struct DataFlowTag;
+        struct ROCROLLER_DECLSPEC DataFlowTag;
         using WaveTilePtr = std::shared_ptr<KernelGraph::CoordinateGraph::WaveTile>;
 
         using Expression = std::variant<

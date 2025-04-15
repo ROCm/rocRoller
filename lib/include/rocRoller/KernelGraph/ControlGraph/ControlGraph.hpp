@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <functional>
 #include <variant>
 
@@ -78,24 +80,24 @@ namespace rocRoller
         /**
          * Return a full representation of 'n'
          */
-        std::string   toString(NodeOrdering n);
-        std::ostream& operator<<(std::ostream& stream, NodeOrdering n);
+        ROCROLLER_DECLSPEC std::string toString(NodeOrdering n);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, NodeOrdering n);
 
         /**
          * Return a full representation of 'c'
          */
-        std::string   toString(CacheStatus c);
-        std::ostream& operator<<(std::ostream& stream, CacheStatus c);
+        ROCROLLER_DECLSPEC std::string toString(CacheStatus c);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, CacheStatus c);
 
         /**
          * Return a 3-character representation of 'n'.
          */
-        std::string abbrev(NodeOrdering n);
+        ROCROLLER_DECLSPEC std::string abbrev(NodeOrdering n);
 
         /**
          * If ordering `order` applies to (a, b), return the ordering that applies to (b, a).
          */
-        NodeOrdering opposite(NodeOrdering order);
+        ROCROLLER_DECLSPEC NodeOrdering opposite(NodeOrdering order);
 
         /**
          * Control flow graph.
@@ -103,7 +105,8 @@ namespace rocRoller
          * Nodes in the graph represent operations.  Edges describe
          * dependencies.
          */
-        class ControlGraph : public Graph::Hypergraph<Operation, ControlEdge, false>
+        class ROCROLLER_DECLSPEC ControlGraph
+            : public Graph::Hypergraph<Operation, ControlEdge, false>
         {
         public:
             using Base = Graph::Hypergraph<Operation, ControlEdge, false>;

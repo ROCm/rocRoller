@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <any>
 #include <bitset>
 #include <functional>
@@ -50,7 +52,7 @@ namespace rocRoller
      *
      * Keeps track of its instances, so do not create temporaries.
     */
-    struct SettingsOptionBase
+    struct ROCROLLER_DECLSPEC SettingsOptionBase
     {
         std::string name;
         std::string description;
@@ -76,7 +78,7 @@ namespace rocRoller
      * @tparam T type of underlying option.
      */
     template <typename T, bool LazyValue = false>
-    struct SettingsOption : public SettingsOptionBase
+    struct ROCROLLER_DECLSPEC SettingsOption : public SettingsOptionBase
     {
         using Type = T;
         using DefaultValueType =
@@ -97,11 +99,11 @@ namespace rocRoller
         int                     getBitIndex() const;
     };
 
-    std::string   toString(LogLevel level);
-    std::ostream& operator<<(std::ostream&, LogLevel const&);
+    ROCROLLER_DECLSPEC std::string toString(LogLevel level);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, LogLevel const&);
 
     /**
-     * @brief Settings class is derived from lazy singleton class and handles options
+     * @brief Settings class is derived from lazy singleton class  and handles options
      * that are defined through environment variables or developer defined options.
      *
      * Getting a value requires a call to get(SettingsOption opt). When get() is called,
@@ -112,7 +114,7 @@ namespace rocRoller
      *
      * A call to set(SettingsOption opt) sets (or overwrites) the corresponding value in m_values.
      */
-    class Settings : public LazySingleton<Settings>
+    class ROCROLLER_DECLSPEC Settings : public LazySingleton<Settings>
     {
     public:
         using bitFieldType = std::bitset<32>;
@@ -284,6 +286,8 @@ namespace rocRoller
         std::map<std::string, std::any> m_values;
         std::vector<std::string>        m_setBitOptions;
     };
+
+    ROCROLLER_DECLSPEC F8Mode getDefaultF8ModeForCurrentHipDevice();
 }
 
 #include <rocRoller/Utilities/Settings_impl.hpp>

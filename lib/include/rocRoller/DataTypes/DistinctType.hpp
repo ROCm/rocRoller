@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -45,7 +47,7 @@ namespace rocRoller
      * to its underlying data type.
      */
     template <typename T, typename Subclass>
-    struct DistinctType
+    struct ROCROLLER_DECLSPEC DistinctType
     {
         using Value = T;
 

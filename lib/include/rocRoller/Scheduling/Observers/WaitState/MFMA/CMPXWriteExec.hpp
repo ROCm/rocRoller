@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -43,7 +45,7 @@ namespace rocRoller
          * | 94x  | v_cmpx* write EXEC | v_mfma*         | 4    |
          *
          */
-        class CMPXWriteExec : public WaitStateObserver<CMPXWriteExec>
+        class ROCROLLER_DECLSPEC CMPXWriteExec : public WaitStateObserver<CMPXWriteExec>
         {
         public:
             CMPXWriteExec() {}

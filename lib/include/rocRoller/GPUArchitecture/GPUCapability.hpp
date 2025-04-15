@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -42,7 +44,7 @@
 
 namespace rocRoller
 {
-    class GPUCapability
+    class ROCROLLER_DECLSPEC GPUCapability
     {
     public:
         enum Value : uint8_t
@@ -200,7 +202,7 @@ namespace rocRoller
 
         static std::string toString(Value);
 
-        struct Hash
+        struct ROCROLLER_DECLSPEC Hash
         {
             std::size_t operator()(const GPUCapability& input) const
             {
@@ -216,7 +218,7 @@ namespace rocRoller
         static const std::unordered_map<std::string, Value> m_stringMap;
     };
 
-    std::ostream& operator<<(std::ostream&, GPUCapability::Value);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, GPUCapability::Value);
 }
 
 #include <rocRoller/GPUArchitecture/GPUCapability_impl.hpp>

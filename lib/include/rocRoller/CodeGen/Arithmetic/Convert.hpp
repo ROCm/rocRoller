@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::Convert>>
-        GetGenerator<Expression::Convert>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::Convert>>
+                       GetGenerator<Expression::Convert>(Register::ValuePtr dst,
                                           Register::ValuePtr arg,
                                           Expression::Convert const&);
     /**
@@ -46,7 +48,7 @@ namespace rocRoller
     Generator<Instruction>
         generateConvertOp(DataType dataType, Register::ValuePtr dest, Register::ValuePtr arg);
 
-    class ConvertGenerator : public UnaryArithmeticGenerator<Expression::Convert>
+    class ROCROLLER_DECLSPEC ConvertGenerator : public UnaryArithmeticGenerator<Expression::Convert>
     {
     public:
         ConvertGenerator(ContextPtr c)
@@ -122,7 +124,8 @@ namespace rocRoller
      *  the second arg is a seed for stochastic rounding.
      */
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::SRConvert<DataType::FP8>>>
+    ROCROLLER_DECLSPEC
+        std::shared_ptr<BinaryArithmeticGenerator<Expression::SRConvert<DataType::FP8>>>
         GetGenerator<Expression::SRConvert<DataType::FP8>>(
             Register::ValuePtr dst,
             Register::ValuePtr lhs,
@@ -130,7 +133,8 @@ namespace rocRoller
             Expression::SRConvert<DataType::FP8> const&);
 
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::SRConvert<DataType::BF8>>>
+    ROCROLLER_DECLSPEC
+        std::shared_ptr<BinaryArithmeticGenerator<Expression::SRConvert<DataType::BF8>>>
         GetGenerator<Expression::SRConvert<DataType::BF8>>(
             Register::ValuePtr dst,
             Register::ValuePtr lhs,
@@ -139,7 +143,8 @@ namespace rocRoller
 
     // Templated Generator class based on the return type.
     template <DataType DATATYPE>
-    class SRConvertGenerator : public BinaryArithmeticGenerator<Expression::SRConvert<DATATYPE>>
+    class ROCROLLER_DECLSPEC SRConvertGenerator
+        : public BinaryArithmeticGenerator<Expression::SRConvert<DATATYPE>>
     {
     public:
         SRConvertGenerator(ContextPtr c)

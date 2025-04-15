@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #define RR_EMPTY_STRUCT_WITH_NAME(cls)          \
-    struct cls                                  \
+    struct ROCROLLER_DECLSPEC cls               \
     {                                           \
         static constexpr bool HasValue = false; \
                                                 \

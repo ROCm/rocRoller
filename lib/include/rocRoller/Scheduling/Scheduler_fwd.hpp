@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 namespace rocRoller
 {
@@ -52,10 +54,10 @@ namespace rocRoller
             Count
         };
 
-        class Scheduler;
-        class LockState;
+        class ROCROLLER_DECLSPEC Scheduler;
+        class ROCROLLER_DECLSPEC LockState;
 
-        std::string toString(SchedulerProcedure const&);
-        std::string toString(Dependency const&);
+        ROCROLLER_DECLSPEC std::string toString(SchedulerProcedure const&);
+        ROCROLLER_DECLSPEC std::string toString(Dependency const&);
     }
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -45,7 +47,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <>
-        struct ScalarTraits<Operations::OperationTag>
+        struct ROCROLLER_DECLSPEC ScalarTraits<Operations::OperationTag>
         {
             static std::string output(Operations::OperationTag const& x)
             {
@@ -62,13 +64,13 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct SequenceTraits<std::vector<Operations::OperationTag>, IO>
+        struct ROCROLLER_DECLSPEC SequenceTraits<std::vector<Operations::OperationTag>, IO>
             : public DefaultSequenceTraits<std::vector<Operations::OperationTag>, IO, true>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::Tensor, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::Tensor, IO, Context>
         {
             using TOp = Operations::Tensor;
             using iot = IOTraits<IO>;
@@ -94,7 +96,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::Scalar, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::Scalar, IO, Context>
         {
             using TOp = Operations::Scalar;
             using iot = IOTraits<IO>;
@@ -115,7 +117,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::Literal, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::Literal, IO, Context>
         {
             using TOp = Operations::Literal;
             using iot = IOTraits<IO>;
@@ -135,7 +137,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::BlockScale, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::BlockScale, IO, Context>
         {
             using TOp = Operations::BlockScale;
             using iot = IOTraits<IO>;
@@ -170,7 +172,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Load_Linear, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Load_Linear, IO, Context>
         {
             using TOp = Operations::T_Load_Linear;
             using iot = IOTraits<IO>;
@@ -190,7 +192,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Load_Scalar, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Load_Scalar, IO, Context>
         {
             using TOp = Operations::T_Load_Scalar;
             using iot = IOTraits<IO>;
@@ -210,7 +212,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Load_Tiled, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Load_Tiled, IO, Context>
         {
             using TOp = Operations::T_Load_Tiled;
             using iot = IOTraits<IO>;
@@ -230,7 +232,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Mul, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Mul, IO, Context>
         {
             using TOp = Operations::T_Mul;
             using iot = IOTraits<IO>;
@@ -251,7 +253,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Store_Linear, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Store_Linear, IO, Context>
         {
             using TOp = Operations::T_Store_Linear;
             using iot = IOTraits<IO>;
@@ -272,7 +274,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Store_Tiled, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Store_Tiled, IO, Context>
         {
             using TOp = Operations::T_Store_Tiled;
             using iot = IOTraits<IO>;
@@ -293,7 +295,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::Nop, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::Nop, IO, Context>
         {
             using TOp = Operations::Nop;
             using iot = IOTraits<IO>;
@@ -310,7 +312,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::RandomNumberGenerator, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::RandomNumberGenerator, IO, Context>
         {
             using TOp = Operations::RandomNumberGenerator;
             using iot = IOTraits<IO>;
@@ -332,7 +334,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::T_Execute, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::T_Execute, IO, Context>
         {
             using TOp = Operations::T_Execute;
             using iot = IOTraits<IO>;
@@ -375,7 +377,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::Operation>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::Operation>
         {
             static Operations::Operation call()
             {
@@ -384,7 +386,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::Tensor>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::Tensor>
         {
             static Operations::Operation call()
             {
@@ -393,7 +395,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::Scalar>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::Scalar>
         {
             static Operations::Operation call()
             {
@@ -402,7 +404,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::Literal>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::Literal>
         {
             static Operations::Operation call()
             {
@@ -411,7 +413,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::BlockScale>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::BlockScale>
         {
             static Operations::Operation call()
             {
@@ -420,7 +422,8 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::RandomNumberGenerator>
+        struct ROCROLLER_DECLSPEC
+            DefaultConstruct<Operations::Operation, Operations::RandomNumberGenerator>
         {
             static Operations::Operation call()
             {
@@ -429,7 +432,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Load_Linear>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Load_Linear>
         {
             static Operations::Operation call()
             {
@@ -438,7 +441,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Load_Scalar>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Load_Scalar>
         {
             static Operations::Operation call()
             {
@@ -447,7 +450,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Load_Tiled>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Load_Tiled>
         {
             static Operations::Operation call()
             {
@@ -456,7 +459,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Mul>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Mul>
         {
             static Operations::Operation call()
             {
@@ -466,7 +469,8 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Store_Linear>
+        struct ROCROLLER_DECLSPEC
+            DefaultConstruct<Operations::Operation, Operations::T_Store_Linear>
         {
             static Operations::Operation call()
             {
@@ -476,7 +480,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Store_Tiled>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Store_Tiled>
         {
             static Operations::Operation call()
             {
@@ -486,7 +490,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::T_Execute>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::T_Execute>
         {
             static Operations::Operation call()
             {
@@ -495,7 +499,7 @@ namespace rocRoller
         };
 
         template <>
-        struct DefaultConstruct<Operations::Operation, Operations::Nop>
+        struct ROCROLLER_DECLSPEC DefaultConstruct<Operations::Operation, Operations::Nop>
         {
             static Operations::Operation call()
             {
@@ -504,13 +508,13 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<Operations::Operation, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<Operations::Operation, IO, Context>
             : public DefaultVariantMappingTraits<Operations::Operation, IO, Context>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<std::shared_ptr<Operations::Operation>, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<std::shared_ptr<Operations::Operation>, IO, Context>
             : public SharedPointerMappingTraits<std::shared_ptr<Operations::Operation>,
                                                 IO,
                                                 Context,
@@ -519,7 +523,8 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct SequenceTraits<std::vector<std::shared_ptr<Operations::Operation>>, IO>
+        struct ROCROLLER_DECLSPEC
+            SequenceTraits<std::vector<std::shared_ptr<Operations::Operation>>, IO>
             : public DefaultSequenceTraits<std::vector<std::shared_ptr<Operations::Operation>>,
                                            IO,
                                            false>

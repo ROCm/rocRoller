@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -37,7 +39,7 @@ namespace rocRoller
     namespace Scheduling
     {
 
-        class WMMAObserver
+        class ROCROLLER_DECLSPEC WMMAObserver
         {
         public:
             WMMAObserver();

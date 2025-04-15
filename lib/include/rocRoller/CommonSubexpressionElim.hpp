@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Expression_fwd.hpp>
 #include <set>
@@ -35,7 +37,7 @@ namespace rocRoller
 {
     namespace Expression
     {
-        struct ExpressionNode
+        struct ROCROLLER_DECLSPEC ExpressionNode
         {
             /**
              * The destination register for the expression.
@@ -85,7 +87,8 @@ namespace rocRoller
          * @param context
          * @return ExpressionTree
          */
-        ExpressionTree consolidateSubExpressions(ExpressionPtr expr, ContextPtr context);
+        ROCROLLER_DECLSPEC ExpressionTree consolidateSubExpressions(ExpressionPtr expr,
+                                                                    ContextPtr    context);
 
         /**
          * @brief Get the number of consolidations performed by Common Subexpression Elimination
@@ -93,7 +96,7 @@ namespace rocRoller
          * @param tree Tree to fetch count from
          * @return Count of subexpressions consolidatated from original expression
          */
-        int getConsolidationCount(ExpressionTree const& tree);
+        ROCROLLER_DECLSPEC int getConsolidationCount(ExpressionTree const& tree);
 
         /**
          * @brief Rebuilds an Expression from an ExpressionTree
@@ -101,6 +104,6 @@ namespace rocRoller
          * @param tree The tree to rebuild
          * @return ExpressionPtr
          */
-        ExpressionPtr rebuildExpression(ExpressionTree const& tree);
+        ROCROLLER_DECLSPEC ExpressionPtr rebuildExpression(ExpressionTree const& tree);
     }
 }

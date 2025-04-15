@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cinttypes>
 #include <cmath>
 #include <iostream>
@@ -48,7 +50,7 @@ namespace rocRoller
     *  @brief Floating point 8-bit type in E5M2 format
     *
     */
-    struct BF8
+    struct ROCROLLER_DECLSPEC BF8
     {
         constexpr BF8()
             : data(F8_ZERO_VALUE)
@@ -223,12 +225,12 @@ namespace std
     }
 
     template <>
-    struct is_floating_point<rocRoller::BF8> : true_type
+    struct ROCROLLER_DECLSPEC is_floating_point<rocRoller::BF8> : true_type
     {
     };
 
     template <>
-    struct hash<rocRoller::BF8>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::BF8>
     {
         size_t operator()(const rocRoller::BF8& a) const
         {

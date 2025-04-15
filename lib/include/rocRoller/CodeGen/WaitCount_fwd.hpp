@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class WaitCount;
+    class ROCROLLER_DECLSPEC WaitCount;
 }

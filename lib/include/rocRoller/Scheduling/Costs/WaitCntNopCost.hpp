@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -41,7 +43,7 @@ namespace rocRoller
         /**
          * WaitCntNopCost: Orders the instructions based on the number of Nops and WaitCnts.
          */
-        class WaitCntNopCost : public Cost
+        class ROCROLLER_DECLSPEC WaitCntNopCost : public Cost
         {
         public:
             WaitCntNopCost(ContextPtr);

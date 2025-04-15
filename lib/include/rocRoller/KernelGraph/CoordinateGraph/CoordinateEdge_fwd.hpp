@@ -26,23 +26,25 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 
 namespace rocRoller
 {
     namespace KernelGraph::CoordinateGraph
     {
-        struct ConstructMacroTile;
-        struct DestructMacroTile;
-        struct Flatten;
-        struct Forget;
-        struct Inherit;
-        struct Join;
-        struct MakeOutput;
-        struct PassThrough;
-        struct Split;
-        struct Sunder;
-        struct Tile;
+        struct ROCROLLER_DECLSPEC ConstructMacroTile;
+        struct ROCROLLER_DECLSPEC DestructMacroTile;
+        struct ROCROLLER_DECLSPEC Flatten;
+        struct ROCROLLER_DECLSPEC Forget;
+        struct ROCROLLER_DECLSPEC Inherit;
+        struct ROCROLLER_DECLSPEC Join;
+        struct ROCROLLER_DECLSPEC MakeOutput;
+        struct ROCROLLER_DECLSPEC PassThrough;
+        struct ROCROLLER_DECLSPEC Split;
+        struct ROCROLLER_DECLSPEC Sunder;
+        struct ROCROLLER_DECLSPEC Tile;
 
         using CoordinateTransformEdge = std::variant<ConstructMacroTile,
                                                      DestructMacroTile,
@@ -63,15 +65,15 @@ namespace rocRoller
         concept CConcreteCoordinateTransformEdge
             = (CCoordinateTransformEdge<T> && !std::same_as<CoordinateTransformEdge, T>);
 
-        struct DataFlow;
+        struct ROCROLLER_DECLSPEC DataFlow;
 
-        struct Alias;
-        struct Buffer;
-        struct Duplicate;
-        struct Index;
-        struct Offset;
-        struct Stride;
-        struct View;
+        struct ROCROLLER_DECLSPEC Alias;
+        struct ROCROLLER_DECLSPEC Buffer;
+        struct ROCROLLER_DECLSPEC Duplicate;
+        struct ROCROLLER_DECLSPEC Index;
+        struct ROCROLLER_DECLSPEC Offset;
+        struct ROCROLLER_DECLSPEC Stride;
+        struct ROCROLLER_DECLSPEC View;
 
         using DataFlowEdge
             = std::variant<DataFlow, Alias, Buffer, Duplicate, Index, Offset, Stride, View>;

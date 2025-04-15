@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 #include <rocRoller/CommandSolution_fwd.hpp>
@@ -51,7 +53,7 @@ namespace rocRoller
     /**
      * CommandParameters - tunable command parameters.
      */
-    class CommandParameters
+    class ROCROLLER_DECLSPEC CommandParameters
     {
     public:
         CommandParameters();
@@ -157,7 +159,7 @@ namespace rocRoller
      *
      * TODO: Remove this!
      */
-    class CommandLaunchParameters
+    class ROCROLLER_DECLSPEC CommandLaunchParameters
     {
     public:
         CommandLaunchParameters() = default;
@@ -172,7 +174,7 @@ namespace rocRoller
         std::optional<std::array<Expression::ExpressionPtr, 3>> m_workitemCount;
     };
 
-    class CommandKernel
+    class ROCROLLER_DECLSPEC CommandKernel
     {
     public:
         CommandKernel() = default;
@@ -351,7 +353,7 @@ namespace rocRoller
                           hipStream_t               stream);
     };
 
-    class CommandSolution
+    class ROCROLLER_DECLSPEC CommandSolution
     {
     public:
         explicit CommandSolution(CommandPtr command);

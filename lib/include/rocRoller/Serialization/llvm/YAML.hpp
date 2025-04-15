@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Serialization/Base.hpp>
 #include <rocRoller/Serialization/HasTraits.hpp>
 
@@ -69,18 +71,18 @@ namespace llvm
          */
 
         template <typename T>
-        struct FlowBase
+        struct ROCROLLER_DECLSPEC FlowBase
         {
         };
 
         template <sn::CHasFlow T>
-        struct FlowBase<T>
+        struct ROCROLLER_DECLSPEC FlowBase<T>
         {
             static const bool flow = true;
         };
 
         template <typename T>
-        requires(sn::has_SequenceTraits<T, IO>::value) struct SequenceTraits<T>
+        requires(sn::has_SequenceTraits<T, IO>::value) struct ROCROLLER_DECLSPEC SequenceTraits<T>
             : public FlowBase<sn::SequenceTraits<T, IO>>
         {
             static size_t size(IO& io, T& seq)
@@ -95,7 +97,8 @@ namespace llvm
         };
 
         template <typename T>
-        requires(sn::has_EnumTraits<T, IO>::value) struct ScalarEnumerationTraits<T>
+        requires(sn::has_EnumTraits<T, IO>::value) struct ROCROLLER_DECLSPEC
+            ScalarEnumerationTraits<T>
         {
             static void enumeration(IO& io, T& value)
             {
@@ -104,7 +107,8 @@ namespace llvm
         };
 
         template <typename T, typename Context>
-        requires(sn::has_MappingTraits<T, IO>::value) struct MappingContextTraits<T, Context>
+        requires(sn::has_MappingTraits<T, IO>::value) struct ROCROLLER_DECLSPEC
+            MappingContextTraits<T, Context>
         {
             static void mapping(IO& io, T& obj, Context& ctx)
             {
@@ -119,8 +123,8 @@ namespace llvm
         };
 
         template <typename T>
-        requires(sn::has_EmptyMappingTraits<T, IO>::value) struct MappingTraits<T>
-            : public FlowBase<sn::MappingTraits<T, IO, EmptyContext>>
+        requires(sn::has_EmptyMappingTraits<T, IO>::value) struct ROCROLLER_DECLSPEC
+            MappingTraits<T> : public FlowBase<sn::MappingTraits<T, IO, EmptyContext>>
         {
             static void mapping(IO& io, T& obj)
             {
@@ -135,7 +139,8 @@ namespace llvm
         };
 
         template <typename T>
-        requires(sn::has_CustomMappingTraits<T, IO>::value) struct CustomMappingTraits<T>
+        requires(sn::has_CustomMappingTraits<T, IO>::value) struct ROCROLLER_DECLSPEC
+            CustomMappingTraits<T>
         {
             using Impl = sn::CustomMappingTraits<T, IO>;
 
@@ -151,7 +156,7 @@ namespace llvm
         };
 
         template <typename T>
-        struct Hide
+        struct ROCROLLER_DECLSPEC Hide
         {
             T& value;
 
@@ -173,7 +178,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <>
-        struct IOTraits<llvm::yaml::IO>
+        struct ROCROLLER_DECLSPEC IOTraits<llvm::yaml::IO>
         {
             using IO = llvm::yaml::IO;
 
@@ -249,7 +254,7 @@ namespace llvm
             = std::conditional<std::is_same<size_t, uint64_t>::value, FooType, size_t>::type;
 
         template <>
-        struct ScalarTraits<mysize_t>
+        struct ROCROLLER_DECLSPEC ScalarTraits<mysize_t>
         {
             static void output(const mysize_t& value, void* ctx, raw_ostream& stream)
             {
@@ -272,7 +277,7 @@ namespace llvm
         };
 
         template <typename T>
-        struct MappingTraits<Hide<T>>
+        struct ROCROLLER_DECLSPEC MappingTraits<Hide<T>>
         {
             static void mapping(IO& io, Hide<T>& value)
             {
@@ -283,7 +288,7 @@ namespace llvm
         };
 
         template <typename T>
-        struct SequenceTraits<Hide<T>>
+        struct ROCROLLER_DECLSPEC SequenceTraits<Hide<T>>
         {
             using Impl  = sn::SequenceTraits<T, IO>;
             using Value = typename Impl::Value;
@@ -301,7 +306,7 @@ namespace llvm
         };
 
         template <typename T>
-        struct ScalarEnumerationTraits<Hide<T>>
+        struct ROCROLLER_DECLSPEC ScalarEnumerationTraits<Hide<T>>
         {
             static void enumeration(IO& io, Hide<T>& value)
             {
@@ -310,7 +315,7 @@ namespace llvm
         };
 
         template <typename T>
-        struct CustomMappingTraits<Hide<T>>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<Hide<T>>
         {
             using Impl = sn::CustomMappingTraits<T, IO>;
 
@@ -336,7 +341,7 @@ namespace llvm
                                      rocRoller::BF8,
                                      rocRoller::FP6,
                                      rocRoller::BF6,
-                                     rocRoller::FP4>) struct ScalarTraits<T>
+                                     rocRoller::FP4>) struct ROCROLLER_DECLSPEC ScalarTraits<T>
         {
             static void output(const T& value, void* ctx, llvm::raw_ostream& out)
             {
@@ -362,7 +367,7 @@ namespace llvm
         };
 
         template <rocRoller::Serialization::CHasScalarTraits Scalar>
-        struct ScalarTraits<Scalar>
+        struct ROCROLLER_DECLSPEC ScalarTraits<Scalar>
         {
             using rrTraits = rocRoller::Serialization::ScalarTraits<Scalar>;
 

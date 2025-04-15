@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
     namespace InstructionGenerators
     {
-        struct ScaledMatrixMultiply;
+        struct ROCROLLER_DECLSPEC ScaledMatrixMultiply;
         using ScaledMatrixMultiplyPtr = std::shared_ptr<ScaledMatrixMultiply>;
     }
 }

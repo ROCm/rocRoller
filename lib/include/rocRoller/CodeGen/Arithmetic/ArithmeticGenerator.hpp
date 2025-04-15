@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Utilities/Error.hpp>
 #include <rocRoller/Utilities/Generator.hpp>
@@ -34,7 +36,7 @@ namespace rocRoller
 {
     /// Base Arithmetic Generator class. All Arithmetic generators should be derived
     /// from this class.
-    class ArithmeticGenerator
+    class ROCROLLER_DECLSPEC ArithmeticGenerator
     {
     public:
         ArithmeticGenerator(ContextPtr context)
@@ -101,7 +103,7 @@ namespace rocRoller
     // Unary Arithmetic Generator. Most unary generators should be derived from
     // this class.
     template <Expression::CUnary Operation>
-    class UnaryArithmeticGenerator : public ArithmeticGenerator
+    class ROCROLLER_DECLSPEC UnaryArithmeticGenerator : public ArithmeticGenerator
     {
     public:
         UnaryArithmeticGenerator(ContextPtr context)
@@ -129,7 +131,7 @@ namespace rocRoller
     // Binary Arithmetic Generator. Most binary generators should be derived from
     // this class.
     template <Expression::CBinary Operation>
-    class BinaryArithmeticGenerator : public ArithmeticGenerator
+    class ROCROLLER_DECLSPEC BinaryArithmeticGenerator : public ArithmeticGenerator
     {
     public:
         BinaryArithmeticGenerator(ContextPtr context)
@@ -160,7 +162,7 @@ namespace rocRoller
     // Ternary Arithmetic Generator. Most ternary generators should be derived from
     // this class.
     template <Expression::CTernary Operation>
-    class TernaryArithmeticGenerator : public ArithmeticGenerator
+    class ROCROLLER_DECLSPEC TernaryArithmeticGenerator : public ArithmeticGenerator
     {
     public:
         TernaryArithmeticGenerator(ContextPtr context)
@@ -192,7 +194,7 @@ namespace rocRoller
     // TernaryMixed Arithmetic Generator. Only Ternary generators that can support mixed
     // airthmetic should be derived from this class.
     template <Expression::CTernaryMixed Operation>
-    class TernaryMixedArithmeticGenerator : public ArithmeticGenerator
+    class ROCROLLER_DECLSPEC TernaryMixedArithmeticGenerator : public ArithmeticGenerator
     {
     public:
         TernaryMixedArithmeticGenerator(ContextPtr context)

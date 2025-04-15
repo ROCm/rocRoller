@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
@@ -34,7 +36,7 @@ namespace rocRoller
 {
     namespace KernelGraph
     {
-        class GraphTransform;
+        class ROCROLLER_DECLSPEC GraphTransform;
 
         using GraphTransformPtr = std::shared_ptr<GraphTransform>;
     }

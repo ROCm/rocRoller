@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Transformer.hpp>
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
@@ -43,7 +45,7 @@ namespace rocRoller
          *        to and from memory.
          *
          */
-        class LoadStoreTileGenerator
+        class ROCROLLER_DECLSPEC LoadStoreTileGenerator
         {
         public:
             LoadStoreTileGenerator(KernelGraphPtr, ContextPtr, unsigned int);
@@ -124,7 +126,7 @@ namespace rocRoller
             /**
              * Information needed in order to load or store a tile.
              */
-            struct LoadStoreTileInfo
+            struct ROCROLLER_DECLSPEC LoadStoreTileInfo
             {
                 MemoryInstructions::MemoryKind    kind = MemoryInstructions::MemoryKind::Count;
                 uint64_t                          m    = 0;

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -48,7 +50,7 @@ namespace rocRoller
          * - Storage (Registers, e.g. MacroTile)
          */
 
-        struct BaseDimension
+        struct ROCROLLER_DECLSPEC BaseDimension
         {
             Expression::ExpressionPtr size, stride, offset;
 
@@ -84,7 +86,7 @@ namespace rocRoller
          *
          * Can exist in the final graph.
          */
-        struct Adhoc : public BaseDimension
+        struct ROCROLLER_DECLSPEC Adhoc : public BaseDimension
         {
             Adhoc();
 
@@ -115,7 +117,7 @@ namespace rocRoller
          *
          * Encodes size and stride info.
          */
-        struct SubDimension : public BaseDimension
+        struct ROCROLLER_DECLSPEC SubDimension : public BaseDimension
         {
             int dim;
 
@@ -135,7 +137,7 @@ namespace rocRoller
          * Usually split into SubDimensions.  The subdimensions carry
          * sizes and strides.
          */
-        struct User : public BaseDimension
+        struct ROCROLLER_DECLSPEC User : public BaseDimension
         {
             std::string argumentName;
 
@@ -164,7 +166,7 @@ namespace rocRoller
         /**
          * Linear dimension.  Usually flattened subdimenions.
          */
-        struct Linear : public BaseDimension
+        struct ROCROLLER_DECLSPEC Linear : public BaseDimension
         {
             static constexpr bool HasValue = false;
             using BaseDimension::BaseDimension;
@@ -175,7 +177,7 @@ namespace rocRoller
         /**
          * Wavefront - represents wavefronts within a workgroup.
          */
-        struct Wavefront : public SubDimension
+        struct ROCROLLER_DECLSPEC Wavefront : public SubDimension
         {
             static constexpr bool HasValue = false;
             using SubDimension::SubDimension;
@@ -186,7 +188,7 @@ namespace rocRoller
         /**
          * Lane - represents a lane within a wavefront.
          */
-        struct Lane : public BaseDimension
+        struct ROCROLLER_DECLSPEC Lane : public BaseDimension
         {
             static constexpr bool HasValue = false;
             using BaseDimension::BaseDimension;
@@ -200,7 +202,7 @@ namespace rocRoller
          * Sub-dimensions 0, 1, and 2 correspond to the x, y and z
          * kernel launch dimensions.
          */
-        struct Workgroup : public SubDimension
+        struct ROCROLLER_DECLSPEC Workgroup : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -215,7 +217,7 @@ namespace rocRoller
          * Sub-dimensions 0, 1, and 2 correspond to the x, y and z
          * kernel launch dimensions.
          */
-        struct Workitem : public SubDimension
+        struct ROCROLLER_DECLSPEC Workitem : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -228,7 +230,7 @@ namespace rocRoller
         /**
          * VGPR - represents (small) thread local scalar/array.
          */
-        struct VGPR : public BaseDimension
+        struct ROCROLLER_DECLSPEC VGPR : public BaseDimension
         {
             static constexpr bool HasValue = false;
 
@@ -237,7 +239,7 @@ namespace rocRoller
             std::string name() const override;
         };
 
-        struct VGPRBlockNumber : public BaseDimension
+        struct ROCROLLER_DECLSPEC VGPRBlockNumber : public BaseDimension
         {
             static constexpr bool HasValue = false;
 
@@ -246,7 +248,7 @@ namespace rocRoller
             std::string name() const override;
         };
 
-        struct VGPRBlockIndex : public BaseDimension
+        struct ROCROLLER_DECLSPEC VGPRBlockIndex : public BaseDimension
         {
             static constexpr bool HasValue = false;
 
@@ -262,7 +264,7 @@ namespace rocRoller
          * - Represents storage
          * - Represents address coordinate information
          */
-        struct LDS : public BaseDimension
+        struct ROCROLLER_DECLSPEC LDS : public BaseDimension
         {
             static constexpr bool HasValue = false;
             using BaseDimension::BaseDimension;
@@ -283,7 +285,7 @@ namespace rocRoller
          * ForLoop dimensions elucidate how indexes depend on which
          * for-loop iteration is being executed.
          */
-        struct ForLoop : public BaseDimension
+        struct ROCROLLER_DECLSPEC ForLoop : public BaseDimension
         {
             static constexpr bool HasValue = false;
 
@@ -299,7 +301,7 @@ namespace rocRoller
          * Unroll dimensions elucidate how indexes depend on which
          * inner-iteration of an unrolled for-loop is being executed.
          */
-        struct Unroll : public BaseDimension
+        struct ROCROLLER_DECLSPEC Unroll : public BaseDimension
         {
             static constexpr bool HasValue = false;
 
@@ -313,7 +315,7 @@ namespace rocRoller
         /**
          * MacroTileIndex - sub-dimension of a tile.  See MacroTile.
          */
-        struct MacroTileIndex : public SubDimension
+        struct ROCROLLER_DECLSPEC MacroTileIndex : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -325,7 +327,7 @@ namespace rocRoller
         /**
          * MacroTileNumber.  See MacroTile.
          */
-        struct MacroTileNumber : public SubDimension
+        struct ROCROLLER_DECLSPEC MacroTileNumber : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -340,7 +342,7 @@ namespace rocRoller
          * The storage location (eg, VGPRs vs LDS) is specified by
          * `MemoryType`.
          */
-        struct MacroTile : public BaseDimension
+        struct ROCROLLER_DECLSPEC MacroTile : public BaseDimension
         {
             int        rank       = 0;
             MemoryType memoryType = MemoryType::None;
@@ -436,7 +438,7 @@ namespace rocRoller
         /**
          * ThreadTileIndex - sub-dimension of a tile (fast-moving).
          */
-        struct ThreadTileIndex : public SubDimension
+        struct ROCROLLER_DECLSPEC ThreadTileIndex : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -449,7 +451,7 @@ namespace rocRoller
         /**
          * ThreadTileNumber - sub-dimension of a tile (slow-moving).
          */
-        struct ThreadTileNumber : public SubDimension
+        struct ROCROLLER_DECLSPEC ThreadTileNumber : public SubDimension
         {
             static constexpr bool HasValue = false;
 
@@ -465,7 +467,7 @@ namespace rocRoller
          * The storage location (eg, VGPRs vs LDS) is specified by
          * `MemoryType`.
          */
-        struct ThreadTile : public BaseDimension
+        struct ROCROLLER_DECLSPEC ThreadTile : public BaseDimension
         {
             int rank = -1;
 
@@ -486,7 +488,7 @@ namespace rocRoller
         /**
          * WaveTileIndex - sub-dimension of a tile.  See WaveTile.
          */
-        struct WaveTileIndex : public SubDimension
+        struct ROCROLLER_DECLSPEC WaveTileIndex : public SubDimension
         {
             static constexpr bool HasValue = false;
             using SubDimension::SubDimension;
@@ -497,7 +499,7 @@ namespace rocRoller
         /**
          * WaveTileNumber.  See WaveTile.
          */
-        struct WaveTileNumber : public SubDimension
+        struct ROCROLLER_DECLSPEC WaveTileNumber : public SubDimension
         {
             static constexpr bool HasValue = false;
             using SubDimension::SubDimension;
@@ -508,7 +510,7 @@ namespace rocRoller
         /**
          * WaveTile - a tensor tile owned by a wave in GPRs.
          */
-        struct WaveTile : public BaseDimension
+        struct ROCROLLER_DECLSPEC WaveTile : public BaseDimension
         {
             int rank = 0;
 
@@ -559,7 +561,7 @@ namespace rocRoller
         /**
          * JammedWaveTileNumber - Number of wave tiles to execute per wavefront
          */
-        struct JammedWaveTileNumber : public SubDimension
+        struct ROCROLLER_DECLSPEC JammedWaveTileNumber : public SubDimension
         {
             static constexpr bool HasValue = false;
             using SubDimension::SubDimension;
@@ -570,7 +572,7 @@ namespace rocRoller
         /**
          * ElementNumber - represents the value(s) from a ThreadTile to be stored in the VGPR(s).
          */
-        struct ElementNumber : public SubDimension
+        struct ROCROLLER_DECLSPEC ElementNumber : public SubDimension
         {
             static constexpr bool HasValue = false;
 

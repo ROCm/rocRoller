@@ -29,6 +29,8 @@
  */
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 #include <vector>
 
@@ -53,7 +55,8 @@ namespace rocRoller
          * This means that the output should be run through mergeSets() before
          * using.
          */
-        std::vector<std::set<int>> identifyParallelDimensionSets(KernelGraph const& graph);
+        ROCROLLER_DECLSPEC std::vector<std::set<int>>
+                           identifyParallelDimensionSets(KernelGraph const& graph);
 
         /**
          * Returns the set of LoadTiled nodes reachable from `start`
@@ -63,7 +66,7 @@ namespace rocRoller
          *
          * @param start a control node ID. Typically this should be a StoreTiled node.
          */
-        std::set<int> loadNodesReachableWithoutDimensionModifyingNodes(
+        ROCROLLER_DECLSPEC std::set<int> loadNodesReachableWithoutDimensionModifyingNodes(
             ControlGraph::ControlGraph const& graph, int start);
 
         /**
@@ -80,7 +83,7 @@ namespace rocRoller
          * predicates to the CommandKernel so that we check that these sizes are
          * consistent.
          */
-        class IdentifyParallelDimensions : public GraphTransform
+        class ROCROLLER_DECLSPEC IdentifyParallelDimensions : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

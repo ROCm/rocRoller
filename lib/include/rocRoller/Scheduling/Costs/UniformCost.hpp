@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -41,7 +43,7 @@ namespace rocRoller
         /**
          * UniformCost: Gives zero cost to all instructions.
          */
-        class UniformCost : public Cost
+        class ROCROLLER_DECLSPEC UniformCost : public Cost
         {
         public:
             UniformCost(ContextPtr);

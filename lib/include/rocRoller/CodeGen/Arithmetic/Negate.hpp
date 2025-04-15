@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,11 +35,13 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::Negate>> GetGenerator<Expression::Negate>(
-        Register::ValuePtr dst, Register::ValuePtr arg, Expression::Negate const&);
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::Negate>>
+                       GetGenerator<Expression::Negate>(Register::ValuePtr dst,
+                                         Register::ValuePtr arg,
+                                         Expression::Negate const&);
 
     // Templated Generator class based on the return type.
-    class NegateGenerator : public UnaryArithmeticGenerator<Expression::Negate>
+    class ROCROLLER_DECLSPEC NegateGenerator : public UnaryArithmeticGenerator<Expression::Negate>
     {
     public:
         NegateGenerator(ContextPtr c)

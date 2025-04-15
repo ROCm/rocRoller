@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 #include <vector>
 
@@ -40,7 +42,7 @@ namespace rocRoller
 {
     namespace Scheduling
     {
-        class LockState
+        class ROCROLLER_DECLSPEC LockState
         {
         public:
             explicit LockState(ContextPtr ctx);
@@ -79,7 +81,7 @@ namespace rocRoller
          *
          * - This class should be able to be made into `ComponentBase` class
          */
-        class Scheduler
+        class ROCROLLER_DECLSPEC Scheduler
         {
         public:
             using Argument = std::tuple<SchedulerProcedure, CostFunction, rocRoller::ContextPtr>;
@@ -132,8 +134,8 @@ namespace rocRoller
                                std::vector<Generator<Instruction>::iterator>& iterators);
         };
 
-        std::ostream& operator<<(std::ostream&, SchedulerProcedure const&);
-        std::ostream& operator<<(std::ostream&, Dependency const&);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, SchedulerProcedure const&);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, Dependency const&);
     }
 }
 

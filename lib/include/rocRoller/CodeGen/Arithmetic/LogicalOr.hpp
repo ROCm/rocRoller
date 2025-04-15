@@ -26,21 +26,24 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::LogicalOr>>
-        GetGenerator<Expression::LogicalOr>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::LogicalOr>>
+                       GetGenerator<Expression::LogicalOr>(Register::ValuePtr dst,
                                             Register::ValuePtr lhs,
                                             Register::ValuePtr rhs,
                                             Expression::LogicalOr const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class LogicalOrGenerator : public BinaryArithmeticGenerator<Expression::LogicalOr>
+    class ROCROLLER_DECLSPEC LogicalOrGenerator
+        : public BinaryArithmeticGenerator<Expression::LogicalOr>
     {
     public:
         LogicalOrGenerator(ContextPtr c)

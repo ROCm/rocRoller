@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <string>
 
@@ -37,7 +39,7 @@
 
 namespace rocRoller
 {
-    struct Instruction
+    struct ROCROLLER_DECLSPEC Instruction
     {
         enum
         {

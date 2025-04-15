@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 #include <rocRoller/KernelGraph/CoordinateGraph/CoordinateEdge_fwd.hpp>
@@ -96,7 +98,7 @@ namespace rocRoller
          * Index - denotes that the source will index the register
          * allocation from the dest.
          */
-        struct Index
+        struct ROCROLLER_DECLSPEC Index
         {
             int index = -1;
 

@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
 
-    class MemoryInstructions;
+    class ROCROLLER_DECLSPEC MemoryInstructions;
 
 }

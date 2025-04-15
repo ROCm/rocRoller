@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -39,7 +41,7 @@ namespace rocRoller
          * that are leafs (don't have outgoing/incoming edges), and
          * attaches Workgroup coordinates to them.
          */
-        class ConnectWorkgroups : public GraphTransform
+        class ROCROLLER_DECLSPEC ConnectWorkgroups : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

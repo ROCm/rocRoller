@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Assemblers/Assembler.hpp>
 #include <rocRoller/GPUArchitecture/GPUArchitectureTarget.hpp>
 
@@ -34,7 +36,7 @@
 
 namespace rocRoller
 {
-    class SubprocessAssembler : public Assembler
+    class ROCROLLER_DECLSPEC SubprocessAssembler : public Assembler
     {
     public:
         SubprocessAssembler();

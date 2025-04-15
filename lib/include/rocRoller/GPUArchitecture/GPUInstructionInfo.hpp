@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -43,7 +45,7 @@
 
 namespace rocRoller
 {
-    class GPUWaitQueueType
+    class ROCROLLER_DECLSPEC GPUWaitQueueType
     {
     public:
         enum Value : uint8_t
@@ -84,7 +86,7 @@ namespace rocRoller
 
         static std::string toString(Value);
 
-        struct Hash
+        struct ROCROLLER_DECLSPEC Hash
         {
             std::size_t operator()(const GPUWaitQueueType& input) const
             {
@@ -103,9 +105,9 @@ namespace rocRoller
         static const std::unordered_map<std::string, Value> m_stringMap;
     };
 
-    std::ostream& operator<<(std::ostream&, GPUWaitQueueType::Value const& v);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, GPUWaitQueueType::Value const& v);
 
-    class GPUWaitQueue
+    class ROCROLLER_DECLSPEC GPUWaitQueue
     {
     public:
         enum Value : uint8_t
@@ -173,7 +175,7 @@ namespace rocRoller
 
         static std::string toString(Value);
 
-        struct Hash
+        struct ROCROLLER_DECLSPEC Hash
         {
             std::size_t operator()(const GPUWaitQueue& input) const
             {
@@ -186,9 +188,9 @@ namespace rocRoller
         static std::unordered_map<std::string, Value> m_stringMap;
     };
 
-    std::ostream& operator<<(std::ostream&, GPUWaitQueue::Value const& v);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, GPUWaitQueue::Value const& v);
 
-    class GPUInstructionInfo
+    class ROCROLLER_DECLSPEC GPUInstructionInfo
     {
     public:
         GPUInstructionInfo() = default;

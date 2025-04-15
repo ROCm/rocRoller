@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution_fwd.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/Context_fwd.hpp>
@@ -73,7 +75,7 @@ namespace rocRoller
          *
          * @param numWGs How many workgroups will be launched.
          */
-        class AddStreamK : public GraphTransform
+        class ROCROLLER_DECLSPEC AddStreamK : public GraphTransform
         {
         public:
             AddStreamK()                  = delete;

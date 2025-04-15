@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Instruction.hpp>
 #include <rocRoller/Utilities/Generator.hpp>
 
@@ -40,7 +42,7 @@ namespace rocRoller
      * This will add the comment "foo" to each instruction that's part of
      * generating `expr`.
      */
-    class AddComment
+    class ROCROLLER_DECLSPEC AddComment
     {
     public:
         AddComment(std::string comment)
@@ -63,7 +65,7 @@ namespace rocRoller
      * Really intended for use only from LowerFromKernelGraph, so that every
      * instruction is annotated with the control op that it came from.
      */
-    class AddControlOp
+    class ROCROLLER_DECLSPEC AddControlOp
     {
     public:
         AddControlOp(int op)

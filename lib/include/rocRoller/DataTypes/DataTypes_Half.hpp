@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_HIP
 #include <hip/hip_fp16.h>
 #endif
@@ -47,7 +49,7 @@ namespace rocRoller
     /**
  * \ingroup DataTypes
  */
-    struct Half : public DistinctType<uint16_t, Half>
+    struct ROCROLLER_DECLSPEC Half : public DistinctType<uint16_t, Half>
     {
     };
 #endif
@@ -61,7 +63,7 @@ namespace std
     }
 
     template <>
-    struct hash<rocRoller::Half>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::Half>
     {
         inline size_t operator()(rocRoller::Half const& h) const noexcept
         {
@@ -71,12 +73,12 @@ namespace std
     };
 
     template <>
-    struct is_floating_point<rocRoller::Half> : std::true_type
+    struct ROCROLLER_DECLSPEC is_floating_point<rocRoller::Half> : std::true_type
     {
     };
 
     template <>
-    struct is_signed<rocRoller::Half> : std::true_type
+    struct ROCROLLER_DECLSPEC is_signed<rocRoller::Half> : std::true_type
     {
     };
 } // namespace std

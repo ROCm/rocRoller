@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Graph/Hypergraph.hpp>
 #include <rocRoller/Serialization/AssemblyKernel.hpp>
@@ -40,7 +42,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO>
-        struct MappingTraits<Graph::HypergraphIncident, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<Graph::HypergraphIncident, IO, EmptyContext>
         {
             using iot              = IOTraits<IO>;
             static const bool flow = true;
@@ -61,14 +63,14 @@ namespace rocRoller
         ROCROLLER_SERIALIZE_VECTOR(false, Graph::HypergraphIncident);
 
         template <CNamedVariant Var>
-        struct ElementEntry
+        struct ROCROLLER_DECLSPEC ElementEntry
         {
             int id;
             Var value;
         };
 
         template <CNamedVariant Var, typename IO, typename Context>
-        struct MappingTraits<ElementEntry<Var>, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<ElementEntry<Var>, IO, Context>
         {
             using iot   = IOTraits<IO>;
             using Entry = ElementEntry<Var>;
@@ -90,7 +92,7 @@ namespace rocRoller
         };
 
         template <CNamedVariant Var, typename IO>
-        struct SequenceTraits<std::vector<ElementEntry<Var>>, IO>
+        struct ROCROLLER_DECLSPEC SequenceTraits<std::vector<ElementEntry<Var>>, IO>
             : public DefaultSequenceTraits<std::vector<ElementEntry<Var>>, IO, false>
         {
         };
@@ -102,7 +104,8 @@ namespace rocRoller
         // };
 
         template <typename Node, typename Edge, bool Hyper, typename IO>
-        struct MappingTraits<Graph::Hypergraph<Node, Edge, Hyper>, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<Graph::Hypergraph<Node, Edge, Hyper>, IO, EmptyContext>
         {
             using iot     = IOTraits<IO>;
             using HG      = Graph::Hypergraph<Node, Edge, Hyper>;

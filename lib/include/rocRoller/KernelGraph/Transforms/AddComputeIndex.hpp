@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -48,7 +50,7 @@ namespace rocRoller
          * portion of the Coordinate graph to keep track of the data
          * needed to perform the operations.
          */
-        class AddComputeIndex : public GraphTransform
+        class ROCROLLER_DECLSPEC AddComputeIndex : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

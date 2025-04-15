@@ -26,6 +26,8 @@ j* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cassert>
 #include <cinttypes>
 #include <cstdint>
@@ -346,11 +348,11 @@ namespace rocRoller
 
     inline constexpr int8_t F6_ZERO_VALUE = 0x0;
 
-    struct FP6;
-    float fp6_to_float(const FP6 v);
-    FP6   float_to_fp6(const float v);
+    struct ROCROLLER_DECLSPEC FP6;
+    ROCROLLER_DECLSPEC float  fp6_to_float(const FP6 v);
+    ROCROLLER_DECLSPEC FP6    float_to_fp6(const float v);
 
-    struct BF6;
-    float bf6_to_float(const BF6 v);
-    BF6   float_to_bf6(const float v);
+    struct ROCROLLER_DECLSPEC BF6;
+    ROCROLLER_DECLSPEC float  bf6_to_float(const BF6 v);
+    ROCROLLER_DECLSPEC BF6    float_to_bf6(const float v);
 }

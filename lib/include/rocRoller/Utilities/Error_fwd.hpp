@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class Error;
+    class ROCROLLER_DECLSPEC Error;
 
-    class FatalError;
-    class RecoverableError;
+    class ROCROLLER_DECLSPEC FatalError;
+    class ROCROLLER_DECLSPEC RecoverableError;
 }

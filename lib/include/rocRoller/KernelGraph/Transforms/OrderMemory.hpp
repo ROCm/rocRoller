@@ -25,9 +25,11 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/AssemblyKernel_fwd.hpp>
 #include <rocRoller/KernelGraph/ControlGraph/Operation.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -42,7 +44,7 @@ namespace rocRoller
         /**
          * @brief Ensure there are no ambiguous memory operations in the control graph.
          */
-        class OrderMemory : public GraphTransform
+        class ROCROLLER_DECLSPEC OrderMemory : public GraphTransform
         {
         public:
             OrderMemory(bool checkOrder = true)

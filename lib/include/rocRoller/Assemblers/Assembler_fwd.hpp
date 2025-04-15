@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <string>
 
 namespace rocRoller
 {
-    class Assembler;
+    class ROCROLLER_DECLSPEC Assembler;
     using AssemblerPtr = std::shared_ptr<Assembler>;
 
     enum class AssemblerType : int
@@ -41,5 +43,5 @@ namespace rocRoller
         Count
     };
 
-    std::string toString(AssemblerType t);
+    ROCROLLER_DECLSPEC std::string toString(AssemblerType t);
 }

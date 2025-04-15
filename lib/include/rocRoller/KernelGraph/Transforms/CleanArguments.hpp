@@ -25,9 +25,11 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/AssemblyKernel_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
 #include <rocRoller/Operations/Command_fwd.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -37,7 +39,7 @@ namespace rocRoller
          * @brief Removes all CommandArgruments found within an
          * expression with the appropriate AssemblyKernel Argument.
          */
-        class CleanArguments : public GraphTransform
+        class ROCROLLER_DECLSPEC CleanArguments : public GraphTransform
         {
         public:
             CleanArguments(ContextPtr context, CommandPtr command)

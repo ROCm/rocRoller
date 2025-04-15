@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
     namespace KernelGraph::CoordinateGraph
     {
-        class Transformer;
+        class ROCROLLER_DECLSPEC Transformer;
 
         using TransformerPtr = std::shared_ptr<Transformer>;
     }

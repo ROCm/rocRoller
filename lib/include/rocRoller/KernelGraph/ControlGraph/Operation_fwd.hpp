@@ -26,42 +26,44 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 
 namespace rocRoller
 {
     namespace KernelGraph::ControlGraph
     {
-        struct Assign;
-        struct Barrier;
-        struct ComputeIndex;
-        struct ConditionalOp;
-        struct AssertOp;
-        struct Deallocate;
-        struct DoWhileOp;
-        struct Exchange;
-        struct ForLoopOp;
-        struct Kernel;
-        struct LoadLDSTile;
-        struct LoadLinear;
-        struct LoadVGPR;
-        struct LoadSGPR;
-        struct LoadTiled;
-        struct Multiply;
-        struct NOP;
-        struct Block;
-        struct Scope;
-        struct SetCoordinate;
-        struct StoreLDSTile;
-        struct LoadTileDirect2LDS;
-        struct StoreLinear;
-        struct StoreTiled;
-        struct StoreVGPR;
-        struct StoreSGPR;
-        struct TensorContraction;
-        struct UnrollOp;
-        struct WaitZero;
-        struct SeedPRNG;
+        struct ROCROLLER_DECLSPEC Assign;
+        struct ROCROLLER_DECLSPEC Barrier;
+        struct ROCROLLER_DECLSPEC ComputeIndex;
+        struct ROCROLLER_DECLSPEC ConditionalOp;
+        struct ROCROLLER_DECLSPEC AssertOp;
+        struct ROCROLLER_DECLSPEC Deallocate;
+        struct ROCROLLER_DECLSPEC DoWhileOp;
+        struct ROCROLLER_DECLSPEC Exchange;
+        struct ROCROLLER_DECLSPEC ForLoopOp;
+        struct ROCROLLER_DECLSPEC Kernel;
+        struct ROCROLLER_DECLSPEC LoadLDSTile;
+        struct ROCROLLER_DECLSPEC LoadLinear;
+        struct ROCROLLER_DECLSPEC LoadVGPR;
+        struct ROCROLLER_DECLSPEC LoadSGPR;
+        struct ROCROLLER_DECLSPEC LoadTiled;
+        struct ROCROLLER_DECLSPEC Multiply;
+        struct ROCROLLER_DECLSPEC NOP;
+        struct ROCROLLER_DECLSPEC Block;
+        struct ROCROLLER_DECLSPEC Scope;
+        struct ROCROLLER_DECLSPEC SetCoordinate;
+        struct ROCROLLER_DECLSPEC StoreLDSTile;
+        struct ROCROLLER_DECLSPEC LoadTileDirect2LDS;
+        struct ROCROLLER_DECLSPEC StoreLinear;
+        struct ROCROLLER_DECLSPEC StoreTiled;
+        struct ROCROLLER_DECLSPEC StoreVGPR;
+        struct ROCROLLER_DECLSPEC StoreSGPR;
+        struct ROCROLLER_DECLSPEC TensorContraction;
+        struct ROCROLLER_DECLSPEC UnrollOp;
+        struct ROCROLLER_DECLSPEC WaitZero;
+        struct ROCROLLER_DECLSPEC SeedPRNG;
 
         using Operation = std::variant<Assign,
                                        Barrier,

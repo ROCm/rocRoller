@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -45,7 +47,7 @@
 
 namespace rocRoller
 {
-    class GPUArchitecture
+    class ROCROLLER_DECLSPEC GPUArchitecture
     {
     public:
         GPUArchitecture();
@@ -121,7 +123,7 @@ namespace rocRoller
     };
 
     //Used as a container for serialization.
-    struct GPUArchitecturesStruct
+    struct ROCROLLER_DECLSPEC GPUArchitecturesStruct
     {
         std::map<GPUArchitectureTarget, GPUArchitecture> architectures;
     };

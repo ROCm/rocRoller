@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 #include <unordered_map>
 
@@ -40,7 +42,7 @@
 
 namespace rocRollerTest
 {
-    class ArgumentLoaderTest_loadArgExtra_Test;
+    class ROCROLLER_DECLSPEC ArgumentLoaderTest_loadArgExtra_Test;
 }
 
 namespace rocRoller
@@ -57,7 +59,7 @@ namespace rocRoller
      * instructions as well as possibly more synchronization.
      *
      */
-    class ArgumentLoader
+    class ROCROLLER_DECLSPEC ArgumentLoader
     {
     public:
         ArgumentLoader(AssemblyKernelPtr kernel);

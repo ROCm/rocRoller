@@ -35,6 +35,8 @@ j* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 namespace rocRoller
 {
 #pragma once
+
+#include <rocRoller/rocRoller.hpp>
     inline constexpr uint16_t BFLOAT16_Q_NAN_VALUE = 0xFFC1;
     inline constexpr uint16_t BFLOAT16_ZERO_VALUE  = 0x00;
 
@@ -85,7 +87,7 @@ namespace rocRoller
 
     }
 
-    struct BFloat16;
-    float    bf16_to_float(const BFloat16 v);
-    BFloat16 float_to_bf16(const float v);
+    struct ROCROLLER_DECLSPEC   BFloat16;
+    ROCROLLER_DECLSPEC float    bf16_to_float(const BFloat16 v);
+    ROCROLLER_DECLSPEC BFloat16 float_to_bf16(const float v);
 }

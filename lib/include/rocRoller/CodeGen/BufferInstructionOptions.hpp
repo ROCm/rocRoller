@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Utilities/Error.hpp>
 
 /**
@@ -38,7 +40,7 @@
 
 namespace rocRoller
 {
-    struct BufferInstructionOptions
+    struct ROCROLLER_DECLSPEC BufferInstructionOptions
     {
         bool offen = false;
         bool glc   = false;

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Buffer.hpp>
 #include <rocRoller/CodeGen/BufferInstructionOptions.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
@@ -36,7 +38,7 @@
 namespace rocRoller
 {
 
-    class MemoryInstructions
+    class ROCROLLER_DECLSPEC MemoryInstructions
     {
     public:
         MemoryInstructions(ContextPtr context);
@@ -384,11 +386,13 @@ namespace rocRoller
                                             Register::ValuePtr  toPack) const;
     };
 
-    std::string   toString(MemoryInstructions::MemoryDirection const& d);
-    std::ostream& operator<<(std::ostream& stream, MemoryInstructions::MemoryDirection n);
+    ROCROLLER_DECLSPEC std::string toString(MemoryInstructions::MemoryDirection const& d);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                       stream,
+                                                MemoryInstructions::MemoryDirection n);
 
-    std::string   toString(MemoryInstructions::MemoryKind const& k);
-    std::ostream& operator<<(std::ostream& stream, MemoryInstructions::MemoryKind k);
+    ROCROLLER_DECLSPEC std::string toString(MemoryInstructions::MemoryKind const& k);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                  stream,
+                                                MemoryInstructions::MemoryKind k);
 }
 
 #include <rocRoller/CodeGen/MemoryInstructions_impl.hpp>

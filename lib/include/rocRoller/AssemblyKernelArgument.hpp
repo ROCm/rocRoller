@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 #include <rocRoller/Expression.hpp>
@@ -36,7 +38,7 @@
 namespace rocRoller
 {
 
-    struct AssemblyKernelArgument
+    struct ROCROLLER_DECLSPEC AssemblyKernelArgument
     {
         std::string   name;
         VariableType  variableType;
@@ -52,5 +54,6 @@ namespace rocRoller
         std::string toString() const;
     };
 
-    std::ostream& operator<<(std::ostream& stream, AssemblyKernelArgument const& arg);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                 stream,
+                                                AssemblyKernelArgument const& arg);
 }

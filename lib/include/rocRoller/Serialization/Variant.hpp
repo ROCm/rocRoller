@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <variant>
 
 #include <rocRoller/Serialization/Base.hpp>
@@ -57,7 +59,7 @@ namespace rocRoller
         };
 
         template <typename T>
-        struct VariantTypeKeySpecifier
+        struct ROCROLLER_DECLSPEC VariantTypeKeySpecifier
         {
             static std::string TypeKey()
             {
@@ -111,7 +113,7 @@ namespace rocRoller
          * allows the Adhoc dimension to use this for its `m_name` field.
          */
         template <CNamedVariant T, typename IO, typename Context = EmptyContext>
-        struct DefaultVariantMappingTraits
+        struct ROCROLLER_DECLSPEC DefaultVariantMappingTraits
         {
             using iot            = IOTraits<IO>;
             using AlternativeFn  = std::function<T(void)>;
@@ -217,7 +219,7 @@ namespace rocRoller
             DefaultVariantMappingTraits<T, IO, Context>::alternatives
             = DefaultVariantMappingTraits<T, IO, Context>::GetAlternatives();
 
-        struct RemainingTypePathVisitor
+        struct ROCROLLER_DECLSPEC RemainingTypePathVisitor
         {
             template <CNamedVariant Var>
             std::string operator()(Var const& v)

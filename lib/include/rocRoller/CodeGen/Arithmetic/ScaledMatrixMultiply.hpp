@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include "ScaledMatrixMultiply_fwd.hpp"
 
 #include <memory>
@@ -37,7 +39,7 @@ namespace rocRoller
 {
     namespace InstructionGenerators
     {
-        struct ScaledMatrixMultiply
+        struct ROCROLLER_DECLSPEC ScaledMatrixMultiply
         {
             /**
              * Context, accumulation type, input type.
@@ -67,7 +69,7 @@ namespace rocRoller
                 = 0;
         };
 
-        struct ScaledMatrixMultiplyGenerator : public ScaledMatrixMultiply
+        struct ROCROLLER_DECLSPEC ScaledMatrixMultiplyGenerator : public ScaledMatrixMultiply
         {
             static bool constexpr isValidInputType(auto const vtype)
             {

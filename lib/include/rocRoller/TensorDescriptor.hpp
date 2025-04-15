@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <numeric>
 
 #include <rocRoller/CommandSolution.hpp>
@@ -38,7 +40,7 @@ namespace rocRoller
      * Describes a tensor including dimensions, memory layout, and data type.
      * Decoupled from any particular pointer value or memory location.
      */
-    class TensorDescriptor
+    class ROCROLLER_DECLSPEC TensorDescriptor
     {
     public:
         TensorDescriptor()

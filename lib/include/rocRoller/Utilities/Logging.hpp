@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 // Only need the forward declaration of LogLevel
 #include <rocRoller/Utilities/Settings_fwd.hpp>
 
@@ -39,7 +41,7 @@ namespace rocRoller
     namespace Log
     {
 
-        class logger
+        class ROCROLLER_DECLSPEC logger
         {
         public:
             void log(LogLevel level, const std::string& str);
@@ -78,7 +80,7 @@ namespace rocRoller
         };
 
         using LoggerPtr = std::shared_ptr<logger>;
-        LoggerPtr getLogger();
+        ROCROLLER_DECLSPEC LoggerPtr getLogger();
 
         inline void log(LogLevel level, const std::string& str)
         {

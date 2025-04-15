@@ -25,9 +25,11 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -41,7 +43,7 @@ namespace rocRoller
          * Linear dimensions are packed/flattened, tiled onto
          * workgroups and wavefronts, and then operated on.
          */
-        class LowerLinear : public GraphTransform
+        class ROCROLLER_DECLSPEC LowerLinear : public GraphTransform
         {
         public:
             LowerLinear(ContextPtr context)
@@ -62,7 +64,7 @@ namespace rocRoller
         /**
          * Rewrite KernelGraph to additionally distribute linear dimensions onto a For loop.
          */
-        class LowerLinearLoop : public GraphTransform
+        class ROCROLLER_DECLSPEC LowerLinearLoop : public GraphTransform
         {
         public:
             LowerLinearLoop(Expression::ExpressionPtr loopSize, ContextPtr context)

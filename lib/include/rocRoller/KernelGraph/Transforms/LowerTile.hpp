@@ -25,9 +25,11 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -50,7 +52,7 @@ namespace rocRoller
          * translation time.  To specify these attributes, call
          * `setDimension`.
          */
-        class LowerTile : public GraphTransform
+        class ROCROLLER_DECLSPEC LowerTile : public GraphTransform
         {
         public:
             LowerTile(CommandParametersPtr params, ContextPtr context)

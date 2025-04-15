@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class ScheduledInstructions;
+    class ROCROLLER_DECLSPEC ScheduledInstructions;
 }

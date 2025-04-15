@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -41,7 +43,7 @@ namespace rocRoller
          * | 120x  | v_wmma* read SrcC (16 pass) | v_* read | 8    |
          *
          */
-        class WMMAReadSrcD : public WaitStateObserver<WMMAReadSrcD>
+        class ROCROLLER_DECLSPEC WMMAReadSrcD : public WaitStateObserver<WMMAReadSrcD>
         {
         public:
             WMMAReadSrcD() {}

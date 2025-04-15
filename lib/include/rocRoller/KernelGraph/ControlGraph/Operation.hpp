@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <cstdint>
 #include <initializer_list>
 #include <string>
@@ -62,7 +64,7 @@ namespace rocRoller
         /**
          * SetCoordinate - Sets the value of a Coordinate
          */
-        struct SetCoordinate
+        struct ROCROLLER_DECLSPEC SetCoordinate
         {
             SetCoordinate();
             explicit SetCoordinate(Expression::ExpressionPtr value);
@@ -90,7 +92,7 @@ namespace rocRoller
          * if(condition) goto while_top
          * <Sequence>
          */
-        struct DoWhileOp
+        struct ROCROLLER_DECLSPEC DoWhileOp
         {
             Expression::ExpressionPtr condition;
 
@@ -124,7 +126,7 @@ namespace rocRoller
          * for_bottom:
          * <Sequence>
          */
-        struct ForLoopOp
+        struct ROCROLLER_DECLSPEC ForLoopOp
         {
             Expression::ExpressionPtr condition;
 
@@ -153,7 +155,7 @@ namespace rocRoller
          * <Sequence>
          *
         */
-        struct ConditionalOp
+        struct ROCROLLER_DECLSPEC ConditionalOp
         {
             Expression::ExpressionPtr condition;
 
@@ -180,7 +182,7 @@ namespace rocRoller
          * Where <terminates kernel> is a instruction sequence that causes a trap or exception in kernel code.
          *
         */
-        struct AssertOp
+        struct ROCROLLER_DECLSPEC AssertOp
         {
             std::string assertName;
 
@@ -193,7 +195,7 @@ namespace rocRoller
         /**
          * UnrollOp - a kernel unroll.
          */
-        struct UnrollOp
+        struct ROCROLLER_DECLSPEC UnrollOp
         {
             Expression::ExpressionPtr size;
 
@@ -207,7 +209,7 @@ namespace rocRoller
          * If the register already exists, it must be of type 'regType'.  If not, `regType`
          * specifies which type of register will be allocated.
          */
-        struct Assign
+        struct ROCROLLER_DECLSPEC Assign
         {
             Register::Type            regType = Register::Type::Count;
             Expression::ExpressionPtr expression;
@@ -240,7 +242,7 @@ namespace rocRoller
          * @param increment Increment dimension
          * @param base
          */
-        struct ComputeIndex
+        struct ROCROLLER_DECLSPEC ComputeIndex
         {
             // TODO: might be nicer to have UInt32 for strides; need
             // to allow user to specify stride types instead of
@@ -267,7 +269,7 @@ namespace rocRoller
         /**
          * LoadLinear - Load linear dimension.
          */
-        struct LoadLinear
+        struct ROCROLLER_DECLSPEC LoadLinear
         {
             LoadLinear();
             explicit LoadLinear(rocRoller::VariableType const varType);
@@ -288,7 +290,7 @@ namespace rocRoller
          * instructions) is specified by the `LayoutType` member of
          * the the WaveTile node.
          */
-        struct LoadTiled
+        struct ROCROLLER_DECLSPEC LoadTiled
         {
             LoadTiled();
             explicit LoadTiled(VariableType const varType, bool const isTransposedTile = false);
@@ -302,7 +304,7 @@ namespace rocRoller
         /**
          * LoadVGPR - replaces LoadLinear.
          */
-        struct LoadVGPR
+        struct ROCROLLER_DECLSPEC LoadVGPR
         {
             LoadVGPR();
             explicit LoadVGPR(VariableType const varType, bool const scalar = false);
@@ -316,7 +318,7 @@ namespace rocRoller
         /**
          * LoadSGPR - load scalar value from memory.
          */
-        struct LoadSGPR
+        struct ROCROLLER_DECLSPEC LoadSGPR
         {
             LoadSGPR();
             LoadSGPR(VariableType const varType, BufferInstructionOptions const bio);
@@ -330,7 +332,7 @@ namespace rocRoller
         /**
          * LoadLDSTile - loads a tile from LDS
          */
-        struct LoadLDSTile
+        struct ROCROLLER_DECLSPEC LoadLDSTile
         {
             LoadLDSTile();
             explicit LoadLDSTile(VariableType const varType, bool const isTransposedTile = false);
@@ -342,7 +344,7 @@ namespace rocRoller
             std::string toString() const;
         };
 
-        struct LoadTileDirect2LDS
+        struct ROCROLLER_DECLSPEC LoadTileDirect2LDS
         {
             LoadTileDirect2LDS();
             explicit LoadTileDirect2LDS(VariableType const varType);
@@ -355,7 +357,7 @@ namespace rocRoller
         /**
          * Multiply - Multiply two MacroTiles
          */
-        struct Multiply
+        struct ROCROLLER_DECLSPEC Multiply
         {
             Multiply();
             Multiply(Operations::ScaleMode scaleA, Operations::ScaleMode scaleB);
@@ -387,7 +389,7 @@ namespace rocRoller
          * Storage location and affinity is specified by the MacroTile
          * node.
          */
-        struct StoreTiled
+        struct ROCROLLER_DECLSPEC StoreTiled
         {
             StoreTiled();
             explicit StoreTiled(VariableType const dtype);
@@ -406,7 +408,7 @@ namespace rocRoller
         /**
          * StoreSGPR - stores a scalar value to memory.
          */
-        struct StoreSGPR
+        struct ROCROLLER_DECLSPEC StoreSGPR
         {
             StoreSGPR();
             StoreSGPR(VariableType const varType, BufferInstructionOptions const bio);
@@ -420,7 +422,7 @@ namespace rocRoller
         /**
          * StoreLDSTile - store a tile into LDS
          */
-        struct StoreLDSTile
+        struct ROCROLLER_DECLSPEC StoreLDSTile
         {
             StoreLDSTile();
             explicit StoreLDSTile(VariableType const varType);
@@ -433,7 +435,7 @@ namespace rocRoller
         /**
          * TensorContraction - Tensor contraction operation.
          */
-        struct TensorContraction
+        struct ROCROLLER_DECLSPEC TensorContraction
         {
             TensorContraction();
             TensorContraction(std::vector<int> const& aContractedDimensions,
@@ -465,7 +467,7 @@ namespace rocRoller
         /**
          * Exchange - permute the lanes data within a wave.
          */
-        struct Exchange
+        struct ROCROLLER_DECLSPEC Exchange
         {
             Exchange();
             explicit Exchange(VariableType const varType);
@@ -478,7 +480,7 @@ namespace rocRoller
         /**
          * SeedPRNG - Set the initial seed value of a random number generator
          */
-        struct SeedPRNG
+        struct ROCROLLER_DECLSPEC SeedPRNG
         {
             SeedPRNG();
             explicit SeedPRNG(bool addTID);

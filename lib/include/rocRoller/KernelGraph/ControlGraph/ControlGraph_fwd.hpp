@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace KernelGraph::ControlGraph
     {
-        class ControlGraph;
+        class ROCROLLER_DECLSPEC ControlGraph;
     }
 }

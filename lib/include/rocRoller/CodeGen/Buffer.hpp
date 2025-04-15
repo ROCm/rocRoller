@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <functional>
 #include <memory>
 
@@ -38,7 +40,7 @@
 
 namespace rocRoller
 {
-    struct GFX9BufferDescriptorOptions
+    struct ROCROLLER_DECLSPEC GFX9BufferDescriptorOptions
     {
         enum DataFormatValue
         {
@@ -87,14 +89,14 @@ namespace rocRoller
         void validate() const;
     };
 
-    std::string   toString(GFX9BufferDescriptorOptions::DataFormatValue val);
-    std::ostream& operator<<(std::ostream&                                stream,
-                             GFX9BufferDescriptorOptions::DataFormatValue val);
+    ROCROLLER_DECLSPEC std::string toString(GFX9BufferDescriptorOptions::DataFormatValue val);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                                stream,
+                                                GFX9BufferDescriptorOptions::DataFormatValue val);
 
     static_assert(sizeof(GFX9BufferDescriptorOptions) == 4);
     static_assert(GFX9BufferDescriptorOptions::DFReserved == 15);
 
-    class BufferDescriptor
+    class ROCROLLER_DECLSPEC BufferDescriptor
     {
     public:
         BufferDescriptor(Register::ValuePtr srd, ContextPtr context);

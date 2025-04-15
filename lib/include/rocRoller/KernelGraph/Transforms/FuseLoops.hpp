@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -37,7 +39,7 @@ namespace rocRoller
          * Fuses multiple loops together if they iterate over the same
          * length.
          */
-        class FuseLoops : public GraphTransform
+        class ROCROLLER_DECLSPEC FuseLoops : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

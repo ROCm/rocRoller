@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
@@ -33,11 +35,14 @@ namespace rocRoller
 
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::BitFieldExtract>> GetGenerator(
-        Register::ValuePtr dst, Register::ValuePtr arg, Expression::BitFieldExtract const& expr);
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::BitFieldExtract>>
+                       GetGenerator(Register::ValuePtr                 dst,
+                                    Register::ValuePtr                 arg,
+                                    Expression::BitFieldExtract const& expr);
 
     template <DataType DATATYPE>
-    class BitFieldExtractGenerator : public UnaryArithmeticGenerator<Expression::BitFieldExtract>
+    class ROCROLLER_DECLSPEC BitFieldExtractGenerator
+        : public UnaryArithmeticGenerator<Expression::BitFieldExtract>
     {
     public:
         BitFieldExtractGenerator(ContextPtr c)

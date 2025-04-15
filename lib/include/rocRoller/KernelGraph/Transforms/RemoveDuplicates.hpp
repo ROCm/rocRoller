@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -34,7 +36,7 @@ namespace rocRoller
         /**
          * @brief Remove duplicate loads and stores from the graph.
          */
-        class RemoveDuplicates : public GraphTransform
+        class ROCROLLER_DECLSPEC RemoveDuplicates : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

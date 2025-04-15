@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -45,7 +47,7 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO>
-        struct MappingTraits<AssemblyKernelArgument, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<AssemblyKernelArgument, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -79,7 +81,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<AssemblyKernel, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<AssemblyKernel, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -179,7 +181,7 @@ namespace rocRoller
         };
 
         template <typename IO>
-        struct MappingTraits<AssemblyKernels, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<AssemblyKernels, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;

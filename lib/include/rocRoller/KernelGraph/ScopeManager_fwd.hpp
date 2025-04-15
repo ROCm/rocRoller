@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller::KernelGraph
 {
-    class ScopeManager;
+    class ROCROLLER_DECLSPEC ScopeManager;
 }

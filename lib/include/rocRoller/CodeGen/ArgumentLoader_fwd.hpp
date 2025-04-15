@@ -29,8 +29,10 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class ArgumentLoader;
+    class ROCROLLER_DECLSPEC ArgumentLoader;
 
 }

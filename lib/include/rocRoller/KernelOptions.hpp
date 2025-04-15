@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <ostream>
 #include <string>
 
@@ -42,7 +44,7 @@ namespace rocRoller
     const std::string SCRATCH = "SCRATCH";
     const std::string NUMWGS  = "numWGs";
 
-    struct KernelOptions
+    struct ROCROLLER_DECLSPEC KernelOptions
     {
         LogLevel logLevel = LogLevel::Verbose;
 

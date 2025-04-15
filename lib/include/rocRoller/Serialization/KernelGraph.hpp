@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_LLVM
 #include <llvm/ObjectYAML/YAML.h>
 #endif
@@ -44,7 +46,7 @@ namespace rocRoller
     {
 
         template <typename IO>
-        struct MappingTraits<KernelGraph::KernelGraph, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::KernelGraph, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;
@@ -63,7 +65,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::KernelGraphPtr, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::KernelGraphPtr, IO, Context>
             : public SharedPointerMappingTraits<KernelGraph::KernelGraphPtr, IO, Context, true>
         {
         };

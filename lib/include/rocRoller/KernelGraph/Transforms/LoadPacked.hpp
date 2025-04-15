@@ -25,14 +25,16 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
     namespace KernelGraph
     {
-        class LoadPacked : public GraphTransform
+        class ROCROLLER_DECLSPEC LoadPacked : public GraphTransform
         {
         public:
             LoadPacked(ContextPtr context);

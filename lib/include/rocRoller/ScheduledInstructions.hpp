@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <sstream>
 #include <vector>
 
@@ -35,7 +37,7 @@
 
 namespace rocRoller
 {
-    class ScheduledInstructions
+    class ROCROLLER_DECLSPEC ScheduledInstructions
     {
     public:
         explicit ScheduledInstructions(ContextPtr ctx);

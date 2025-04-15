@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ namespace rocRoller
          * instruction from the the lowest index stream with the
          * least cost.
          */
-        class PriorityScheduler : public Scheduler
+        class ROCROLLER_DECLSPEC PriorityScheduler : public Scheduler
         {
         public:
             PriorityScheduler(ContextPtr, CostFunction);

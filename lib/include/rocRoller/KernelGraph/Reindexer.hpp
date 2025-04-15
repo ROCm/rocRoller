@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <map>
 
 #include <rocRoller/Expression_fwd.hpp>
@@ -35,7 +37,7 @@ namespace rocRoller
 {
     namespace KernelGraph
     {
-        class GraphReindexer
+        class ROCROLLER_DECLSPEC GraphReindexer
         {
         public:
             std::map<int, int> coordinates;
@@ -52,9 +54,10 @@ namespace rocRoller
          *   auto newExpr = reindexExpression(oldExpr, reindexer);
          *
          */
-        Expression::ExpressionPtr reindexExpression(Expression::ExpressionPtr expr,
-                                                    GraphReindexer const&     reindexer);
+        ROCROLLER_DECLSPEC Expression::ExpressionPtr
+            reindexExpression(Expression::ExpressionPtr expr, GraphReindexer const& reindexer);
 
-        void reindexExpressions(KernelGraph& graph, int tag, GraphReindexer const& reindexer);
+        ROCROLLER_DECLSPEC void
+            reindexExpressions(KernelGraph& graph, int tag, GraphReindexer const& reindexer);
     }
 }

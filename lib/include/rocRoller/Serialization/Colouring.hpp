@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/KernelGraph/Utils.hpp>
 #include <rocRoller/Serialization/Base.hpp>
 #include <rocRoller/Serialization/Containers.hpp>
@@ -36,13 +38,13 @@ namespace rocRoller
     {
 
         template <typename IO>
-        struct CustomMappingTraits<std::map<int, int>, IO>
+        struct ROCROLLER_DECLSPEC CustomMappingTraits<std::map<int, int>, IO>
             : public DefaultCustomMappingTraits<std::map<int, int>, IO, false, true>
         {
         };
 
         template <typename IO>
-        struct MappingTraits<KernelGraph::UnrollColouring, IO, EmptyContext>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::UnrollColouring, IO, EmptyContext>
         {
             static const bool flow = false;
             using iot              = IOTraits<IO>;

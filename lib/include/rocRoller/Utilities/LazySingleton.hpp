@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
     template <typename Class>
-    class LazySingleton
+    class ROCROLLER_DECLSPEC LazySingleton
     {
     public:
         static std::shared_ptr<Class> getInstance()

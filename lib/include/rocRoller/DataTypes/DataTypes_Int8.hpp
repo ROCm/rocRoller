@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #ifdef ROCROLLER_USE_HIP
 #include <hip/hip_runtime.h>
 #endif
@@ -37,7 +39,7 @@ namespace rocRoller
     /**
  * \ingroup DataTypes
  */
-    struct Int8 : public DistinctType<int8_t, Int8>
+    struct ROCROLLER_DECLSPEC Int8 : public DistinctType<int8_t, Int8>
     {
     };
 } // namespace rocRoller

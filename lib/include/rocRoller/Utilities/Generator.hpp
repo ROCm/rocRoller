@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 /**
  * Compiler-specific tricks to get coroutines working
  *
@@ -90,8 +92,8 @@ namespace rocRoller
         Done,
         Count
     };
-    std::string   toString(GeneratorState s);
-    std::ostream& operator<<(std::ostream&, GeneratorState const&);
+    ROCROLLER_DECLSPEC std::string toString(GeneratorState s);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, GeneratorState const&);
 
     /**
      * Range/ConcreteRange wraps a collection object behind a virtual interface,
@@ -99,7 +101,7 @@ namespace rocRoller
      * and provide access to its items.
      */
     template <typename T>
-    struct Range
+    struct ROCROLLER_DECLSPEC Range
     {
         virtual ~Range() = default;
 
@@ -110,7 +112,7 @@ namespace rocRoller
     };
 
     template <typename T, CInputRangeOf<T> TheRange>
-    struct ConcreteRange : public Range<T>
+    struct ROCROLLER_DECLSPEC ConcreteRange : public Range<T>
     {
         template <std::convertible_to<TheRange> ARange>
         explicit ConcreteRange(ARange&& r);
@@ -331,7 +333,7 @@ namespace rocRoller
      *
      */
     template <std::movable T>
-    class Generator
+    class ROCROLLER_DECLSPEC Generator
     {
     public:
         /**
@@ -343,7 +345,7 @@ namespace rocRoller
          * state of whether we currently have a value or not, and whether we
          * currently have a range or not.
          */
-        class promise_type
+        class ROCROLLER_DECLSPEC promise_type
         {
         public:
             /****
@@ -405,7 +407,7 @@ namespace rocRoller
          * `std::default_sentinel_t`, not `Iterator`.  The
          * `std::common_iterator<>` adaptor provides that functionality.
          */
-        class Iterator
+        class ROCROLLER_DECLSPEC Iterator
         {
         public:
             // Required for STL iterator adaptors.  Not actually required to provide the - operator though.

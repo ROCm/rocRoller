@@ -57,6 +57,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <vector>
 
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
@@ -72,7 +74,7 @@ namespace rocRoller
          * returns a transformed kernel graph based on the
          * transformation.
          */
-        class GraphTransform
+        class ROCROLLER_DECLSPEC GraphTransform
         {
         public:
             GraphTransform()                                       = default;

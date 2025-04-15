@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -36,7 +38,7 @@ namespace rocRoller
          *
      * @ingroup Transformations
     */
-        class AddDirect2LDS : public GraphTransform
+        class ROCROLLER_DECLSPEC AddDirect2LDS : public GraphTransform
         {
         public:
             AddDirect2LDS(ContextPtr context, CommandParametersPtr params)

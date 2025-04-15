@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Scheduling
     {
-        class UniformCost;
+        class ROCROLLER_DECLSPEC UniformCost;
     }
 }

@@ -26,15 +26,17 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
     namespace KernelGraph
     {
-        class KernelGraph;
-        struct KernelUnrollVisitor;
-        struct LoopDistributeVisitor;
+        class ROCROLLER_DECLSPEC  KernelGraph;
+        struct ROCROLLER_DECLSPEC KernelUnrollVisitor;
+        struct ROCROLLER_DECLSPEC LoopDistributeVisitor;
 
         using KernelGraphPtr = std::shared_ptr<KernelGraph>;
     }

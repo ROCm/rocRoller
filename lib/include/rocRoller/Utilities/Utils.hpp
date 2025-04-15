@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -56,19 +58,19 @@ namespace rocRoller
      */
 
     template <typename T>
-    constexpr T CeilDivide(T num, T den)
+    ROCROLLER_DECLSPEC constexpr T CeilDivide(T num, T den)
     {
         return (num + (den - 1)) / den;
     }
 
     template <typename T>
-    constexpr T RoundUpToMultiple(T val, T den)
+    ROCROLLER_DECLSPEC constexpr T RoundUpToMultiple(T val, T den)
     {
         return CeilDivide(val, den) * den;
     }
 
     template <typename T, typename = typename std::enable_if<std::is_integral<T>::value>>
-    constexpr T IsPrime(T val)
+    ROCROLLER_DECLSPEC constexpr T IsPrime(T val)
     {
         if(val < 2)
             return false;
@@ -84,7 +86,7 @@ namespace rocRoller
     }
 
     template <typename T, typename = typename std::enable_if<std::is_integral<T>::value>>
-    constexpr T NextPrime(T val)
+    ROCROLLER_DECLSPEC constexpr T NextPrime(T val)
     {
         if(val < 2)
             return 2;
@@ -94,7 +96,7 @@ namespace rocRoller
     }
 
     template <typename T>
-    std::variant<T> singleVariant(T value)
+    ROCROLLER_DECLSPEC std::variant<T> singleVariant(T value)
     {
         return std::variant<T>(std::move(value));
     }
@@ -108,7 +110,7 @@ namespace rocRoller
      * - No two sets in return value have any common elements.
      * - mergeSets(mergeSets(x)) == mergeSets(x) for any x.
      */
-    std::vector<std::set<int>> mergeSets(std::vector<std::set<int>> sets);
+    ROCROLLER_DECLSPEC std::vector<std::set<int>> mergeSets(std::vector<std::set<int>> sets);
 
     inline std::string toString(int x)
     {
@@ -123,7 +125,7 @@ namespace rocRoller
     }
 
     template <typename Container, typename Joiner>
-    void streamJoin(std::ostream& stream, Container const& c, Joiner const& j)
+    ROCROLLER_DECLSPEC void streamJoin(std::ostream& stream, Container const& c, Joiner const& j)
     {
         bool first = true;
         for(auto const& item : c)
@@ -235,7 +237,7 @@ namespace rocRoller
         return concatenate(vals...);
     }
 
-    class StreamRead
+    class ROCROLLER_DECLSPEC StreamRead
     {
     public:
         explicit StreamRead(std::string const& value, bool except = true);
@@ -256,7 +258,7 @@ namespace rocRoller
         return stream;
     }
 
-    struct BitFieldGenerator
+    struct ROCROLLER_DECLSPEC BitFieldGenerator
     {
         constexpr static uint32_t maxBitFieldWidth = 32;
 
@@ -294,20 +296,20 @@ namespace rocRoller
     };
 
     template <std::integral T>
-    Generator<T> iota(T begin, T end, T inc)
+    ROCROLLER_DECLSPEC Generator<T> iota(T begin, T end, T inc)
     {
         for(; begin < end; begin += inc)
             co_yield begin;
     }
 
     template <std::integral T>
-    Generator<T> iota(T begin, T end)
+    ROCROLLER_DECLSPEC Generator<T> iota(T begin, T end)
     {
         co_yield iota<T>(begin, end, 1);
     }
 
     template <std::integral T>
-    Generator<T> iota(T begin)
+    ROCROLLER_DECLSPEC Generator<T> iota(T begin)
     {
         for(;; ++begin)
             co_yield begin;
@@ -359,7 +361,7 @@ namespace rocRoller
 
     // helper for visitor
     template <class... Ts>
-    struct overloaded : Ts...
+    struct ROCROLLER_DECLSPEC overloaded : Ts...
     {
         // cppcheck-suppress syntaxError
         using Ts::operator()...;
@@ -373,20 +375,20 @@ namespace rocRoller
      * Converts a string value to an enum by comparing against each toString conversion.
      */
     template <CCountedEnum T>
-    T fromString(std::string const& str);
+    ROCROLLER_DECLSPEC T fromString(std::string const& str);
 
     template <CHasName T>
-    requires(std::default_initializable<T>) std::string name()
+    requires(std::default_initializable<T>) ROCROLLER_DECLSPEC std::string name()
     {
         T obj;
         return name(obj);
     }
 
-    std::string escapeSymbolName(std::string name);
+    ROCROLLER_DECLSPEC std::string escapeSymbolName(std::string name);
 
-    std::vector<char> readFile(std::string const&);
+    ROCROLLER_DECLSPEC std::vector<char> readFile(std::string const&);
 
-    std::string readMetaDataFromCodeObject(std::string const& fileName);
+    ROCROLLER_DECLSPEC std::string readMetaDataFromCodeObject(std::string const& fileName);
 
     /**
      * @}

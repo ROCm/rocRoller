@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -59,7 +61,7 @@ namespace rocRoller
          * | 94x  | v_log_legacy_f32     | v_*                      | 1    |
          *
          */
-        class VALUTransWrite94x : public WaitStateObserver<VALUTransWrite94x>
+        class ROCROLLER_DECLSPEC VALUTransWrite94x : public WaitStateObserver<VALUTransWrite94x>
         {
         public:
             VALUTransWrite94x() {}

@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -36,7 +38,7 @@ namespace rocRoller
          *
          * Fuses neighbouring expressions where possible.
          */
-        class FuseExpressions : public GraphTransform
+        class ROCROLLER_DECLSPEC FuseExpressions : public GraphTransform
         {
         public:
             KernelGraph apply(KernelGraph const& original) override;

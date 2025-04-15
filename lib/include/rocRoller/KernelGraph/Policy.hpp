@@ -26,18 +26,23 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
-    class CacheOnlyPolicy // Use cache to look up order. Caller should ensure the cache is valid.
+    class ROCROLLER_DECLSPEC
+        CacheOnlyPolicy // Use cache to look up order. Caller should ensure the cache is valid.
     {
     };
-    class UpdateCachePolicy // < Use cache to look up order. Cache will be re-built if invalid.
+    class ROCROLLER_DECLSPEC
+        UpdateCachePolicy // < Use cache to look up order. Cache will be re-built if invalid.
     {
     };
-    class UseCacheIfAvailablePolicy // < Look up in cache if available, otherwise, use traversal.
+    class ROCROLLER_DECLSPEC
+        UseCacheIfAvailablePolicy // < Look up in cache if available, otherwise, use traversal.
     {
     };
-    class IgnoreCachePolicy // < Use traversal.
+    class ROCROLLER_DECLSPEC IgnoreCachePolicy // < Use traversal.
     {
     };
 

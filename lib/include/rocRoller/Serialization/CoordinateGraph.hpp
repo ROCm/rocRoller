@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/AssemblyKernel.hpp>
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Graph/Hypergraph.hpp>
@@ -42,7 +44,8 @@ namespace rocRoller
     namespace Serialization
     {
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::BaseDimension, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::BaseDimension, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -63,7 +66,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::LDS, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::LDS, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -85,7 +88,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::Adhoc, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::Adhoc, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -115,7 +118,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::SubDimension, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::SubDimension, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -138,7 +142,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::User, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::User, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -161,7 +165,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::MacroTile, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::MacroTile, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -188,7 +193,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::ThreadTile, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::ThreadTile, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -213,7 +219,7 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::WaveTile, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::WaveTile, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -240,13 +246,13 @@ namespace rocRoller
 
         template <typename T, typename IO, typename Context>
         requires(std::constructible_from<KernelGraph::CoordinateGraph::Edge, T>&& T::HasValue
-                 == false) struct MappingTraits<T, IO, Context>
+                 == false) struct ROCROLLER_DECLSPEC MappingTraits<T, IO, Context>
             : public EmptyMappingTraits<T, IO, Context>
         {
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::Index, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::Index, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -267,7 +273,7 @@ namespace rocRoller
         template <typename T, typename IO, typename Context>
         requires(std::constructible_from<KernelGraph::CoordinateGraph::Dimension, T>&&
                      std::derived_from<T, KernelGraph::CoordinateGraph::SubDimension>&& T::HasValue
-                 == false) struct MappingTraits<T, IO, Context>
+                 == false) struct ROCROLLER_DECLSPEC MappingTraits<T, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -292,7 +298,7 @@ namespace rocRoller
                 T,
                 KernelGraph::CoordinateGraph::
                     BaseDimension> && !std::derived_from<T, KernelGraph::CoordinateGraph::SubDimension> && T::HasValue == false) struct
-            MappingTraits<T, IO, Context>
+            ROCROLLER_DECLSPEC MappingTraits<T, IO, Context>
         {
             using iot = IOTraits<IO>;
 
@@ -313,7 +319,8 @@ namespace rocRoller
 
         static_assert(CNamedVariant<KernelGraph::CoordinateGraph::CoordinateTransformEdge>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::CoordinateTransformEdge, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::CoordinateTransformEdge, IO, Context>
             : public DefaultVariantMappingTraits<
                   KernelGraph::CoordinateGraph::CoordinateTransformEdge,
                   IO,
@@ -324,7 +331,8 @@ namespace rocRoller
         static_assert(CNamedVariant<KernelGraph::CoordinateGraph::DataFlowEdge>);
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::DataFlowEdge, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::DataFlowEdge, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::CoordinateGraph::DataFlowEdge,
                                                  IO,
                                                  Context>
@@ -333,14 +341,15 @@ namespace rocRoller
 
         static_assert(CNamedVariant<KernelGraph::CoordinateGraph::Edge>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::Edge, IO, Context>
+        struct ROCROLLER_DECLSPEC MappingTraits<KernelGraph::CoordinateGraph::Edge, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::CoordinateGraph::Edge, IO, Context>
         {
         };
 
         static_assert(CNamedVariant<KernelGraph::CoordinateGraph::Dimension>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::Dimension, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::Dimension, IO, Context>
             : public DefaultVariantMappingTraits<KernelGraph::CoordinateGraph::Dimension,
                                                  IO,
                                                  Context>
@@ -349,7 +358,8 @@ namespace rocRoller
 
         static_assert(CNamedVariant<KernelGraph::CoordinateGraph::CoordinateGraph::Element>);
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::CoordinateGraph::Element, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::CoordinateGraph::Element, IO, Context>
             : public DefaultVariantMappingTraits<
                   KernelGraph::CoordinateGraph::CoordinateGraph::Element,
                   IO,
@@ -358,7 +368,8 @@ namespace rocRoller
         };
 
         template <typename IO, typename Context>
-        struct MappingTraits<KernelGraph::CoordinateGraph::CoordinateGraph, IO, Context>
+        struct ROCROLLER_DECLSPEC
+            MappingTraits<KernelGraph::CoordinateGraph::CoordinateGraph, IO, Context>
         {
             using iot = IOTraits<IO>;
             using HG  = typename KernelGraph::CoordinateGraph::CoordinateGraph::Base;

@@ -25,7 +25,9 @@
  *******************************************************************************/
 
 #pragma once
+
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+#include <rocRoller/rocRoller.hpp>
 
 namespace rocRoller
 {
@@ -41,7 +43,7 @@ namespace rocRoller
          *
      * @ingroup Transformations
     */
-        class AddPRNG : public GraphTransform
+        class ROCROLLER_DECLSPEC AddPRNG : public GraphTransform
         {
         public:
             AddPRNG(ContextPtr context)

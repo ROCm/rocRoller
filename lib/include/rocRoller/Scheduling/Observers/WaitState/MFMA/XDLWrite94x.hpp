@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -101,7 +103,7 @@ namespace rocRoller
          * | 94x  | v_mfma* write (16 pass)     | v_* read/write                     | 19   |
          *
          */
-        class XDLWrite94x : public WaitStateObserver<XDLWrite94x>
+        class ROCROLLER_DECLSPEC XDLWrite94x : public WaitStateObserver<XDLWrite94x>
         {
         public:
             XDLWrite94x() {}

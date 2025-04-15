@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <atomic>
 #include <chrono>
 #include <map>
@@ -55,7 +57,7 @@ namespace rocRoller
      * Elapsed times are accumulated (atomically) by name.  Times are
      * accumulated by the rocRoller::Timer class below.
      */
-    class TimerPool
+    class ROCROLLER_DECLSPEC TimerPool
     {
     public:
         TimerPool(TimerPool const&) = delete;
@@ -109,7 +111,7 @@ namespace rocRoller
      * When a timer is stopped (via toc()) the elapsed time is added
      * to the TimerPool.
      */
-    class Timer
+    class ROCROLLER_DECLSPEC Timer
     {
     public:
         Timer() = delete;

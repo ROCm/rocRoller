@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <vector>
@@ -41,7 +43,7 @@ namespace rocRoller
         /**
          * NoneCost: This cost can be used for cost-independent schedulers. If it's ever initialized an exception is thrown.
          */
-        class NoneCost : public Cost
+        class ROCROLLER_DECLSPEC NoneCost : public Cost
         {
         public:
             NoneCost(ContextPtr);

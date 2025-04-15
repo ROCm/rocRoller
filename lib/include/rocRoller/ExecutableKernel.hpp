@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/GPUArchitecture/GPUArchitectureTarget.hpp>
 #include <rocRoller/KernelArguments.hpp>
@@ -35,7 +37,7 @@ namespace rocRoller
 {
     // KernelInvocation contains the information needed to launch a kernel with
     // the ExecutableKernel class.
-    struct KernelInvocation
+    struct ROCROLLER_DECLSPEC KernelInvocation
     {
         std::array<unsigned int, 3> workitemCount  = {1, 1, 1};
         std::array<unsigned int, 3> workgroupSize  = {1, 1, 1};
@@ -44,7 +46,7 @@ namespace rocRoller
 
     // The executer class can load a kernel from a string of machine code and
     // then launch the kernel on a GPU.
-    class ExecutableKernel
+    class ROCROLLER_DECLSPEC ExecutableKernel
     {
     public:
         ExecutableKernel();
@@ -129,7 +131,7 @@ namespace rocRoller
         hipFunction_t getHipFunction() const;
 
     private:
-        struct HIPData;
+        struct ROCROLLER_DECLSPEC HIPData;
 
         std::string              m_kernelName;
         bool                     m_kernelLoaded;

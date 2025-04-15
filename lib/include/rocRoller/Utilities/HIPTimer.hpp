@@ -32,6 +32,8 @@
 
 #ifdef ROCROLLER_USE_HIP
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <chrono>
 #include <map>
 #include <memory>
@@ -49,7 +51,7 @@
 
 namespace rocRoller
 {
-    class HIPTimer : public Timer
+    class ROCROLLER_DECLSPEC HIPTimer : public Timer
     {
     public:
         HIPTimer() = delete;

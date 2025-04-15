@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 namespace rocRoller
 {
@@ -41,8 +43,8 @@ namespace rocRoller
             Count
         };
 
-        class Cost;
+        class ROCROLLER_DECLSPEC Cost;
 
-        std::string toString(CostFunction);
+        ROCROLLER_DECLSPEC std::string toString(CostFunction);
     }
 }

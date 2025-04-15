@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <iostream>
 #include <memory>
 #include <set>
@@ -126,7 +128,7 @@ namespace rocRoller
          * To rewrite, for example, only LoadLinear edges, simply
          * override the `visitEdge` method.
          */
-        struct BaseGraphVisitor
+        struct ROCROLLER_DECLSPEC BaseGraphVisitor
         {
             BaseGraphVisitor(ContextPtr       context,
                              Graph::Direction controlGraphOrder  = Graph::Direction::Downstream,

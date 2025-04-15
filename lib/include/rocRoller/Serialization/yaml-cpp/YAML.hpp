@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Serialization/Base.hpp>
 #include <rocRoller/Serialization/Containers.hpp>
 #include <rocRoller/Serialization/HasTraits.hpp>
@@ -40,7 +42,7 @@ namespace rocRoller
 {
     namespace Serialization
     {
-        struct EmitterOutput
+        struct ROCROLLER_DECLSPEC EmitterOutput
         {
             YAML::Emitter* emitter;
             void*          context;
@@ -207,7 +209,7 @@ namespace rocRoller
         }
 
         template <>
-        struct IOTraits<EmitterOutput>
+        struct ROCROLLER_DECLSPEC IOTraits<EmitterOutput>
         {
             using IO = EmitterOutput;
 
@@ -292,7 +294,7 @@ namespace rocRoller
             val.data = floatVal;
         }
 
-        struct NodeInput
+        struct ROCROLLER_DECLSPEC NodeInput
         {
             YAML::Node* node;
             void*       context;
@@ -372,7 +374,7 @@ namespace rocRoller
         };
 
         template <>
-        struct IOTraits<NodeInput>
+        struct ROCROLLER_DECLSPEC IOTraits<NodeInput>
         {
             using IO = NodeInput;
 
@@ -436,7 +438,7 @@ namespace rocRoller
 namespace YAML
 {
     template <>
-    struct convert<rocRoller::BFloat16>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::BFloat16>
     {
         static Node encode(const rocRoller::BFloat16& rhs)
         {
@@ -458,7 +460,7 @@ namespace YAML
     };
 
     template <>
-    struct convert<rocRoller::FP8>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::FP8>
     {
         static Node encode(const rocRoller::FP8& rhs)
         {
@@ -480,7 +482,7 @@ namespace YAML
     };
 
     template <>
-    struct convert<rocRoller::BF8>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::BF8>
     {
         static Node encode(const rocRoller::BF8& rhs)
         {
@@ -502,7 +504,7 @@ namespace YAML
     };
 
     template <>
-    struct convert<rocRoller::FP6>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::FP6>
     {
         static Node encode(const rocRoller::FP6& rhs)
         {
@@ -524,7 +526,7 @@ namespace YAML
     };
 
     template <>
-    struct convert<rocRoller::BF6>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::BF6>
     {
         static Node encode(const rocRoller::BF6& rhs)
         {
@@ -546,7 +548,7 @@ namespace YAML
     };
 
     template <>
-    struct convert<rocRoller::FP4>
+    struct ROCROLLER_DECLSPEC convert<rocRoller::FP4>
     {
         static Node encode(const rocRoller::FP4& rhs)
         {

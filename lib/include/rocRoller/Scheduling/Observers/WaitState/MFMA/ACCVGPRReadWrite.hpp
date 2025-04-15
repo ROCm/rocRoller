@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Scheduling/Observers/WaitState/WaitStateObserver.hpp>
 
 namespace rocRoller
@@ -42,7 +44,7 @@ namespace rocRoller
          * | 908  | v_accvgpr_read write | v_accvgpr_write read SrcA | 2    |
          *
          */
-        class ACCVGPRReadWrite : public WaitStateObserver<ACCVGPRReadWrite>
+        class ROCROLLER_DECLSPEC ACCVGPRReadWrite : public WaitStateObserver<ACCVGPRReadWrite>
         {
         public:
             ACCVGPRReadWrite() {}

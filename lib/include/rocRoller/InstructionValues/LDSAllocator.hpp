@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/InstructionValues/Register_fwd.hpp>
 
 #include <list>
 
 namespace rocRoller
 {
-    class LDSAllocation;
+    class ROCROLLER_DECLSPEC LDSAllocation;
 
     /**
      * @brief An LDSAllocator is used to create LDSAllocations. These are
@@ -44,7 +46,7 @@ namespace rocRoller
      * blocks that have been deallocated.
      *
      */
-    class LDSAllocator : public std::enable_shared_from_this<LDSAllocator>
+    class ROCROLLER_DECLSPEC LDSAllocator : public std::enable_shared_from_this<LDSAllocator>
     {
     public:
         /**
@@ -106,7 +108,7 @@ namespace rocRoller
      * allocated.
      *
      */
-    class LDSAllocation : public std::enable_shared_from_this<LDSAllocation>
+    class ROCROLLER_DECLSPEC LDSAllocation : public std::enable_shared_from_this<LDSAllocation>
     {
         friend class LDSAllocator;
 

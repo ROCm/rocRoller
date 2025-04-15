@@ -26,21 +26,24 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<BinaryArithmeticGenerator<Expression::NotEqual>>
-        GetGenerator<Expression::NotEqual>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<BinaryArithmeticGenerator<Expression::NotEqual>>
+                       GetGenerator<Expression::NotEqual>(Register::ValuePtr dst,
                                            Register::ValuePtr lhs,
                                            Register::ValuePtr rhs,
                                            Expression::NotEqual const&);
 
     // Templated Generator class based on the register type and datatype.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class NotEqualGenerator : public BinaryArithmeticGenerator<Expression::NotEqual>
+    class ROCROLLER_DECLSPEC NotEqualGenerator
+        : public BinaryArithmeticGenerator<Expression::NotEqual>
     {
     public:
         NotEqualGenerator(ContextPtr c)

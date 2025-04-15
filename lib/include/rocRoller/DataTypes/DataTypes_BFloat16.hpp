@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DataTypes_BF16_Utils.hpp>
 
 #define ROCROLLER_USE_BFloat16
@@ -40,7 +42,7 @@ namespace rocRoller
     *  @brief Floating point 8-bit type in E5M2 format
     *
     */
-    struct BFloat16
+    struct ROCROLLER_DECLSPEC BFloat16
     {
         constexpr BFloat16()
             : data(BFLOAT16_ZERO_VALUE)
@@ -101,12 +103,12 @@ namespace rocRoller
 namespace std
 {
     template <>
-    struct is_floating_point<rocRoller::BFloat16> : true_type
+    struct ROCROLLER_DECLSPEC is_floating_point<rocRoller::BFloat16> : true_type
     {
     };
 
     template <>
-    struct hash<rocRoller::BFloat16>
+    struct ROCROLLER_DECLSPEC hash<rocRoller::BFloat16>
     {
         size_t operator()(const rocRoller::BFloat16& a) const
         {

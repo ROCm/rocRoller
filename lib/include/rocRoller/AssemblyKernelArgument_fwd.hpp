@@ -29,11 +29,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 
 namespace rocRoller
 {
-    struct AssemblyKernelArgument;
+    struct ROCROLLER_DECLSPEC AssemblyKernelArgument;
 
     using AssemblyKernelArgumentPtr = std::shared_ptr<AssemblyKernelArgument>;
 }

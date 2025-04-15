@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <concepts>
 #include <string>
 #include <tuple>
@@ -42,7 +44,7 @@ namespace rocRoller
     namespace Scheduling
     {
         template <CObserver... Types>
-        class MetaObserver : public IObserver
+        class ROCROLLER_DECLSPEC MetaObserver : public IObserver
         {
         public:
             using Tup = std::tuple<Types...>;

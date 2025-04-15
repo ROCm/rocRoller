@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 #include <rocRoller/AssertOpKinds_fwd.hpp>
@@ -33,7 +35,7 @@
 namespace rocRoller
 {
 
-    std::string   toString(const AssertOpKind& assertOpKind);
-    std::ostream& operator<<(std::ostream&, AssertOpKind const);
+    ROCROLLER_DECLSPEC std::string toString(AssertOpKind const& assertOpKind);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, AssertOpKind const);
 
 }

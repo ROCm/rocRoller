@@ -26,20 +26,23 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/CodeGen/Arithmetic/ArithmeticGenerator.hpp>
 
 namespace rocRoller
 {
     // GetGenerator function will return the Generator to use based on the provided arguments.
     template <>
-    std::shared_ptr<UnaryArithmeticGenerator<Expression::Exponential2>>
-        GetGenerator<Expression::Exponential2>(Register::ValuePtr dst,
+    ROCROLLER_DECLSPEC std::shared_ptr<UnaryArithmeticGenerator<Expression::Exponential2>>
+                       GetGenerator<Expression::Exponential2>(Register::ValuePtr dst,
                                                Register::ValuePtr arg,
                                                Expression::Exponential2 const&);
 
     // Templated Generator class based on the return type.
     template <Register::Type REGISTER_TYPE, DataType DATATYPE>
-    class Exponential2Generator : public UnaryArithmeticGenerator<Expression::Exponential2>
+    class ROCROLLER_DECLSPEC Exponential2Generator
+        : public UnaryArithmeticGenerator<Expression::Exponential2>
     {
     public:
         Exponential2Generator(ContextPtr c)

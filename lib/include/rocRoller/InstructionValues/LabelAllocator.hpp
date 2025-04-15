@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/InstructionValues/Register_fwd.hpp>
 
 namespace rocRoller
 {
-    class LabelAllocator
+    class ROCROLLER_DECLSPEC LabelAllocator
     {
     public:
         LabelAllocator(std::string prefix);

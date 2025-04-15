@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <vector>
 
 #include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
@@ -82,7 +84,7 @@ namespace rocRoller
          *
          *    Launched workgroups = product(tileNumberCoordSizes) * numIteratedTiles
          */
-        class LoopOverTileNumbers : public GraphTransform
+        class ROCROLLER_DECLSPEC LoopOverTileNumbers : public GraphTransform
         {
         public:
             LoopOverTileNumbers() = delete;
