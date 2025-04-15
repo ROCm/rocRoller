@@ -265,6 +265,8 @@ set_target_properties(
     rocroller PROPERTIES
         VERSION ${ROCROLLER_VERSION}
         SOVERSION ${ROCROLLER_SOVERSION}
+        VISIBILITY_INLINES_HIDDEN ON
+        CXX_VISIBILITY_PRESET hidden
 )
 
 target_link_libraries(rocroller

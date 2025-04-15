@@ -137,14 +137,16 @@ set_property(CACHE YAML_BACKEND PROPERTY STRINGS YAML_CPP LLVM)
 # For paths given when reporting errors
 add_compile_options(-fmacro-prefix-map=${PROJECT_SOURCE_DIR}=.)
 
+set(EXTRA_LINK_OPTIONS "-Wl,--exclude-libs,ALL")
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(COROUTINES_COMPILE_OPTION)
     set(EXTRA_COMPILE_OPTIONS)
-    set(EXTRA_LINK_OPTIONS -fuse-ld=lld -frtti)
+    list(PREPEND EXTRA_LINK_OPTIONS -fuse-ld=lld -frtti)
 else()
     set(COROUTINES_COMPILE_OPTION -fcoroutines)
     set(EXTRA_COMPILE_OPTIONS)
-    set(EXTRA_LINK_OPTIONS -frtti)
+    list(PREPEND EXTRA_LINK_OPTIONS -frtti)
 endif()
 
 if(ROCROLLER_ENABLE_TIMERS)
