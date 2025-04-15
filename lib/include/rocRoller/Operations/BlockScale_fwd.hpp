@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 
 namespace rocRoller
@@ -39,7 +41,7 @@ namespace rocRoller
         /**
          * A block scale operation for MX datatypes
         */
-        class BlockScale;
+        class ROCROLLER_DECLSPEC BlockScale;
 
         enum class ScaleMode
         {
@@ -50,8 +52,8 @@ namespace rocRoller
             Count
         };
 
-        std::string   toString(ScaleMode const& mode);
-        std::ostream& operator<<(std::ostream& stream, ScaleMode const& mode);
+        ROCROLLER_DECLSPEC std::string toString(ScaleMode const& mode);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, ScaleMode const& mode);
 
     }
 }

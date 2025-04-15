@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <optional>
 #include <unordered_set>
 #include <vector>
@@ -45,7 +47,7 @@ namespace rocRoller
         /**
          * A block scale operation for MX datatypes
         */
-        class BlockScale : public BaseOperation
+        class ROCROLLER_DECLSPEC BlockScale : public BaseOperation
         {
         public:
             BlockScale() = delete;

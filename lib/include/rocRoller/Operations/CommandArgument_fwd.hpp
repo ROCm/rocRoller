@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <span>
 #include <variant>
@@ -34,7 +36,7 @@
 
 namespace rocRoller
 {
-    class CommandArgument;
+    class ROCROLLER_DECLSPEC CommandArgument;
     using CommandArgumentPtr = std::shared_ptr<CommandArgument>;
 
     using CommandArgumentValue = std::variant<

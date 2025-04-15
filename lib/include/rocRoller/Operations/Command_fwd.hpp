@@ -29,13 +29,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <iostream>
 #include <memory>
 
 namespace rocRoller
 {
-    class Command;
+    class ROCROLLER_DECLSPEC Command;
     using CommandPtr = std::shared_ptr<Command>;
 
-    std::ostream& operator<<(std::ostream& stream, Command const& command);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Command const& command);
 }

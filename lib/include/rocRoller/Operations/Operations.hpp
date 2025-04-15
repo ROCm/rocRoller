@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <unordered_set>
 
 #include <rocRoller/Context_fwd.hpp>
@@ -44,7 +46,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        struct Nop
+        struct ROCROLLER_DECLSPEC Nop
         {
             Nop() {}
             template <typename... Args>
@@ -55,7 +57,7 @@ namespace rocRoller
             auto operator<=>(Nop const&) const = default;
         };
 
-        struct Inputs
+        struct ROCROLLER_DECLSPEC Inputs
         {
             std::unordered_set<OperationTag> call(Operation const&);
 
@@ -79,7 +81,7 @@ namespace rocRoller
             std::unordered_set<OperationTag> operator()(Nop const&);
         };
 
-        struct Outputs
+        struct ROCROLLER_DECLSPEC Outputs
         {
             std::unordered_set<OperationTag> call(Operation const&);
 
@@ -103,7 +105,7 @@ namespace rocRoller
             std::unordered_set<OperationTag> operator()(Nop const&);
         };
 
-        struct TagVisitor
+        struct ROCROLLER_DECLSPEC TagVisitor
         {
             OperationTag call(XOp const&);
             OperationTag operator()(E_Unary const&);
@@ -111,7 +113,7 @@ namespace rocRoller
             OperationTag operator()(E_Ternary const&);
         };
 
-        struct AssignOutputs
+        struct ROCROLLER_DECLSPEC AssignOutputs
         {
             std::unordered_set<OperationTag> call(Operation&, OperationTag);
 
@@ -138,7 +140,7 @@ namespace rocRoller
             OperationTag m_nextTagValue;
         };
 
-        struct ToStringVisitor
+        struct ROCROLLER_DECLSPEC ToStringVisitor
         {
             std::string call(Operation const&, const unsigned char*);
 
@@ -165,7 +167,7 @@ namespace rocRoller
             const unsigned char* m_runtimeArgs;
         };
 
-        struct SetCommand
+        struct ROCROLLER_DECLSPEC SetCommand
         {
             SetCommand(CommandPtr);
 
@@ -188,7 +190,7 @@ namespace rocRoller
             CommandPtr command;
         };
 
-        struct AllocateArguments
+        struct ROCROLLER_DECLSPEC AllocateArguments
         {
             void call(Operation&);
 
@@ -207,7 +209,7 @@ namespace rocRoller
             void operator()(RandomNumberGenerator&);
         };
 
-        struct VariableTypeVisitor
+        struct ROCROLLER_DECLSPEC VariableTypeVisitor
         {
             rocRoller::VariableType call(Operation&);
 

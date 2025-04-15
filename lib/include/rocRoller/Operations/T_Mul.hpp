@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <unordered_set>
 
 #include <rocRoller/DataTypes/DataTypes.hpp>
@@ -40,7 +42,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        class T_Mul : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Mul : public BaseOperation
         {
         public:
             T_Mul() = delete;

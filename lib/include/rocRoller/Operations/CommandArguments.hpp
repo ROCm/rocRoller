@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/KernelArguments.hpp>
 #include <rocRoller/Operations/CommandArgument_fwd.hpp>
 #include <rocRoller/Operations/CommandArguments_fwd.hpp>
@@ -33,10 +35,10 @@
 
 namespace rocRoller
 {
-    std::string   toString(ArgumentType);
-    std::ostream& operator<<(std::ostream&, ArgumentType);
+    ROCROLLER_DECLSPEC std::string toString(ArgumentType);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, ArgumentType);
 
-    class CommandArguments
+    class ROCROLLER_DECLSPEC CommandArguments
     {
     public:
         CommandArguments() = delete;

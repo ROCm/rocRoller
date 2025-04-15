@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Operations/Operation.hpp>
 
 #include <rocRoller/Serialization/Base_fwd.hpp>
@@ -34,7 +36,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        class T_Load_Linear : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Load_Linear : public BaseOperation
         {
         public:
             T_Load_Linear() = delete;
@@ -53,9 +55,9 @@ namespace rocRoller
             OperationTag m_srcTag;
         };
 
-        std::ostream& operator<<(std::ostream& stream, T_Load_Linear const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, T_Load_Linear const& val);
 
-        class T_Load_Scalar : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Load_Scalar : public BaseOperation
         {
         public:
             T_Load_Scalar() = delete;
@@ -74,9 +76,9 @@ namespace rocRoller
             OperationTag m_srcTag;
         };
 
-        std::ostream& operator<<(std::ostream& stream, T_Load_Scalar const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, T_Load_Scalar const& val);
 
-        class T_Load_Tiled : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Load_Tiled : public BaseOperation
         {
         public:
             T_Load_Tiled() = delete;
@@ -95,9 +97,9 @@ namespace rocRoller
             OperationTag m_srcTag;
         };
 
-        std::ostream& operator<<(std::ostream& stream, T_Load_Tiled const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, T_Load_Tiled const& val);
 
-        class T_Store_Linear : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Store_Linear : public BaseOperation
         {
             template <typename T1, typename T2, typename T3>
             friend struct rocRoller::Serialization::MappingTraits;
@@ -117,9 +119,10 @@ namespace rocRoller
             OperationTag m_dstTag;
         };
 
-        std::ostream& operator<<(std::ostream& stream, T_Store_Linear const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&         stream,
+                                                    T_Store_Linear const& val);
 
-        class T_Store_Tiled : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Store_Tiled : public BaseOperation
         {
         public:
             T_Store_Tiled() = delete;
@@ -139,6 +142,6 @@ namespace rocRoller
             OperationTag m_dstTag;
         };
 
-        std::ostream& operator<<(std::ostream& stream, T_Store_Tiled const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, T_Store_Tiled const& val);
     }
 }

@@ -29,6 +29,8 @@
  */
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <memory>
 #include <unordered_set>
 #include <variant>
@@ -44,7 +46,7 @@ namespace rocRoller
     namespace Operations
     {
 
-        struct E_Unary
+        struct ROCROLLER_DECLSPEC E_Unary
         {
             E_Unary(OperationTag a);
             E_Unary(const std::initializer_list<OperationTag>&);
@@ -65,7 +67,7 @@ namespace rocRoller
 
 // Macro for declaring a new Unary XOp
 #define MAKE_UNARY_XOP(FUNC)                                  \
-    struct FUNC : public E_Unary                              \
+    struct ROCROLLER_DECLSPEC FUNC : public E_Unary           \
     {                                                         \
         FUNC(OperationTag a)                                  \
             : E_Unary(a)                                      \
@@ -86,7 +88,7 @@ namespace rocRoller
         MAKE_UNARY_XOP(E_Not)
         MAKE_UNARY_XOP(E_RandomNumber)
 
-        struct E_Cvt : public E_Unary
+        struct ROCROLLER_DECLSPEC E_Cvt : public E_Unary
         {
             E_Cvt(OperationTag a, rocRoller::DataType destType)
                 : E_Unary(a)
@@ -106,7 +108,7 @@ namespace rocRoller
             rocRoller::DataType destType;
         };
 
-        struct E_Binary
+        struct ROCROLLER_DECLSPEC E_Binary
         {
             E_Binary(OperationTag a, OperationTag b);
             E_Binary(const std::initializer_list<OperationTag>&);
@@ -129,7 +131,7 @@ namespace rocRoller
 
 // Macro for defining a new binary XOp
 #define MAKE_BINARY_XOP(FUNC)                                 \
-    struct FUNC : public E_Binary                             \
+    struct ROCROLLER_DECLSPEC FUNC : public E_Binary          \
     {                                                         \
         FUNC(OperationTag a, OperationTag b)                  \
             : E_Binary(a, b)                                  \
@@ -145,7 +147,7 @@ namespace rocRoller
         }                                                     \
     };
 
-        struct E_StochasticRoundingCvt : public E_Binary
+        struct ROCROLLER_DECLSPEC E_StochasticRoundingCvt : public E_Binary
         {
             E_StochasticRoundingCvt(OperationTag        data,
                                     OperationTag        seed,
@@ -176,7 +178,7 @@ namespace rocRoller
         MAKE_BINARY_XOP(E_Or)
         MAKE_BINARY_XOP(E_GreaterThan)
 
-        struct E_Ternary
+        struct ROCROLLER_DECLSPEC E_Ternary
         {
             E_Ternary(OperationTag a, OperationTag b, OperationTag c);
             E_Ternary(const std::initializer_list<OperationTag>&);
@@ -200,7 +202,7 @@ namespace rocRoller
 
 // Macro for defining a new ternary XOp
 #define MAKE_TERNARY_XOP(FUNC)                                \
-    struct FUNC : public E_Ternary                            \
+    struct ROCROLLER_DECLSPEC FUNC : public E_Ternary         \
     {                                                         \
         FUNC(OperationTag a, OperationTag b, OperationTag c)  \
             : E_Ternary(a, b, c)                              \
@@ -217,7 +219,7 @@ namespace rocRoller
     };
         MAKE_TERNARY_XOP(E_Conditional)
 
-        class T_Execute : public BaseOperation
+        class ROCROLLER_DECLSPEC T_Execute : public BaseOperation
         {
         public:
             T_Execute() = delete;

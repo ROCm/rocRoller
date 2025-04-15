@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <optional>
 #include <string>
 
@@ -56,7 +58,7 @@ namespace rocRoller
      * specific value or type of value should be implemented through
      * the predication mechanism.
      */
-    class CommandArgument : public std::enable_shared_from_this<CommandArgument>
+    class ROCROLLER_DECLSPEC CommandArgument : public std::enable_shared_from_this<CommandArgument>
     {
     public:
         CommandArgument(CommandPtr    com,
@@ -100,25 +102,26 @@ namespace rocRoller
         std::string   m_name;
     };
 
-    std::ostream& operator<<(std::ostream&, CommandArgument const&);
-    std::ostream& operator<<(std::ostream&, CommandArgumentPtr const&);
-    std::ostream& operator<<(std::ostream&, std::vector<CommandArgumentPtr> const&);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, CommandArgument const&);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, CommandArgumentPtr const&);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&,
+                                                std::vector<CommandArgumentPtr> const&);
 
-    VariableType  variableType(CommandArgumentValue const& val);
-    std::string   name(CommandArgumentValue const& val);
-    std::string   toString(CommandArgumentValue const& val);
-    std::ostream& operator<<(std::ostream&, CommandArgumentValue const&);
+    ROCROLLER_DECLSPEC VariableType variableType(CommandArgumentValue const& val);
+    ROCROLLER_DECLSPEC std::string name(CommandArgumentValue const& val);
+    ROCROLLER_DECLSPEC std::string toString(CommandArgumentValue const& val);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&, CommandArgumentValue const&);
 
     /**
      * Returns an unsigned integer from a CommandArgumentValue.
      * If the CommandArgumentValue is not an integer, an exception will be thrown.
      */
-    unsigned int getUnsignedInt(CommandArgumentValue val);
+    ROCROLLER_DECLSPEC unsigned int getUnsignedInt(CommandArgumentValue val);
 
     /**
      * Returns true if a CommandArgumentValue is an integer type.
      */
-    bool isInteger(CommandArgumentValue val);
+    ROCROLLER_DECLSPEC bool isInteger(CommandArgumentValue val);
 }
 
 #include <rocRoller/Operations/CommandArgument_impl.hpp>

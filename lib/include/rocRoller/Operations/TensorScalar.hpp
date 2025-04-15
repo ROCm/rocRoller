@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/Operations/CommandArgument.hpp>
 #include <rocRoller/Operations/CommandArguments_fwd.hpp>
@@ -36,7 +38,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        class Literal : public BaseOperation
+        class ROCROLLER_DECLSPEC Literal : public BaseOperation
         {
         public:
             Literal() = delete;
@@ -54,9 +56,9 @@ namespace rocRoller
             CommandArgumentValue m_value;
         };
 
-        std::ostream& operator<<(std::ostream& stream, Literal const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Literal const& val);
 
-        class Scalar : public BaseOperation
+        class ROCROLLER_DECLSPEC Scalar : public BaseOperation
         {
         public:
             Scalar() = delete;
@@ -82,9 +84,9 @@ namespace rocRoller
             VariableType       m_variableType;
         };
 
-        std::ostream& operator<<(std::ostream& stream, Scalar const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Scalar const& val);
 
-        class Tensor : public BaseOperation
+        class ROCROLLER_DECLSPEC Tensor : public BaseOperation
         {
         public:
             Tensor() = delete;
@@ -129,7 +131,7 @@ namespace rocRoller
             std::vector<size_t> m_literalStrides;
         };
 
-        std::ostream& operator<<(std::ostream& stream, Tensor const& val);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Tensor const& val);
     }
 }
 

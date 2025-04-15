@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <string>
 #include <variant>
 
@@ -33,24 +35,24 @@ namespace rocRoller
 {
     namespace Operations
     {
-        struct T_Execute;
-        struct E_Unary;
-        struct E_Binary;
-        struct E_Ternary;
-        struct E_Neg;
-        struct E_Abs;
-        struct E_RandomNumber;
-        struct E_Not;
-        struct E_Cvt;
-        struct E_StochasticRoundingCvt;
-        struct E_Add;
-        struct E_Sub;
-        struct E_Mul;
-        struct E_Div;
-        struct E_And;
-        struct E_Or;
-        struct E_GreaterThan;
-        struct E_Conditional;
+        struct ROCROLLER_DECLSPEC T_Execute;
+        struct ROCROLLER_DECLSPEC E_Unary;
+        struct ROCROLLER_DECLSPEC E_Binary;
+        struct ROCROLLER_DECLSPEC E_Ternary;
+        struct ROCROLLER_DECLSPEC E_Neg;
+        struct ROCROLLER_DECLSPEC E_Abs;
+        struct ROCROLLER_DECLSPEC E_RandomNumber;
+        struct ROCROLLER_DECLSPEC E_Not;
+        struct ROCROLLER_DECLSPEC E_Cvt;
+        struct ROCROLLER_DECLSPEC E_StochasticRoundingCvt;
+        struct ROCROLLER_DECLSPEC E_Add;
+        struct ROCROLLER_DECLSPEC E_Sub;
+        struct ROCROLLER_DECLSPEC E_Mul;
+        struct ROCROLLER_DECLSPEC E_Div;
+        struct ROCROLLER_DECLSPEC E_And;
+        struct ROCROLLER_DECLSPEC E_Or;
+        struct ROCROLLER_DECLSPEC E_GreaterThan;
+        struct ROCROLLER_DECLSPEC E_Conditional;
 
         using XOp = std::variant<E_Neg,
                                  E_Abs,

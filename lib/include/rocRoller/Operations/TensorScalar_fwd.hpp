@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 namespace rocRoller
 {
     namespace Operations
     {
-        class Scalar;
-        class Tensor;
+        class ROCROLLER_DECLSPEC Scalar;
+        class ROCROLLER_DECLSPEC Tensor;
     }
 }

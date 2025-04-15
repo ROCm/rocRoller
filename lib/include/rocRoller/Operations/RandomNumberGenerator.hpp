@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include "Operation.hpp"
 
 #include <memory>
@@ -39,7 +41,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        class RandomNumberGenerator : public BaseOperation
+        class ROCROLLER_DECLSPEC RandomNumberGenerator : public BaseOperation
         {
         public:
             enum class SeedMode
@@ -63,7 +65,8 @@ namespace rocRoller
             bool operator==(RandomNumberGenerator const&) const;
         };
 
-        std::string   toString(RandomNumberGenerator::SeedMode const&);
-        std::ostream& operator<<(std::ostream& stream, RandomNumberGenerator::SeedMode mode);
+        ROCROLLER_DECLSPEC std::string toString(RandomNumberGenerator::SeedMode const&);
+        ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream&                   stream,
+                                                    RandomNumberGenerator::SeedMode mode);
     }
 }

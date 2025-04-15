@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -43,7 +45,7 @@
 namespace rocRoller
 {
 
-    struct Command : public std::enable_shared_from_this<Command>
+    struct ROCROLLER_DECLSPEC Command : public std::enable_shared_from_this<Command>
     {
     public:
         using OperationList = std::vector<std::shared_ptr<Operations::Operation>>;
@@ -145,7 +147,7 @@ namespace rocRoller
         int m_runtimeArgsOffset = 0;
     };
 
-    std::ostream& operator<<(std::ostream& stream, Command const& command);
+    ROCROLLER_DECLSPEC std::ostream& operator<<(std::ostream& stream, Command const& command);
 
 }
 

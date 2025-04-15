@@ -29,6 +29,8 @@
  */
 
 #pragma once
+
+#include <rocRoller/rocRoller.hpp>
 #include <string>
 #include <variant>
 
@@ -36,19 +38,19 @@ namespace rocRoller
 {
     namespace Operations
     {
-        struct Tensor;
-        struct Scalar;
-        struct Literal;
-        struct BlockScale;
-        struct T_Load_Linear;
-        struct T_Load_Scalar;
-        struct T_Load_Tiled;
-        struct T_Mul;
-        struct T_Store_Linear;
-        struct T_Store_Tiled;
-        struct T_Execute;
-        struct Nop;
-        struct RandomNumberGenerator;
+        struct ROCROLLER_DECLSPEC Tensor;
+        struct ROCROLLER_DECLSPEC Scalar;
+        struct ROCROLLER_DECLSPEC Literal;
+        struct ROCROLLER_DECLSPEC BlockScale;
+        struct ROCROLLER_DECLSPEC T_Load_Linear;
+        struct ROCROLLER_DECLSPEC T_Load_Scalar;
+        struct ROCROLLER_DECLSPEC T_Load_Tiled;
+        struct ROCROLLER_DECLSPEC T_Mul;
+        struct ROCROLLER_DECLSPEC T_Store_Linear;
+        struct ROCROLLER_DECLSPEC T_Store_Tiled;
+        struct ROCROLLER_DECLSPEC T_Execute;
+        struct ROCROLLER_DECLSPEC Nop;
+        struct ROCROLLER_DECLSPEC RandomNumberGenerator;
         using Operation = std::variant<Tensor,
                                        Scalar,
                                        Literal,
@@ -69,9 +71,9 @@ namespace rocRoller
         template <typename T>
         concept CConcreteOperation = (COperation<T> && !std::same_as<Operation, T>);
 
-        struct Inputs;
-        struct Outputs;
-        struct TagVisitor;
+        struct ROCROLLER_DECLSPEC Inputs;
+        struct ROCROLLER_DECLSPEC Outputs;
+        struct ROCROLLER_DECLSPEC TagVisitor;
 
         std::string name(Operation const&);
 

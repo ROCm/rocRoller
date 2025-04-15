@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/DataTypes/DistinctType.hpp>
 
 namespace rocRoller
 {
     namespace Operations
     {
-        struct OperationTag final : public DistinctType<int32_t, OperationTag>
+        struct ROCROLLER_DECLSPEC OperationTag final : public DistinctType<int32_t, OperationTag>
         {
             explicit OperationTag(int value)
                 : DistinctType<int32_t, OperationTag>(value)

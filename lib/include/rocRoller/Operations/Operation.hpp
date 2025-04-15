@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <rocRoller/rocRoller.hpp>
+
 #include <rocRoller/Operations/Command_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>
 #include <rocRoller/Serialization/Base_fwd.hpp>
@@ -36,7 +38,7 @@ namespace rocRoller
 {
     namespace Operations
     {
-        class BaseOperation
+        class ROCROLLER_DECLSPEC BaseOperation
         {
         public:
             BaseOperation();
