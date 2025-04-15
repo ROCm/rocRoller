@@ -70,11 +70,6 @@ namespace rocRoller::KernelGraph
             return a.id < b.id;
         }
 
-        bool inline operator==(TypeAndSubDimension const& a, TypeAndSubDimension const& b)
-        {
-            return a.id == b.id && a.subdimension == b.subdimension;
-        }
-
         struct TypeAndNaryArgument
         {
             std::string  id;
@@ -92,11 +87,6 @@ namespace rocRoller::KernelGraph
             if(a.id == b.id)
                 return a.argument < b.argument;
             return a.id < b.id;
-        }
-
-        bool inline operator==(TypeAndNaryArgument const& a, TypeAndNaryArgument const& b)
-        {
-            return a.id == b.id && a.argument == b.argument;
         }
 
         enum class ComputeIndexArgument : int
@@ -125,11 +115,6 @@ namespace rocRoller::KernelGraph
             if(a.argument == b.argument)
                 return a.index < b.index;
             return a.argument < b.argument;
-        }
-
-        bool inline operator==(ComputeIndex const& a, ComputeIndex const& b)
-        {
-            return a.argument == b.argument && a.index == b.index;
         }
 
         using ConnectionSpec = std::variant<std::monostate,

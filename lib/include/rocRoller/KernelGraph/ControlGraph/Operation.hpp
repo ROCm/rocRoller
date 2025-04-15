@@ -68,10 +68,8 @@ namespace rocRoller
             explicit SetCoordinate(Expression::ExpressionPtr value);
 
             Expression::ExpressionPtr value;
-            std::string               coordName;
 
             std::string name() const;
-            std::string toString() const;
         };
 
         /**

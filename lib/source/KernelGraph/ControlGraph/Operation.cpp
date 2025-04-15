@@ -69,15 +69,6 @@ namespace rocRoller::KernelGraph::ControlGraph
     {
     }
 
-    std::string SetCoordinate::toString() const
-    {
-        if(coordName != "")
-        {
-            return concatenate(name(), " ", coordName, ": ", toShortString(value));
-        }
-        return concatenate(name(), ": ", value);
-    }
-
     std::string ForLoopOp::toString() const
     {
         return concatenate(name(), " ", loopName, ": ", condition);
