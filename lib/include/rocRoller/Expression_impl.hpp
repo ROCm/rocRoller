@@ -622,5 +622,73 @@ namespace rocRoller
             }
         }
 
+        template <CExpression T>
+        struct ContainsVisitor
+        {
+            bool operator()(T const& expr)
+            {
+                return true;
+            }
+
+            template <CUnary U>
+            requires(!std::same_as<T, U>) bool operator()(U const& expr)
+            {
+                return call(expr.arg);
+            }
+
+            template <CBinary U>
+            requires(!std::same_as<T, U>) bool operator()(U const& expr)
+            {
+                return call(expr.lhs) || call(expr.rhs);
+            }
+
+            template <CTernary U>
+            requires(!std::same_as<T, U>) bool operator()(U const& expr)
+            {
+                return call(expr.lhs) || call(expr.r1hs) || call(expr.r2hs);
+            }
+
+            template <std::same_as<ScaledMatrixMultiply> U>
+            requires(!std::same_as<T, U>) bool operator()(U const& expr)
+            {
+                return call(expr.matA) || call(expr.matB) || call(expr.matC) || call(expr.scaleA)
+                       || call(expr.scaleB);
+            }
+
+            template <CValue U>
+            requires(!std::same_as<T, U>) bool operator()(U const& expr)
+            {
+                return false;
+            }
+
+            bool call(Expression const& expr)
+            {
+                return std::visit(*this, expr);
+            }
+
+            bool call(ExpressionPtr const& expr)
+            {
+                if(!expr)
+                    return false;
+
+                return call(*expr);
+            }
+        };
+
+        template <CExpression T>
+        inline bool contains(Expression const& expr)
+        {
+            ContainsVisitor<T> v;
+            return v.call(expr);
+        }
+
+        template <CExpression T>
+        inline bool contains(ExpressionPtr expr)
+        {
+            AssertFatal(expr != nullptr);
+
+            return contains<T>(*expr);
+        }
+
     }
 }
