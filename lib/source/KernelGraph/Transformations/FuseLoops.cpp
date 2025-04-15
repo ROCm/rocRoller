@@ -55,6 +55,13 @@ namespace rocRoller
         {
             using GD = rocRoller::Graph::Direction;
 
+            /**
+             * @brief Gather all for loops to fuse below the starting node
+             *
+             * @param graph
+             * @param start
+             * @return std::vector<std::unordered_set<int>>
+             */
             std::vector<std::unordered_set<int>> gatherForLoops(KernelGraph& graph, int start)
             {
                 auto bodies      = graph.control.getOutputNodeIndices<Body>(start).to<std::set>();
@@ -63,6 +70,7 @@ namespace rocRoller
                 auto isSequence      = graph.control.isElemType<Sequence>();
                 auto isBody          = graph.control.isElemType<Body>();
 
+                // Get a set of all ForLoops and SetCoordinates which contain (tail) ForLoops
                 auto maybeForLoops
                     = graph.control.depthFirstVisit(bodies, isSequence, GD::Downstream)
                           .filter([&](int tag) -> bool {
@@ -78,6 +86,7 @@ namespace rocRoller
                           })
                           .to<std::unordered_set>();
 
+                // Filter the previous set of nodes to only the ForLoops under consideration
                 std::vector<int> forLoops;
                 for(auto const& maybeForLoop : maybeForLoops)
                 {
@@ -101,6 +110,8 @@ namespace rocRoller
                     }
                 }
 
+                // Determine sets of loops to be fused together
+                // Currently loops should only be fused if they're the "same" loop (from unrolling)
                 std::vector<std::unordered_set<int>> loopGroupsToFuse;
                 while(!forLoops.empty())
                 {
@@ -186,6 +197,13 @@ namespace rocRoller
                 return loopGroupsToFuse;
             }
 
+            /**
+             * @brief General routine to fuse one node into another
+             *
+             * @param graph
+             * @param fusedNodeTag
+             * @param nodeTag
+             */
             void fuseNode(KernelGraph& graph, int fusedNodeTag, int nodeTag)
             {
                 for(auto const& child :
@@ -250,6 +268,10 @@ namespace rocRoller
                 }
             }
 
+            /**
+             * @brief Visitor to determine if two nodes are the "same" operation of the purposes of fusion
+             *
+             */
             struct IsSameOperationVisitor
             {
                 template <CConcreteOperation OpA, CConcreteOperation OpB>
@@ -290,6 +312,12 @@ namespace rocRoller
                 KernelGraph const& graph;
             };
 
+            /**
+             * @brief Walks up the tree, fusing nodes which contain the start in their body and are the same operation
+             *
+             * @param graph
+             * @param tag
+             */
             void fuseScopes(KernelGraph& graph, int tag)
             {
                 auto parentsWithEdges
@@ -414,6 +442,12 @@ namespace rocRoller
             return newGraph;
         }
 
+        /**
+         * @brief Ensure no node is a child of two nodes which are not contained within each other
+         *
+         * @param graph
+         * @return ConstraintStatus
+         */
         ConstraintStatus BodyOfOnlyOneNode(const KernelGraph& graph)
         {
             ConstraintStatus retval;
