@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include <rocRoller/ExpressionTransformations.hpp>
 #include <rocRoller/Expression_fwd.hpp>
 
 namespace rocRoller

@@ -32,6 +32,7 @@
 #include <rocRoller/KernelGraph/Transforms/UnrollLoops.hpp>
 #include <rocRoller/KernelGraph/Utils.hpp>
 #include <rocRoller/KernelGraph/Visitors.hpp>
+
 namespace rocRoller
 {
     namespace KernelGraph

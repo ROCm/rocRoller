@@ -35,6 +35,8 @@
 
 #include <rocRoller/Operations/Command.hpp>
 
+#include <rocRoller/KernelGraph/Utils.hpp>
+
 namespace rocRoller
 {
     namespace KernelGraph

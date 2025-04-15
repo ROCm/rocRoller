@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include <rocRoller/CodeGen/MemoryInstructions.hpp>
+#include <rocRoller/CodeGen/Utils.hpp>
 #include <rocRoller/InstructionValues/Register.hpp>
 
 namespace rocRoller
