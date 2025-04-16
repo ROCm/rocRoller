@@ -206,6 +206,7 @@ namespace rocRoller
              */
             void fuseNode(KernelGraph& graph, int fusedNodeTag, int nodeTag)
             {
+                // Move operations that come after `nodeTag` to follow `fusedNodeTag`.
                 for(auto const& child :
                     graph.control.getOutputNodeIndices<Sequence>(nodeTag).to<std::vector>())
                 {
@@ -215,6 +216,7 @@ namespace rocRoller
                     }
                     graph.control.deleteElement<Sequence>(std::vector<int>{nodeTag},
                                                           std::vector<int>{child});
+                    // Make sure we don't introduce a cycle
                     std::unordered_set<int> toDelete;
                     for(auto descSeqOfChild :
                         filter(graph.control.isElemType<Sequence>(),
@@ -233,6 +235,7 @@ namespace rocRoller
                     }
                 }
 
+                // Fuse the bodies
                 for(auto const& child :
                     graph.control.getOutputNodeIndices<Body>(nodeTag).to<std::vector>())
                 {
@@ -241,6 +244,7 @@ namespace rocRoller
                                                       std::vector<int>{child});
                 }
 
+                // Make sure dependencies are satisfied
                 for(auto const& parent :
                     graph.control.getInputNodeIndices<Sequence>(nodeTag).to<std::vector>())
                 {
