@@ -3046,6 +3046,7 @@ namespace GEMMDriverTest
         gemm.m = 256;
         gemm.n = 512;
         gemm.k = 80;
+        
         gemm.macM = 128;
         gemm.macN = 256;
         gemm.macK = 16;
