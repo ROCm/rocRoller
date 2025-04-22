@@ -179,6 +179,7 @@ set(rocroller_src
     source/KernelGraph/Transformations/AddDirect2LDS.cpp
     source/KernelGraph/Transformations/AddF6LDSPadding.cpp
     source/KernelGraph/Transformations/AddLDS.cpp
+    source/KernelGraph/Transformations/AddPrefetch.cpp
     source/KernelGraph/Transformations/AddPRNG.cpp
     source/KernelGraph/Transformations/AddStreamK.cpp
     source/KernelGraph/Transformations/AliasDataFlowTags.cpp
@@ -219,7 +220,7 @@ set(rocroller_src
     source/Observers/VALUTransWrite94x.cpp
     source/Observers/VALUWrite.cpp
     source/Observers/VALUWriteReadlane94x.cpp
-    source/Observers/VALUWriteSGPRVCC94x.cpp
+    source/Observers/VALUWriteSGPRVCC.cpp
     source/Observers/VALUWriteSGPRVMEM.cpp
     source/Observers/VALUWriteVCCVDIVFMAS.cpp
     source/Observers/VCMPXWrite94x.cpp

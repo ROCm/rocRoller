@@ -44,6 +44,7 @@
 #include <rocRoller/TensorDescriptor.hpp>
 #include <rocRoller/Utilities/Error.hpp>
 #include <rocRoller/Utilities/Timer.hpp>
+#include <rocRoller/Utilities/Utils.hpp>
 
 #include "GPUContextFixture.hpp"
 #include "SourceMatcher.hpp"
@@ -832,6 +833,7 @@ namespace MatrixMultiplyTest
 
     TEST_P(MatrixMultiplyWMMATestGPU, GPU_MatrixMultiplyMacroTileWMMAF16Accum)
     {
+        REQUIRE_ARCH_CAP(GPUCapability::HasWMMA_F16_ACC);
         const auto [typeAndWaveK, transOp] = std::get<1>(GetParam());
         const auto [dataType, waveK]       = typeAndWaveK;
         const auto [transA, transB]        = transOp;
@@ -889,6 +891,7 @@ namespace MatrixMultiplyTest
 
     TEST_P(MatrixMultiplyWMMATestGPU, GPU_MatrixMultiplyABWMMAF16Accum)
     {
+        REQUIRE_ARCH_CAP(GPUCapability::HasWMMA_F16_ACC);
         const auto [typeAndWaveK, transOp] = std::get<1>(GetParam());
         const auto [typeAB, waveK]         = typeAndWaveK;
         const auto [transA, transB]        = transOp;
@@ -1012,6 +1015,7 @@ namespace MatrixMultiplyTest
 
     TEST_P(MatrixMultiplyABCWMMATestGPU, GPU_MatrixMultiplyABCWMMAFP16)
     {
+        REQUIRE_ARCH_CAP(GPUCapability::HasWMMA_F16_ACC);
         matrixMultiplyABC<Half, Half>(16, 16, 16, 1);
 
         const auto        numWMMAs = 2; // mac_k = 2 * wave_k
@@ -1022,6 +1026,7 @@ namespace MatrixMultiplyTest
 
     TEST_P(MatrixMultiplyABCWMMATestGPU, GPU_MatrixMultiplyABCWMMABFloat16)
     {
+        REQUIRE_ARCH_CAP(GPUCapability::HasWMMA_F16_ACC);
         matrixMultiplyABC<BFloat16, BFloat16>(16, 16, 16, 1);
 
         const auto        numWMMAs = 2; // mac_k = 2 * wave_k
