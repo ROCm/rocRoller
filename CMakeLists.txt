@@ -120,6 +120,7 @@ option(BUILD_CLIENTS "Build performance testing clients" ON)
 option(BUILD_TESTING "Build rocRoller test clients" ON)
 option(BUILD_DOCS "Build rocRoller documentation" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
+option(BUILD_ADDRESS_SANITIZER "Build hipBLASLt with address sanitizer enabled" OFF)
 
 option(MXDATAGENERATOR_SSH "Fetch mxDataGenerator via SSH" OFF)
 set(MXDATAGENERATOR_GIT_URL "github.com" CACHE STRING "Base Git URL to fetch mxDataGenerator from.")
@@ -136,6 +137,13 @@ set_property(CACHE YAML_BACKEND PROPERTY STRINGS YAML_CPP LLVM)
 
 # For paths given when reporting errors
 add_compile_options(-fmacro-prefix-map=${PROJECT_SOURCE_DIR}=.)
+
+if(BUILD_ADDRESS_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -shared-libasan")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -shared-libasan")
+    #add_compile_options(-fsanitize=address -shared-libasan)
+    #add_link_options(-shared-libasan)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(COROUTINES_COMPILE_OPTION)
