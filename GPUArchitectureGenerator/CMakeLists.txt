@@ -86,7 +86,6 @@ target_compile_options(
     GPUArchitectureGenerator PUBLIC ${COROUTINES_COMPILE_OPTION}
                                     ${EXTRA_COMPILE_OPTIONS}
 )
-
 target_link_options(GPUArchitectureGenerator PUBLIC ${EXTRA_LINK_OPTIONS})
 
 target_link_libraries(

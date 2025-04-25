@@ -141,8 +141,6 @@ add_compile_options(-fmacro-prefix-map=${PROJECT_SOURCE_DIR}=.)
 if(BUILD_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -shared-libasan")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -shared-libasan")
-    #add_compile_options(-fsanitize=address -shared-libasan)
-    #add_link_options(-shared-libasan)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
