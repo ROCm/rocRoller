@@ -25,34 +25,23 @@
  *******************************************************************************/
 
 #pragma once
-#include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
+
+#include <rocRoller/CodeGen/Instruction.hpp>
+#include <rocRoller/Context_fwd.hpp>
+#include <rocRoller/Expression_fwd.hpp>
+#include <rocRoller/Utilities/Generator.hpp>
 
 namespace rocRoller
 {
-    namespace KernelGraph
+    namespace Expression
     {
         /**
-         * @brief Connect unbound (leaf) MacroTileNumber coordinates
-         * to Workgroups.
-         *
-         * This transform searches for MacroTileNumber coordinates
-         * that are leafs (don't have outgoing/incoming edges), and
-         * attaches Workgroup coordinates to them.
-         */
-        class ConnectWorkgroups : public GraphTransform
-        {
-        public:
-            ConnectWorkgroups(CommandParametersPtr params, ContextPtr context);
-
-            KernelGraph apply(KernelGraph const& original) override;
-            std::string name() const override
-            {
-                return "ConnectWorkgroups";
-            }
-
-        private:
-            CommandParametersPtr m_params;
-            ContextPtr           m_context;
-        };
+          * Replace AssemblyKernelArgument sub-expressions with registers that
+          * contain their values. This may possibly require some instructions so
+          * this is a Generator and it returns the modified expression in `dst`.
+          */
+        Generator<Instruction> replaceKernelArgs(ContextPtr const&    context,
+                                                 ExpressionPtr&       dst,
+                                                 ExpressionPtr const& src);
     }
 }

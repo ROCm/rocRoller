@@ -79,6 +79,7 @@ set(rocroller_src
     source/Logging.cpp
     source/Random.cpp
     source/Register.cpp
+    source/ReplaceKernelArgs.cpp
     source/ScheduledInstructions.cpp
     source/Scheduler.cpp
     source/Timer.cpp
@@ -153,6 +154,7 @@ set(rocroller_src
     source/ExpressionTransformations/LowerBitfieldValues.cpp
     source/ExpressionTransformations/LowerExponential.cpp
     source/ExpressionTransformations/LowerPRNG.cpp
+    source/ExpressionTransformations/PositionalArgumentPropagation.cpp
     source/ExpressionTransformations/RestoreCommandArguments.cpp
     source/ExpressionTransformations/Simplify.cpp
 
@@ -329,8 +331,7 @@ endif()
 
 target_link_libraries(
     rocroller
-    PRIVATE ${llvm_libs} ${llvm_yaml_libs} lldELF
-    PUBLIC msgpackc-cxx
+    PRIVATE ${llvm_libs} ${llvm_yaml_libs} lldELF msgpackc-cxx
 )
 target_include_directories(rocroller SYSTEM PUBLIC ${LLD_INCLUDE_DIRS})
 
@@ -354,6 +355,4 @@ rocm_export_targets(
     TARGETS roc::rocroller roc::rocroller_interface
     NAMESPACE roc::
     EXPORT rocroller_targets
-    DEPENDS
-        PACKAGE msgpack VERSION 3.3.0
 )

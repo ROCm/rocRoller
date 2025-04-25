@@ -83,7 +83,6 @@ set(
     unit/GPUInstructionInfoTest.cpp
     unit/GeneratorTest.cpp
     unit/HalfPrecisionTest.cpp
-    unit/HypergraphTest.cpp
     unit/InstructionTest.cpp
     unit/KernelGraphTest.cpp
     unit/KernelGraphTest/ConstantPropagation.cpp
@@ -163,6 +162,7 @@ set(
     catch/BranchGeneratorTest.cpp
     catch/CommandArgumentValueTest.cpp
     catch/CommandTest.cpp
+    catch/ConnectWorkgroupsTest.cpp
     catch/CustomAssertionTest.cpp
     catch/CustomMatcherTest.cpp
     catch/DataTypesTest.cpp
@@ -175,6 +175,7 @@ set(
     catch/FastArithmeticTest.cpp
     catch/GlobalLoadStoreTest.cpp
     catch/HazardObserverTest.cpp
+    catch/HypergraphTest.cpp
     catch/IdentifyParallelDimensionsTest.cpp
     catch/KernelArgumentsTest.cpp
     catch/KernelGraphColouringTest.cpp

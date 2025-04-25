@@ -201,10 +201,6 @@ namespace GEMMDriverTest
                 numWorkgroupY = N / gemm.macN;
             }
 
-            auto NX = std::make_shared<Expression::Expression>(numWorkgroupX * workgroupSizeX);
-            auto NY = std::make_shared<Expression::Expression>(numWorkgroupY * workgroupSizeY);
-            auto NZ = std::make_shared<Expression::Expression>(1u);
-
             // Host data
             using PackedTypeA = typename PackedTypeOf<TA>::type;
             using PackedTypeB = typename PackedTypeOf<TB>::type;
@@ -415,7 +411,12 @@ namespace GEMMDriverTest
 
             auto params = std::make_shared<CommandParameters>();
             params->setManualKernelDimension(2);
+            params->setManualWorkgroupSize({workgroupSizeX, workgroupSizeY, 1});
+
             // TODO: Calculate these values internally based on workgroup sizes.
+            params->setManualWavefrontCount(
+                {static_cast<uint>(gemm.macM / gemm.waveM / wavetilePerWavefrontM),
+                 static_cast<uint>(gemm.macN / gemm.waveN / wavetilePerWavefrontN)});
             params->setWaveTilesPerWavefront(wavetilePerWavefrontM, wavetilePerWavefrontN);
             params->setSplitStoreTileIntoWaveBlocks(gemm.splitStoreTileIntoWaveBlocks);
 
@@ -530,14 +531,6 @@ namespace GEMMDriverTest
                 params->setDimensionInfo(tagStoreD, macTileD);
             }
 
-            params->setManualWorkgroupSize({workgroupSizeX, workgroupSizeY, 1});
-            Log::debug("GEMM workgroup sizes {} {} {}", workgroupSizeX, workgroupSizeY, 1);
-            Log::debug("GEMM workitem counts {} {} {}", toString(NX), toString(NY), toString(NZ));
-
-            params->setManualWavefrontCount(
-                {static_cast<uint>(gemm.macM / gemm.waveM / wavetilePerWavefrontM),
-                 static_cast<uint>(gemm.macN / gemm.waveN / wavetilePerWavefrontN)});
-
             CommandKernel commandKernel(command, testKernelName());
 
             // TODO Some test have loops, we need to reset the context.
@@ -546,10 +539,6 @@ namespace GEMMDriverTest
             commandKernel.setContext(m_context);
             commandKernel.setCommandParameters(params);
             commandKernel.generateKernel();
-
-            auto launch = std::make_shared<CommandLaunchParameters>();
-            launch->setManualWorkitemCount({NX, NY, NZ});
-            commandKernel.setLaunchParameters(launch);
 
             CommandArguments commandArgs = command->createArguments();
 
@@ -2037,7 +2026,7 @@ namespace GEMMDriverTest
         }
     }
 
-    TEST_P(GEMMTestGPU, GPU_SwizzleScaledGEMMMXF8TN)
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledGEMMMXF4TN)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
 
@@ -2048,7 +2037,7 @@ namespace GEMMDriverTest
 
             auto gemm = setup_GEMMF8F6F4(waveM, waveN, waveK);
 
-            gemm.macM = 128;
+            gemm.macM = 256;
             gemm.macN = 256;
             gemm.macK = 128;
             gemm.m    = 2 * gemm.macM;
@@ -2075,22 +2064,22 @@ namespace GEMMDriverTest
                     for(auto unrollK : {0, 2})
                     {
                         gemm.unrollK = unrollK;
-                        basicGEMM<FP8, FP8, float>(gemm);
+                        basicGEMM<FP4, FP4, float>(gemm);
 
                         std::string generatedCode = m_context->instructions()->toString();
                         // when both the scales are loaded directly from buffer into VGPRs
                         if(!loadLDSScaleA && !loadLDSScaleB)
                             EXPECT_EQ(countSubstring(generatedCode, "buffer_load_ubyte "), 0);
-                        // when either scale is loaded via LDS
+                        // when either scale is loaded via LDS -- no swizzle applied
                         if(loadLDSScaleA || loadLDSScaleB)
-                            EXPECT_EQ(countSubstring(generatedCode, "ds_read_u8 "), 0);
+                            EXPECT_GT(countSubstring(generatedCode, "ds_read_u8 "), 0);
                     }
                 }
             }
         }
     }
 
-    TEST_P(GEMMTestGPU, GPU_SwizzleScaledPrefetchGEMMMXF8TN)
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledUnrollGEMMMXF4TN)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
 
@@ -2101,7 +2090,67 @@ namespace GEMMDriverTest
 
             auto gemm = setup_GEMMF8F6F4(waveM, waveN, waveK);
 
-            gemm.macM = 128;
+            gemm.macM = 256;
+            gemm.macN = 256;
+            gemm.macK = 128;
+
+            gemm.m = 2 * gemm.macM;
+            gemm.n = 3 * gemm.macN;
+            gemm.k = 4 * gemm.macK;
+
+            gemm.workgroupSizeX = 2 * gemm.wavefrontSize;
+            gemm.workgroupSizeY = 2;
+
+            gemm.loadLDSA      = true;
+            gemm.loadLDSB      = true;
+            gemm.loadLDSScaleA = false;
+            gemm.loadLDSScaleB = false;
+
+            gemm.scaleAMode = Operations::ScaleMode::Separate;
+            gemm.scaleBMode = Operations::ScaleMode::Separate;
+
+            gemm.swizzleScale = true;
+
+            for(auto unrollK : {0, 2, 4})
+            {
+                gemm.unrollK = unrollK;
+                basicGEMM<FP4, FP4, float>(gemm);
+
+                std::string generatedCode = m_context->instructions()->toString();
+                EXPECT_EQ(countSubstring(generatedCode, "buffer_load_ubyte "), 0);
+
+                if(unrollK == 0)
+                {
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dword "), 4);
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dwordx2 "), 0);
+                }
+                else if(unrollK == 2)
+                {
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dword "), 0);
+                    // 2x2 wave config: NumAScaleLoadTiles = 256/2/64 = 2 and NumBScaleLoadTiles = 256/2/64 = 2
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dwordx2 "), 4);
+                }
+                else if(unrollK == 4)
+                {
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dword "), 0);
+                    EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dwordx2 "), 0);
+                }
+            }
+        }
+    }
+
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledPrefetchGEMMMXF4TN)
+    {
+        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
+
+        for(auto waveK : {64, 128})
+        {
+            int waveM = (waveK == 128) ? 16 : 32;
+            int waveN = (waveK == 128) ? 16 : 32;
+
+            auto gemm = setup_GEMMF8F6F4(waveM, waveN, waveK);
+
+            gemm.macM = 256;
             gemm.macN = 256;
             gemm.macK = 128;
 
@@ -2127,20 +2176,23 @@ namespace GEMMDriverTest
 
             gemm.swizzleScale = true;
 
-            basicGEMM<FP8, FP8, float>(gemm);
+            basicGEMM<FP4, FP4, float>(gemm);
 
             std::string generatedCode = m_context->instructions()->toString();
             EXPECT_EQ(countSubstring(generatedCode, "buffer_load_ubyte "), 0);
+            EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dword "), 0);
+            // 1x4 wave config: NumAScaleLoadTiles = 256/64 = 4 and NumBScaleLoadTiles = 256/4/64 = 1
+            EXPECT_EQ(countSubstring(generatedCode, "buffer_load_dwordx2 "), 5);
         }
     }
 
-    TEST_P(GEMMTestGPU, GPU_SwizzleScaledPrefetchLDSGEMMMXF8TN)
+    TEST_P(GEMMTestGPU, GPU_SwizzleScaledPrefetchLDSGEMMMXF4TN)
     {
         REQUIRE_ARCH_CAP(GPUCapability::HasMFMA_f8f6f4);
 
         auto gemm = setup_GEMMF8F6F4(32, 32, 64);
 
-        gemm.macM = 128;
+        gemm.macM = 256;
         gemm.macN = 256;
         gemm.macK = 128;
 
@@ -2166,10 +2218,10 @@ namespace GEMMDriverTest
 
         gemm.swizzleScale = true;
 
-        basicGEMM<FP8, FP8, float>(gemm);
-
+        basicGEMM<FP4, FP4, float>(gemm);
         std::string generatedCode = m_context->instructions()->toString();
-        EXPECT_EQ(countSubstring(generatedCode, "ds_read_u8 "), 0);
+        // no swizzle applied for scales loaded via LDS
+        EXPECT_GT(countSubstring(generatedCode, "ds_read_u8 "), 0);
     }
 
     TEST_P(GEMMF8F6F4TestGPU, GPU_SwizzleScaled_Prefetch_GEMMF8F6F4)
@@ -3027,45 +3079,6 @@ namespace GEMMDriverTest
         std::string generatedCode = m_context->instructions()->toString();
 
         EXPECT_EQ(countSubstring(generatedCode, "ds_write_b128"), 12);
-    }
-
-    TEST_P(GEMMTestGPU, GPU_BasicGEMMLiteralStrides)
-    {
-        REQUIRE_ARCH_CAP(GPUCapability::HasMFMA);
-        GEMMProblem gemm;
-        gemm.packMultipleElementsInto1VGPR = true;
-        gemm.transB                        = "N";
-
-        gemm.literalStrides = true;
-        basicGEMM<float>(gemm);
-        std::string output_literalStrides = m_context->instructions()->toString();
-
-        gemm.literalStrides = false;
-        basicGEMM<float>(gemm);
-        std::string output_noLiteralStrides = m_context->instructions()->toString();
-
-        //Since we're setting the first dimension to a literal 1, there will be less occurrences of Load_Tiled_0_stride_0.
-        EXPECT_LT(countSubstring(output_literalStrides, "Tensor_0_stride_0"),
-                  countSubstring(output_noLiteralStrides, "Tensor_0_stride_0"));
-        EXPECT_LT(countSubstring(output_literalStrides, "Tensor_2_stride_0"),
-                  countSubstring(output_noLiteralStrides, "Tensor_2_stride_0"));
-        EXPECT_LT(countSubstring(output_literalStrides, "Tensor_4_stride_0"),
-                  countSubstring(output_noLiteralStrides, "Tensor_4_stride_0"));
-
-        // Since we're not setting the second dimension to a literal, there
-        // will be the same occurrences of Load_Tiled_X_stride_1.
-
-        // Currently due to some expressions having different signedness
-        // between literal and non-literal, there are some extra convert
-        // expressions in the literal version and so this is mentioned more
-        // times in comments.
-        EXPECT_EQ(countSubstring(output_literalStrides, "Tensor_0_stride_1"),
-                  countSubstring(output_noLiteralStrides, "Tensor_0_stride_1") + 2);
-        EXPECT_EQ(countSubstring(output_literalStrides, "Tensor_2_stride_1"),
-                  countSubstring(output_noLiteralStrides, "Tensor_2_stride_1") + 2);
-
-        EXPECT_EQ(countSubstring(output_literalStrides, "Tensor_4_stride_1"),
-                  countSubstring(output_noLiteralStrides, "Tensor_4_stride_1"));
     }
 
     TEST_P(GEMMTestGPU, GPU_BasicGEMMFP16AllLDS)
