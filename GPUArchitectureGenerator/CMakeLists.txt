@@ -133,7 +133,7 @@ if(BUILD_ADDRESS_SANITIZER)
         OUTPUT_VARIABLE ASAN_LIB_PATH
         COMMAND_ECHO STDOUT)
     string(STRIP ${ASAN_LIB_PATH} ASAN_LIB_PATH)
-    set(GPUArchitectureGeneratorBin LD_PRELOAD=${ASAN_LIB_PATH} ${GPUArchitectureGeneratorBin})
+    set(GPUArchitectureGeneratorBin LD_PRELOAD=${ASAN_LIB_PATH} ASAN_OPTIONS=detect_leaks=0 ${GPUArchitectureGeneratorBin})
 endif()
 
 if(NOT ROCROLLER_USE_PREGENERATED_ARCH_DEF)
