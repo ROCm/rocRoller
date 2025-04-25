@@ -125,7 +125,7 @@ file(MAKE_DIRECTORY ${ARCH_FILE_DIR})
 
 set(GPUArchitectureGeneratorBin $<TARGET_FILE:GPUArchitectureGenerator>)
 
-if(BUILD_ADDRESS_SANITIZER)
+if(BUILD_ADDRESS_SANITIZER OR "${CMAKE_CXX_FLAGS}" MATCHES "-fsanitize=address")
     # Must populate LD_PRELOAD with ASAN runtime if ASAN is being used.
     # Find the ASAN RT with compiler and update env for Tensile call.
     execute_process(
