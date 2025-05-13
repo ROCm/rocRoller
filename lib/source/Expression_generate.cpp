@@ -32,6 +32,7 @@
 #include <rocRoller/Context.hpp>
 #include <rocRoller/Expression.hpp>
 #include <rocRoller/ExpressionTransformations.hpp>
+#include <rocRoller/ReplaceKernelArgs.hpp>
 
 #include <rocRoller/CodeGen/ArgumentLoader.hpp>
 #include <rocRoller/CodeGen/Arithmetic/MatrixMultiply.hpp>
@@ -416,12 +417,18 @@ namespace rocRoller
                     //
                     // test in ExpressionTest.cpp.
 
-                    auto resPack = DataTypeInfo::Get(resType.varType).packing;
-                    auto dstPack = DataTypeInfo::Get(dest->variableType()).packing;
-                    AssertFatal(dstPack <= resPack, "Destination/result packing mismatch.");
+                    if constexpr(!CBitwise<T>)
+                    {
+                        auto resPack = DataTypeInfo::Get(resType.varType).packing;
+                        auto dstPack = DataTypeInfo::Get(dest->variableType()).packing;
+                        AssertFatal(dstPack <= resPack,
+                                    "Destination/result packing mismatch.",
+                                    ShowValue(resPack),
+                                    ShowValue(dstPack));
+                    }
                 }
 
-                if(lhsInfo.packing != rhsInfo.packing)
+                if(!CBitwise<T> && lhsInfo.packing != rhsInfo.packing)
                 {
                     // If the packing values of the datatypes are different, we need to
                     // convert the more packed value into the less packed value type.
@@ -480,7 +487,8 @@ namespace rocRoller
                                               || IsSpecial(lhs->regType()) || lhs->valueCount() == 1
                                           ? lhs
                                           : lhs->element({k});
-                        if(!destInfo.isIntegral && lhs->variableType() != resType.varType)
+                        if(!CBitwise<T> && !destInfo.isIntegral
+                           && lhs->variableType() != resType.varType)
                         {
                             co_yield generateConvertOp(
                                 resType.varType.dataType, conversion, lhsVal);
@@ -491,7 +499,10 @@ namespace rocRoller
                                               || IsSpecial(rhs->regType()) || rhs->valueCount() == 1
                                           ? rhs
                                           : rhs->element({k});
-                        if(!destInfo.isIntegral && rhs->variableType() != resType.varType)
+
+                        // Bitwise ops don't need to convert the RHS.
+                        if(!CBitwise<T> && !CShift<T> && !destInfo.isIntegral
+                           && rhs->variableType() != resType.varType)
                         {
                             co_yield generateConvertOp(
                                 resType.varType.dataType, conversion, rhsVal);
@@ -1121,7 +1132,7 @@ namespace rocRoller
         {
             std::string destStr = "nullptr";
             if(dest)
-                destStr = dest->toString();
+                destStr = dest->description();
             co_yield Instruction::Comment("Generate " + toString(expr) + " into " + destStr);
 
             // Replace RandomNumber expression with expressions that implement the PRNG algorithm
@@ -1140,6 +1151,8 @@ namespace rocRoller
             }
 
             expr = lowerBitfieldValues(expr);
+            // Replace kernel args with registers.
+            co_yield replaceKernelArgs(context, expr, expr);
 
             CodeGeneratorVisitor v{context};
 

@@ -655,9 +655,17 @@ namespace rocRoller
                 m_context->registerTagManager()->deleteTag(dimTag);
             }
 
-            Generator<Instruction> operator()(int, Barrier const&, Transformer)
+            Generator<Instruction> operator()(int tag, Barrier const&, Transformer)
             {
-                co_yield m_context->mem()->barrier();
+                std::vector<Register::ValuePtr> srcs;
+                for(auto& c : m_graph->mapper.getConnections(tag))
+                {
+                    auto srcTag = c.coordinate;
+                    auto reg    = m_context->registerTagManager()->getRegister(srcTag);
+                    srcs.push_back(std::move(reg));
+                }
+
+                co_yield m_context->mem()->barrier(srcs);
             }
 
             Generator<Instruction> operator()(int tag, ComputeIndex const& ci, Transformer coords)
@@ -1123,8 +1131,9 @@ namespace rocRoller
                                 "Exchange: SIMDBlock must be the fastest running dimension");
                 }
 
-                const uint wfs     = m_context->kernel()->wavefront_size();
-                const uint numVgpr = waveTileSize / wfs;
+                const uint wfs = m_context->kernel()->wavefront_size();
+                // Exchange tile fixed size: 64 x 4
+                const uint numVgpr = 64 * 4 / wfs;
 
                 auto vgpr = m_context->registerTagManager()->getRegister(macTileTag);
 

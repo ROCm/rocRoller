@@ -79,6 +79,7 @@ set(rocroller_src
     source/Logging.cpp
     source/Random.cpp
     source/Register.cpp
+    source/ReplaceKernelArgs.cpp
     source/ScheduledInstructions.cpp
     source/Scheduler.cpp
     source/Timer.cpp
@@ -200,6 +201,7 @@ set(rocroller_src
     source/KernelGraph/Transformations/LowerTile.cpp
     source/KernelGraph/Transformations/OrderEpilogueBlocks.cpp
     source/KernelGraph/Transformations/OrderMemory.cpp
+    source/KernelGraph/Transformations/PrefetchScale.cpp
     source/KernelGraph/Transformations/RemoveDuplicates.cpp
     source/KernelGraph/Transformations/Simplify.cpp
     source/KernelGraph/Transformations/SwizzleScale.cpp
@@ -213,6 +215,7 @@ set(rocroller_src
     source/Observers/DGEMM16x16x4Write.cpp
     source/Observers/DGEMM4x4x4Write.cpp
     source/Observers/DLWrite.cpp
+    source/Observers/MEMObserver.cpp
     source/Observers/MFMAObserver.cpp
     source/Observers/OPSEL94x.cpp
     source/Observers/ObserverCreation.cpp
@@ -239,6 +242,7 @@ set(rocroller_src
 
     source/Operations/BlockScale.cpp
     source/Operations/Command.cpp
+    source/Operations/CommandArgument.cpp
     source/Operations/Operation.cpp
     source/Operations/RandomNumberGenerator.cpp
     source/Operations/T_LoadStore.cpp
@@ -330,8 +334,7 @@ endif()
 
 target_link_libraries(
     rocroller
-    PRIVATE ${llvm_libs} ${llvm_yaml_libs} lldELF
-    PUBLIC msgpackc-cxx
+    PRIVATE ${llvm_libs} ${llvm_yaml_libs} lldELF msgpackc-cxx
 )
 target_include_directories(rocroller SYSTEM PUBLIC ${LLD_INCLUDE_DIRS})
 
@@ -355,6 +358,4 @@ rocm_export_targets(
     TARGETS roc::rocroller roc::rocroller_interface
     NAMESPACE roc::
     EXPORT rocroller_targets
-    DEPENDS
-        PACKAGE msgpack VERSION 3.3.0
 )

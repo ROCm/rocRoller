@@ -69,11 +69,19 @@ namespace rocRoller
          */
         Generator<RegisterId> Value::getRegisterIds() const
         {
-            if(m_regType == Type::Literal || m_regType == Type::NullLiteral
-               || m_regType == Type::Label)
+            if(regType() == Type::Literal || regType() == Type::NullLiteral
+               || regType() == Type::Label)
             {
                 co_return;
             }
+
+            if(regType() == Type::LocalData)
+            {
+                co_yield RegisterId(
+                    Type::LocalData, m_ldsAllocation->offset(), m_ldsAllocation->size());
+                co_return;
+            }
+
             if(IsSpecial(m_regType))
             {
                 auto context = m_context.lock();
@@ -105,12 +113,16 @@ namespace rocRoller
             return std::make_shared<Expression::Expression>(shared_from_this());
         }
 
-        bool Value::sameAs(ValuePtr b) const
+        bool Value::sameRegistersAs(ValuePtr b) const
         {
-            return this->regType() == b->regType() && this->variableType() == b->variableType()
-                   && this->registerCount() == b->registerCount()
+            return this->regType() == b->regType() && this->registerCount() == b->registerCount()
                    && this->allocationCoord() == b->allocationCoord()
                    && this->allocation() == b->allocation();
+        }
+
+        bool Value::sameAs(ValuePtr b) const
+        {
+            return this->variableType() == b->variableType() && this->sameRegistersAs(b);
         }
 
         std::vector<ValuePtr> Value::split(std::vector<std::vector<int>> const& indices)
@@ -166,27 +178,57 @@ namespace rocRoller
             m_contiguousIndices.reset();
         }
 
-        bool Value::intersects(ValuePtr input) const
+        bool Value::intersects(Value const& other) const
         {
-            if(regType() != input->regType())
-                return false;
-
-            if(allocationState() != AllocationState::Allocated
-               || input->allocationState() != AllocationState::Allocated)
-                return false;
-
-            for(int a : registerIndices())
+            if(isSpecial())
             {
-                for(int b : input->registerIndices())
+                if(regType() == other.regType())
+                    return true;
+
+                if(regType() == Type::VCC
+                   && (other.regType() == Type::VCC_LO || other.regType() == Type::VCC_HI))
+                    return true;
+
+                if(other.regType() == Type::VCC
+                   && (regType() == Type::VCC_LO || regType() == Type::VCC_HI))
+                    return true;
+            }
+            else if(regType() == Type::LocalData)
+            {
+                if(other.regType() != Type::LocalData)
+                    return false;
+
+                return m_ldsAllocation->intersects(other.m_ldsAllocation);
+            }
+            else
+            {
+                if(regType() != other.regType())
+                    return false;
+
+                if(allocationState() != AllocationState::Allocated
+                   || other.allocationState() != AllocationState::Allocated)
+                    return false;
+
+                for(int a : registerIndices())
                 {
-                    if(a == b)
+                    for(int b : other.registerIndices())
                     {
-                        return true;
+                        if(a == b)
+                        {
+                            return true;
+                        }
                     }
                 }
             }
 
             return false;
+        }
+
+        bool Value::intersects(ValuePtr const& other) const
+        {
+            AssertFatal(other);
+
+            return intersects(*other);
         }
 
         std::optional<int> Allocation::controlOp() const
