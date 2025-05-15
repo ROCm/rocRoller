@@ -181,7 +181,7 @@ namespace rocRoller
             auto const&        architecture = context->targetArchitecture();
             GPUInstructionInfo info         = architecture.GetInstructionInfo(inst.getOpCode());
 
-            if(context->kernelOptions().assertWaitCntState)
+            /*if(context->kernelOptions().assertWaitCntState)
             {
                 if(info.isBranch())
                 {
@@ -194,7 +194,7 @@ namespace rocRoller
                 {
                     addLabelState(inst.getLabel());
                 }
-            }
+            }*/
 
             auto instWaitQueues = info.getWaitQueues();
 
