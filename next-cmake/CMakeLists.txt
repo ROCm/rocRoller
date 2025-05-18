@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.21.0)
 project(rocroller VERSION 1.0.0)
 
 set(ROCROLLER_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
+set(ROCROLLER_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../test")
 
 include(FetchContent)
 
@@ -9,7 +10,7 @@ set(ROCROLLER_ENABLE_HIP ON CACHE BOOL "")
 set(ROCROLLER_ENABLE_CMRC OFF CACHE BOOL "")
 set(ROCROLLER_ENABLE_LLVM ON CACHE BOOL "")
 set(ROCROLLER_ENABLE_CLIENT OFF CACHE BOOL "")
-set(ROCROLLER_BUILD_TESTING OFF CACHE BOOL "")
+set(ROCROLLER_BUILD_TESTING ON CACHE BOOL "")
 
 FetchContent_Declare(
     fmt
@@ -33,6 +34,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(libdivide)
 
 add_library(rocroller)
+add_library(roc::rocroller ALIAS rocroller)
 
 if(ROCROLLER_ENABLE_CMRC)
     FetchContent_Declare(
@@ -64,17 +66,20 @@ if(ROCROLLER_ENABLE_LLVM)
 endif()
 
 target_link_libraries(rocroller
-    PRIVATE
+    PUBLIC
         fmt::fmt
+    PRIVATE
         spdlog::spdlog
         libdivide::libdivide
 )
 
 target_include_directories(rocroller 
-    PRIVATE
-        "${ROCROLLER_LIB_DIR}/include"
+    PUBLIC
+        $<BUILD_INTERFACE:${ROCROLLER_LIB_DIR}/include>
 )
-target_compile_features(rocroller PRIVATE cxx_std_20)
+
+target_compile_features(rocroller PUBLIC cxx_std_20)
+
 add_subdirectory(host-library)
 
 if(ROCROLLER_ENABLE_CLIENT)
