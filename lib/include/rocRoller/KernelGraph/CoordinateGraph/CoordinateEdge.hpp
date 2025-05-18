@@ -28,7 +28,7 @@
 
 #include <string>
 
-#include <rocRoller/Expression_fwd.hpp>
+#include <rocRoller/Expression.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/CoordinateEdge_fwd.hpp>
 #include <rocRoller/KernelGraph/StructUtils.hpp>
 #include <rocRoller/Utilities/Utils.hpp>
