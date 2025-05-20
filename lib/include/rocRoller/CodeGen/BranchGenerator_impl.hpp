@@ -97,8 +97,15 @@ namespace rocRoller
             conditionLocation = "scc";
         }
         if(context->kernelOptions().alwaysWaitBeforeBranch)
+        {
             co_yield Instruction::Wait(
                 WaitCount::Zero(context->targetArchitecture(), "DEBUG: Wait before Branch"));
+        }
+        else
+        {
+            co_yield Instruction::Wait(
+                WaitCount::Max(context->targetArchitecture(), "Keep queues within limit"));
+        }
         co_yield_(Instruction(concatenate("s_cbranch_", conditionLocation, conditionType),
                               {},
                               {destLabel},
