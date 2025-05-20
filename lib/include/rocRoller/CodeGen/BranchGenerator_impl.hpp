@@ -51,8 +51,15 @@ namespace rocRoller
 
         auto ctx = m_context.lock();
         if(ctx->kernelOptions().alwaysWaitBeforeBranch)
+        {
             co_yield Instruction::Wait(
                 WaitCount::Zero(ctx->targetArchitecture(), "DEBUG: Wait before Branch"));
+        }
+        else
+        {
+            co_yield Instruction::Wait(
+                WaitCount::Max(ctx->targetArchitecture(), "Keep queues within max waitcnt limit"));
+        }
 
         co_yield_(Instruction("s_branch", {}, {destLabel}, {}, comment));
     }
@@ -103,8 +110,8 @@ namespace rocRoller
         }
         else
         {
-            co_yield Instruction::Wait(
-                WaitCount::Max(context->targetArchitecture(), "Keep queues within limit"));
+            co_yield Instruction::Wait(WaitCount::Max(context->targetArchitecture(),
+                                                      "Keep queues within max waitcnt limit"));
         }
         co_yield_(Instruction(concatenate("s_cbranch_", conditionLocation, conditionType),
                               {},
