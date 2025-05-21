@@ -27,7 +27,7 @@
 set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_TEST_DIR}/common")
 
 add_library(common-test-utilities OBJECT)
-
+add_library(rocroller::common-test-utilities ALIAS common-test-utilities)
 #target_compile_options(
 #    common_test_utilities PUBLIC ${COROUTINES_COMPILE_OPTION}
 #                                 ${EXTRA_COMPILE_OPTIONS}
@@ -36,7 +36,7 @@ add_library(common-test-utilities OBJECT)
 target_link_libraries(common-test-utilities
     PUBLIC
         roc::rocroller
-        mxDataGenerator
+        roc::mxDataGenerator
         hip::host
         OpenMP::OpenMP_CXX
 )

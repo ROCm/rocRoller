@@ -1,86 +1,174 @@
+################################################################################
+#
+# MIT License
+#
+# Copyright 2025 AMD ROCm(TM) Software
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell cop-
+# ies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IM-
+# PLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNE-
+# CTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+
 cmake_minimum_required(VERSION 3.21.0)
 project(rocroller VERSION 1.0.0)
 
 set(ROCROLLER_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
 set(ROCROLLER_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../test")
+set(ROCROLLER_GPUARCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../GPUArchitectureGenerator")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(CMakeRC)
 include(FetchContent)
+include(CMakeDependentOption)
 
-set(ROCROLLER_ENABLE_HIP ON CACHE BOOL "")
-set(ROCROLLER_ENABLE_CMRC OFF CACHE BOOL "")
-set(ROCROLLER_ENABLE_LLVM ON CACHE BOOL "")
-set(ROCROLLER_ENABLE_CLIENT OFF CACHE BOOL "")
-set(ROCROLLER_BUILD_TESTING ON CACHE BOOL "")
+set(ROCROLLER_ENABLE_YAML_CPP ON CACHE BOOL "Enable yaml-cpp API")
+cmake_dependent_option(ROCROLLER_ENABLE_LLVM "" ON "NOT ROCROLLER_ENABLE_YAML_CPP" OFF)
+set(ROCROLLER_BUILD_TESTING ON CACHE BOOL "Build rocRoller testing.")
+set(ROCROLLER_EMBED_ARCH_DEF ON CACHE BOOL "Embed msgpack architecture data in library.")
+set(ROCROLLER_BUILD_SHARED_LIBS ON CACHE BOOL "Build rocRoller as a shared library.")
+set(ROCROLLER_ENABLE_FETCH ON CACHE BOOL "Enable fetch content for dependencies if find_package fails.")
 
-FetchContent_Declare(
-    fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG master
-)
-FetchContent_MakeAvailable(fmt)
+find_package(fmt)
+if(NOT fmt_FOUND)
+    if(ROCROLLER_ENABLE_FETCH)
+        set(FMT_SYSTEM_HEADERS ON)
+        FetchContent_Declare(
+            fmt
+            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+            GIT_TAG master
+        )
+        FetchContent_MakeAvailable(fmt)
+    else()
+        message(FATAL_ERROR "Failed to find fmt")
+    endif()
+endif()
 
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.x
-)
-FetchContent_MakeAvailable(spdlog)
+find_package(spdlog)
+if(NOT spdlog_FOUND)
+    if(ROCROLLER_ENABLE_FETCH)
+        FetchContent_Declare(
+            spdlog
+            GIT_REPOSITORY https://github.com/gabime/spdlog.git
+            GIT_TAG v1.x
+        )
+        FetchContent_MakeAvailable(spdlog)
+    else()
+        message(FATAL_ERROR "Failed to find spdlog")
+    endif()
+endif()
 
-FetchContent_Declare(
-    libdivide
-    GIT_REPOSITORY https://github.com/ridiculousfish/libdivide.git
-    GIT_TAG master
-)
-FetchContent_MakeAvailable(libdivide)
-
-add_library(rocroller)
-add_library(roc::rocroller ALIAS rocroller)
-
-if(ROCROLLER_ENABLE_CMRC)
+find_package(libdivide)
+if(NOT libdivide_FOUND)
+if(ROCROLLER_ENABLE_FETCH)
     FetchContent_Declare(
-        cmrc
-        GIT_REPOSITORY https://github.com/vector-of-bool/cmrc.git
+        libdivide
+        GIT_REPOSITORY https://github.com/ridiculousfish/libdivide.git
         GIT_TAG master
     )
-    FetchContent_MakeAvailable(cmrc)
-    target_compile_definitions(rocroller PRIVATE ROCROLLER_EMBED_ARCH_DEF)
+    FetchContent_MakeAvailable(libdivide)
+    else()
+        message(FATAL_ERROR "Failed to find libdivide")
+    endif()
 endif()
 
-
-if(ROCROLLER_ENABLE_HIP)
-    find_package(hip REQUIRED)
-    target_compile_definitions(rocroller 
-        PUBLIC 
-            ROCROLLER_USE_HIP
-            __HIP_PLATFORM_AMD__
-    )
-    find_package(LLD REQUIRED)
-    target_link_libraries(rocroller PRIVATE hip::host)
-    target_include_directories(rocroller PRIVATE "${LLD_INCLUDE_DIRS}")
+find_package(msgpack-cxx CONFIG)
+if(msgpack-cxx_FOUND)
+    message(STATUS "Found msgpack-cxx (>=6.x)")
+    set(msgpack_libs msgpack-cxx)
+else()
+    find_package(msgpackc-cxx CONFIG REQUIRED NAMES msgpackc-cxx msgpack)
+    message(STATUS "Found msgpack (<=5.x)")
+    set(msgpack_libs msgpackc)
 endif()
+
+find_package(hip REQUIRED)
+find_package(LLVM REQUIRED)
+find_package(LLD REQUIRED)
+
+if(ROCROLLER_BUILD_SHARED_LIBS)
+    add_library(rocroller SHARED)
+else()
+    add_library(rocroller)
+    set_target_properties(rocroller PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+add_library(roc::rocroller ALIAS rocroller)
+
+if(ROCROLLER_ENABLE_YAML_CPP)
+    find_package(yaml-cpp)
+    if(NOT yaml-cpp_FOUND)
+        if(ROCROLLER_ENABLE_FETCH)
+            set(YAML_CPP_BUILD_TOOLS OFF)
+            set(YAML_BUILD_SHARED_LIBS OFF)
+            FetchContent_Declare(
+                yaml_cpp
+                GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+                GIT_TAG master
+            )
+            FetchContent_MakeAvailable(yaml_cpp)
+        else()
+            message(FATAL_ERROR "Failed to find yaml-cpp")
+        endif()
+    endif()
+    target_link_libraries(rocroller PUBLIC yaml-cpp::yaml-cpp)
+    target_compile_definitions(rocroller PRIVATE ROCROLLER_USE_YAML_CPP)
+endif()
+
+target_compile_definitions(rocroller
+    PUBLIC 
+        ROCROLLER_USE_HIP
+        __HIP_PLATFORM_AMD__
+)
 
 if(ROCROLLER_ENABLE_LLVM)
-    find_package(LLVM REQUIRED)
-    target_link_libraries(rocroller PRIVATE LLVMObjectYAML)
+    llvm_map_components_to_libnames(llvm_yaml_libs objectyaml)
+endif()
+
+llvm_map_components_to_libnames(llvm_libs mc support)
+
+target_link_libraries(rocroller PRIVATE hip::host ${msgpack_libs})
+target_include_directories(rocroller PRIVATE "${LLD_INCLUDE_DIRS}")
+
+if(ROCROLLER_ENABLE_LLVM)
+    # ROCROLLER_USE_LLVM enables the llvm yaml API
     target_compile_definitions(rocroller PRIVATE ROCROLLER_USE_LLVM)
 endif()
 
 target_link_libraries(rocroller
     PUBLIC
-        fmt::fmt
+        fmt::fmt-header-only
     PRIVATE
-        spdlog::spdlog
+        spdlog::spdlog_header_only
         libdivide::libdivide
+        ${llvm_yaml_libs}
+        ${llvm_libs}
 )
 
-target_include_directories(rocroller 
-    PUBLIC
-        $<BUILD_INTERFACE:${ROCROLLER_LIB_DIR}/include>
-)
+target_include_directories(rocroller PUBLIC $<BUILD_INTERFACE:${ROCROLLER_LIB_DIR}/include>)
 
 target_compile_features(rocroller PUBLIC cxx_std_20)
 
 add_subdirectory(host-library)
+add_subdirectory(GPUArchitectureGenerator)
+
+if(ROCROLLER_EMBED_ARCH_DEF)
+    target_link_libraries(rocroller PUBLIC $<BUILD_INTERFACE:rocroller::GPUArchitecture_def>)
+    target_compile_definitions(rocroller PRIVATE ROCROLLER_EMBED_ARCH_DEF)
+endif()
 
 if(ROCROLLER_ENABLE_CLIENT)
     add_subdirectory(client)
@@ -89,3 +177,11 @@ endif()
 if(ROCROLLER_BUILD_TESTING)
     add_subdirectory(test)
 endif()
+
+install(TARGETS rocroller EXPORT rocroller-targets)
+install(
+    EXPORT rocroller-targets
+    FILE rocroller-targets.cmake
+    NAMESPACE roc::
+    DESTINATION lib/cmake
+)

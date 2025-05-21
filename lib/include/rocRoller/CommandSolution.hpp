@@ -33,10 +33,10 @@
 #include <rocRoller/AssemblyKernel_fwd.hpp>
 #include <rocRoller/Context_fwd.hpp>
 #include <rocRoller/ExecutableKernel_fwd.hpp>
-#include <rocRoller/Expression_fwd.hpp>
 #include <rocRoller/KernelArguments.hpp>
 #include <rocRoller/KernelGraph/CoordinateGraph/Dimension_fwd.hpp>
 #include <rocRoller/KernelGraph/KernelGraph_fwd.hpp>
+#include <rocRoller/Expression.hpp>
 #include <rocRoller/KernelOptions.hpp>
 #include <rocRoller/Operations/Command_fwd.hpp>
 #include <rocRoller/Operations/OperationTag.hpp>

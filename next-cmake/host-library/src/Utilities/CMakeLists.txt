@@ -27,7 +27,6 @@
 set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/Utilities")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ReadELF.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/Settings.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/Utils.cpp"
 )

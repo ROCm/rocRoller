@@ -29,6 +29,5 @@ target_sources(rocroller
     PRIVATE
         "${_CMAKE_CURRENT_SOURCE_DIR}/Assembler.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/InProcessAssembler_assemble.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/InProcessAssembler.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/SubprocessAssembler.cpp"
 )

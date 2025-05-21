@@ -73,3 +73,35 @@ add_subdirectory(Observers)
 add_subdirectory(Utilities)
 add_subdirectory(Operations)
 add_subdirectory(KernelGraph)
+
+add_library(rocroller-no-rtti 
+    OBJECT
+        "${_CMAKE_CURRENT_SOURCE_DIR}/Utilities/ReadELF.cpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/Assemblers/InProcessAssembler.cpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/ExpressionTransformations/FastDivision.cpp"
+)
+
+target_compile_options(rocroller-no-rtti PRIVATE -fno-rtti)
+target_compile_features(rocroller-no-rtti PRIVATE cxx_std_20)
+target_compile_definitions(rocroller-no-rtti
+    PUBLIC
+        ROCROLLER_USE_HIP
+        __HIP_PLATFORM_AMD__
+)
+target_include_directories(rocroller-no-rtti
+    PRIVATE
+        "${LLVM_INCLUDE_DIRS}"
+        "${ROCROLLER_LIB_DIR}/include"
+)
+target_link_libraries(rocroller-no-rtti
+    PRIVATE
+        hip::host
+        spdlog::spdlog_header_only
+        lldELF
+)
+
+target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:rocroller-no-rtti>)
+
+set_target_properties(
+    rocroller-no-rtti PROPERTIES POSITION_INDEPENDENT_CODE ON
+)

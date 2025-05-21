@@ -30,7 +30,6 @@ target_sources(rocroller
         "${_CMAKE_CURRENT_SOURCE_DIR}/CombineShifts.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/DataFlowTagPropagation.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/FastArithmetic.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/FastDivision.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/FastMultiplication.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/FuseAssociative.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/FuseTernary.cpp"
