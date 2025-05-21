@@ -41,21 +41,30 @@ namespace rocRoller
             Count
         };
 
-        enum class Dependency
+        enum class Dependency: int
+        {
+            None = 0, //< Temporary. Should only be used for unlocking.
+            Branch,   //< Exclusive: Loops and ConditionalOp
+            M0,       //< Non-exclusive: The M0 special-purpose register
+            VCC,      //< Non-exclusive: The VCC special-purpose register
+            SCC,      //< Exclusive: The SCC special-purpose register, which is
+                      //  implicitly written by many instructions.
+            Count
+        };
+
+        enum class LockOperation: int
         {
             None = 0,
-            SCC,
-            VCC,
-            Branch,
+            Lock,
             Unlock,
-            M0,
             Count
         };
 
         class Scheduler;
         class LockState;
 
-        std::string toString(SchedulerProcedure const&);
-        std::string toString(Dependency const&);
+        std::string toString(SchedulerProcedure);
+        std::string toString(Dependency);
+        std::string toString(LockOperation);
     }
 }

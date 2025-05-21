@@ -87,7 +87,13 @@ namespace rocRoller
                     if(iterators[idx] == seqs[idx].end())
                         continue;
 
-                    float myCost = (*m_cost)(iterators[idx]);
+
+                    auto const& instr = *iterators[idx];
+
+                    if(m_lockstate.isLockedFrom(instr, idx))
+                        continue;
+
+                    float myCost = (*m_cost)(instr);
 
                     if(myCost < minCost)
                     {
@@ -101,7 +107,7 @@ namespace rocRoller
 
                 if(minCostIdx >= 0)
                 {
-                    co_yield yieldFromStream(iterators[minCostIdx]);
+                    co_yield yieldFromStream(iterators[minCostIdx], minCostIdx);
                 }
 
             } while(minCostIdx >= 0);

@@ -41,48 +41,133 @@ namespace rocRollerTest
 
     TEST_F(LockStateTest, Basic)
     {
-        auto none_lock = Scheduling::LockState(m_context);
-        auto scc_lock  = Scheduling::LockState(m_context, Scheduling::Dependency::SCC);
-        auto vcc_lock  = Scheduling::LockState(m_context, Scheduling::Dependency::VCC);
+        auto lock_inst    = Instruction::Lock(Scheduling::Dependency::SCC, "Lock Instruction");
+        auto unlock_inst  = Instruction::Unlock("Unlock Instruction");
+        auto comment_inst = Instruction::Comment("Comment Instruction");
 
-        EXPECT_EQ(none_lock.isLocked(), false);
-        EXPECT_EQ(scc_lock.isLocked(), true);
-        EXPECT_EQ(vcc_lock.isLocked(), true);
+        auto lock_m0_inst = Instruction::Lock(Scheduling::Dependency::M0, "Lock M0");
+        auto unlock_m0_inst = Instruction::Unlock(Scheduling::Dependency::M0, "Lock M0");
 
-        EXPECT_EQ(none_lock.getLockDepth(), 0);
-        EXPECT_EQ(scc_lock.getLockDepth(), 1);
-        EXPECT_EQ(vcc_lock.getLockDepth(), 1);
+        {
+            auto none_lock = Scheduling::LockState(m_context);
+            EXPECT_EQ(none_lock.isLocked(), false);
+            EXPECT_EQ(none_lock.getLockDepth(), 0);
 
-        EXPECT_EQ(none_lock.getDependency(), Scheduling::Dependency::None);
-        EXPECT_EQ(scc_lock.getDependency(), Scheduling::Dependency::SCC);
-        EXPECT_EQ(vcc_lock.getDependency(), Scheduling::Dependency::VCC);
+            EXPECT_EQ(none_lock.getTopDependency(), Scheduling::Dependency::None);
 
-        auto lock_inst = Instruction::Lock(Scheduling::Dependency::SCC, "Lock Instruction");
-        none_lock.add(lock_inst);
+            none_lock.add(lock_inst, 0);
 
-        EXPECT_EQ(none_lock.isLocked(), true);
-        EXPECT_EQ(none_lock.getLockDepth(), 1);
+            EXPECT_THROW(none_lock.add(unlock_m0_inst, 0), FatalError);
 
-        auto unlock_inst   = Instruction::Unlock("Unlock Instruction");
-        auto comment_isntr = Instruction::Comment("Comment Instruction");
-        scc_lock.add(unlock_inst);
-        vcc_lock.add(comment_isntr);
+            EXPECT_EQ(none_lock.isLocked(), true);
+            EXPECT_EQ(none_lock.getLockDepth(), 1);
 
-        EXPECT_EQ(scc_lock.isLocked(), false);
-        EXPECT_EQ(vcc_lock.isLocked(), true);
-        EXPECT_EQ(scc_lock.getDependency(), Scheduling::Dependency::None);
-        EXPECT_EQ(scc_lock.getLockDepth(), 0);
+            none_lock.add(unlock_inst, 0);
+            EXPECT_EQ(none_lock.isLocked(), false);
+            EXPECT_EQ(none_lock.getLockDepth(), 0);
 
-        vcc_lock.add(unlock_inst);
-        EXPECT_EQ(vcc_lock.isLocked(), false);
+            none_lock.add(lock_m0_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 1);
 
-        EXPECT_THROW(scc_lock.add(unlock_inst), FatalError);
-        EXPECT_THROW(vcc_lock.isValid(true), FatalError);
-        EXPECT_NO_THROW(vcc_lock.isValid(false));
+            EXPECT_EQ(none_lock.isLocked(), false);
 
-        EXPECT_THROW({ auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Unlock); },
-                     FatalError);
-        EXPECT_THROW({ auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Count); },
-                     FatalError);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+
+            none_lock.add(lock_m0_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 2);
+
+            EXPECT_EQ(none_lock.isLocked(), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+
+            none_lock.add(unlock_m0_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 1);
+
+            EXPECT_EQ(none_lock.isLocked(), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
+
+            EXPECT_THROW(none_lock.add(lock_inst, 1), FatalError);
+            none_lock.add(lock_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 2);
+
+            EXPECT_EQ(none_lock.isLocked(), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
+
+            none_lock.add(unlock_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 1);
+
+            EXPECT_EQ(none_lock.isLocked(), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
+
+            none_lock.add(unlock_inst, 0);
+            EXPECT_EQ(none_lock.getLockDepth(), 0);
+
+            EXPECT_EQ(none_lock.isLocked(), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), false);
+        }
+
+        {
+            auto scc_lock = Scheduling::LockState(m_context, Scheduling::Dependency::SCC);
+            EXPECT_EQ(scc_lock.isLocked(), true);
+            EXPECT_EQ(scc_lock.getLockDepth(), 1);
+            EXPECT_EQ(scc_lock.getTopDependency(), Scheduling::Dependency::SCC);
+            scc_lock.add(unlock_inst, 0);
+            EXPECT_EQ(scc_lock.isLocked(), false);
+            EXPECT_EQ(scc_lock.getTopDependency(), Scheduling::Dependency::None);
+            EXPECT_EQ(scc_lock.getLockDepth(), 0);
+            EXPECT_THROW(scc_lock.add(unlock_inst, 0), FatalError);
+        }
+
+        {
+            auto vcc_lock = Scheduling::LockState(m_context, Scheduling::Dependency::VCC);
+            EXPECT_EQ(vcc_lock.isLocked(), true);
+            EXPECT_EQ(vcc_lock.getLockDepth(), 1);
+            EXPECT_EQ(vcc_lock.getTopDependency(), Scheduling::Dependency::VCC);
+            vcc_lock.add(comment_inst, 0);
+            EXPECT_EQ(vcc_lock.isLocked(), true);
+            vcc_lock.add(unlock_inst, 0);
+            EXPECT_EQ(vcc_lock.isLocked(), false);
+
+            EXPECT_THROW(vcc_lock.isValid(true), FatalError);
+            EXPECT_NO_THROW(vcc_lock.isValid(false));
+        }
+
+        EXPECT_THROW(
+            { auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Count); },
+            FatalError);
     }
 }

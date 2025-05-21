@@ -412,9 +412,9 @@ namespace rocRollerTest
             co_yield(
                 Inst("(C) If Begin").lock(Scheduling::Dependency::SCC, "(C) Scheduler C Lock"));
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::Branch);
-            EXPECT_EQ(schedulerB->getLockState().getDependency(), Scheduling::Dependency::VCC);
-            EXPECT_EQ(schedulerC->getLockState().getDependency(), Scheduling::Dependency::SCC);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::Branch);
+            EXPECT_EQ(schedulerB->getLockState().getTopDependency(), Scheduling::Dependency::VCC);
+            EXPECT_EQ(schedulerC->getLockState().getTopDependency(), Scheduling::Dependency::SCC);
 
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
@@ -425,9 +425,9 @@ namespace rocRollerTest
             co_yield(Inst("(C) If Instruction"));
             co_yield(Inst("(C) If End").unlock("(C) Scheduler C Unlock"));
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::Branch);
-            EXPECT_EQ(schedulerB->getLockState().getDependency(), Scheduling::Dependency::VCC);
-            EXPECT_EQ(schedulerC->getLockState().getDependency(), Scheduling::Dependency::None);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::Branch);
+            EXPECT_EQ(schedulerB->getLockState().getTopDependency(), Scheduling::Dependency::VCC);
+            EXPECT_EQ(schedulerC->getLockState().getTopDependency(), Scheduling::Dependency::None);
 
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
@@ -444,8 +444,8 @@ namespace rocRollerTest
             co_yield(Inst("(B) Unroll 0 Begin")
                          .lock(Scheduling::Dependency::VCC, "(B) Scheduler B Lock"));
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::Branch);
-            EXPECT_EQ(schedulerB->getLockState().getDependency(), Scheduling::Dependency::VCC);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::Branch);
+            EXPECT_EQ(schedulerB->getLockState().getTopDependency(), Scheduling::Dependency::VCC);
 
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
@@ -454,8 +454,8 @@ namespace rocRollerTest
             co_yield((*schedulerC)(c_sequences));
             co_yield(Inst("(B) Unroll 0 End")).unlock("(B) Scheduler B Unlock");
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::Branch);
-            EXPECT_EQ(schedulerB->getLockState().getDependency(), Scheduling::Dependency::None);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::Branch);
+            EXPECT_EQ(schedulerB->getLockState().getTopDependency(), Scheduling::Dependency::None);
 
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
@@ -482,7 +482,7 @@ namespace rocRollerTest
             co_yield(Inst("(A) For Loop Begin")
                          .lock(Scheduling::Dependency::Branch, "(A) Scheduler A Lock"));
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::Branch);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::Branch);
 
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
@@ -491,7 +491,7 @@ namespace rocRollerTest
             co_yield(Inst("+++ Scheduler A Lock Depth: "
                           + std::to_string(schedulerA->getLockState().getLockDepth())));
 
-            EXPECT_EQ(schedulerA->getLockState().getDependency(), Scheduling::Dependency::None);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(), Scheduling::Dependency::None);
         };
 
         a_sequences.push_back(opA());

@@ -33,7 +33,7 @@ namespace rocRoller
     {
         RegisterComponentBase(Scheduler);
 
-        std::string toString(SchedulerProcedure const& proc)
+        std::string toString(SchedulerProcedure proc)
         {
             switch(proc)
             {
@@ -54,12 +54,12 @@ namespace rocRoller
             Throw<FatalError>("Invalid Scheduler Procedure: ", ShowValue(static_cast<int>(proc)));
         }
 
-        std::ostream& operator<<(std::ostream& stream, SchedulerProcedure const& proc)
+        std::ostream& operator<<(std::ostream& stream, SchedulerProcedure proc)
         {
             return stream << toString(proc);
         }
 
-        std::string toString(Dependency const& dep)
+        std::string toString(Dependency dep)
         {
             switch(dep)
             {
@@ -71,8 +71,6 @@ namespace rocRoller
                 return "VCC";
             case Dependency::Branch:
                 return "Branch";
-            case Dependency::Unlock:
-                return "Unlock";
             case Dependency::M0:
                 return "M0";
             default:
@@ -82,71 +80,177 @@ namespace rocRoller
             Throw<FatalError>("Invalid Dependency: ", ShowValue(static_cast<int>(dep)));
         }
 
-        std::ostream& operator<<(std::ostream& stream, Dependency const& dep)
+        std::ostream& operator<<(std::ostream& stream, Dependency dep)
         {
             return stream << toString(dep);
         }
 
         LockState::LockState(ContextPtr ctx)
-            : m_dependency(Dependency::None)
-            , m_lockdepth(0)
-            , m_ctx(ctx)
+            : m_ctx(ctx)
         {
         }
 
         LockState::LockState(ContextPtr ctx, Dependency dependency)
-            : m_dependency(dependency)
-            , m_ctx(ctx)
+            : m_ctx(ctx)
         {
-            AssertFatal(m_dependency != Scheduling::Dependency::Count
-                            && m_dependency != Scheduling::Dependency::Unlock,
-                        "Can not instantiate LockState with Count or Unlock dependency");
-
-            m_lockdepth = 1;
+            lock(dependency, -1);
         }
 
-        void LockState::add(Instruction const& instruction)
+        void LockState::lock(Dependency dep, int streamId)
+        {
+            AssertFatal(dep != Dependency::Count);
+
+            if(isExclusive(dep))
+            {
+                for(auto const& [myDep, myStreamId] : m_lockStack)
+                    AssertFatal(myStreamId == streamId,
+                                ShowValue(myStreamId),
+                                ShowValue(myDep),
+                                ShowValue(streamId));
+            }
+
+            m_lockStack.push_back({dep, streamId});
+            m_locks.insert(dep);
+            if(isExclusive(dep))
+                m_exclusive = true;
+            m_streamIds[dep] = streamId;
+        }
+
+        void LockState::unlock(Dependency dep, int streamId)
+        {
+            AssertFatal(m_lockStack.size() > 0);
+
+            {
+                auto [backDep, backId] = m_lockStack.back();
+
+                if(dep != Dependency::None)
+                {
+                    AssertFatal(backDep == dep);
+                }
+                else
+                {
+                    dep = backDep;
+                }
+
+                if(streamId >= 0 && backId >= 0)
+                    AssertFatal(backId == streamId);
+            }
+
+            {
+                auto iter = m_streamIds.find(dep);
+                AssertFatal(iter != m_streamIds.end()
+                                && (streamId < 0 || iter->second < 0 || iter->second == streamId),
+                            ShowValue(dep),
+                            ShowValue(streamId));
+            }
+
+            m_lockStack.pop_back();
+
+            bool foundDep = false;
+            m_exclusive   = false;
+            for(auto iter = m_lockStack.rbegin(); iter != m_lockStack.rend(); ++iter)
+            {
+                auto [myDep, myId] = *iter;
+                if(!foundDep && myDep == dep)
+                {
+                    foundDep         = true;
+                    m_streamIds[dep] = myId;
+                }
+
+                if(isExclusive(myDep))
+                    m_exclusive = true;
+
+                if(foundDep && m_exclusive)
+                    break;
+            }
+
+            {
+                auto iter = m_locks.find(dep);
+                AssertFatal(iter != m_locks.end());
+                m_locks.erase(iter);
+            }
+
+            // if(isExclusive(dep))
+            // {
+            //     m_exclusive = false;
+            //     for(int i = 0; i < static_cast<int>(Dependency::Count); i++)
+            //     {
+            //         auto thisDep = static_cast<Dependency>(i);
+
+            //         if(isExclusive(thisDep) && m_locks.contains(thisDep))
+            //         {
+            //             m_exclusive = true;
+            //             break;
+            //         }
+            //     }
+            // }
+        }
+
+        bool LockState::isLockedFrom(Instruction const& instr, int streamId) const
+        {
+            if(m_lockStack.empty())
+                return false;
+
+            if(m_exclusive)
+            {
+                if(std::get<1>(m_lockStack.back()) == streamId)
+                    return false;
+                return true;
+            }
+
+            auto lockOp = instr.getLockValue();
+            if(lockOp != LockOperation::Lock)
+                return false;
+
+            auto dep = instr.getDependency();
+
+            if(isExclusive(dep))
+            {
+                for(auto const& [myDep, myStreamId] : m_lockStack)
+                    if(myStreamId != streamId)
+                        return true;
+            }
+
+            if(m_locks.contains(dep))
+            {
+                return m_streamIds.at(dep) != streamId;
+            }
+
+            return false;
+        }
+
+        void LockState::add(Instruction const& instruction, int streamId)
         {
             lockCheck(instruction);
 
-            int inst_lockvalue = instruction.getLockValue();
+            auto lockOp = instruction.getLockValue();
 
-            // Instruction does not lock or unlock, do nothing
-            if(inst_lockvalue == 0)
+            switch(lockOp)
             {
-                return;
-            }
+            case LockOperation::None:
+                break;
 
-            // Instruction can only lock (1) or unlock (-1)
-            if(inst_lockvalue != -1 && inst_lockvalue != 1)
-            {
-                Throw<FatalError>("Invalid instruction lockstate: ", ShowValue(inst_lockvalue));
-            }
+            case LockOperation::Lock:
+                lock(instruction.getDependency(), streamId);
+                break;
 
-            // Instruction trying to unlock when there is no lock
-            if(m_lockdepth == 0 && inst_lockvalue == -1)
-            {
-                Throw<FatalError>("Trying to unlock when not locked");
-            }
+            case LockOperation::Unlock:
+                unlock(instruction.getDependency(), streamId);
+                break;
 
-            // Instruction initializes the lockstate
-            if(m_lockdepth == 0)
-            {
-                m_dependency = instruction.getDependency();
-            }
-
-            m_lockdepth += inst_lockvalue;
-
-            // Instruction releases lock
-            if(m_lockdepth == 0)
-            {
-                m_dependency = Scheduling::Dependency::None;
+            case LockOperation::Count:
+                Throw<FatalError>("Invalid LockOperation ", static_cast<int>(lockOp));
             }
         }
 
         bool LockState::isLocked() const
         {
-            return m_lockdepth > 0;
+            return m_exclusive;
+        }
+
+        constexpr bool isExclusive(Dependency dep)
+        {
+            return dep != Dependency::M0;
         }
 
         // Will grow into a function that accepts args and checks the lock is in a valid state against those args
@@ -177,23 +281,27 @@ namespace rocRoller
                             " reads a special register, it should only be used within a lock."));
         }
 
-        Dependency LockState::getDependency() const
+        Dependency LockState::getTopDependency() const
         {
-            return m_dependency;
+            if(!m_lockStack.empty())
+                return std::get<0>(m_lockStack.back());
+
+            return Dependency::None;
         }
 
         int LockState::getLockDepth() const
         {
-            return m_lockdepth;
+            return m_lockStack.size();
         }
 
-        Generator<Instruction> Scheduler::yieldFromStream(Generator<Instruction>::iterator& iter)
+        Generator<Instruction> Scheduler::yieldFromStream(Generator<Instruction>::iterator& iter,
+                                                          int streamId)
         {
             do
             {
                 AssertFatal(iter != std::default_sentinel_t{},
                             "End of instruction stream reached without unlocking");
-                m_lockstate.add(*iter);
+                m_lockstate.add(*iter, streamId);
                 co_yield *iter;
                 ++iter;
                 co_yield consumeComments(iter, std::default_sentinel_t{});

@@ -79,7 +79,8 @@ namespace rocRoller
 
                     while(iterators[i] != seqs[i].end())
                     {
-                        co_yield yieldFromStream(iterators[i]);
+                        for(auto const& inst: yieldFromStream(iterators[i], i))
+                            co_yield inst;
                         yieldedAny = true;
                     }
 
