@@ -25,22 +25,8 @@
 
 include(CTest)
 
-find_package(mxDataGenerator)
-if(NOT mxDataGenerator_FOUND)
-    if(ROCROLLER_ENABLE_FETCH)
-        FetchContent_Declare(
-            mxDataGenerator
-            GIT_REPOSITORY "https://github.com/ROCm/mxDataGenerator.git"
-            GIT_TAG e74b2c1b6f357c053b27958177ca454ba21918b7
-        )
-        FetchContent_MakeAvailable(mxDataGenerator)
-    else()
-        message(FATAL_ERROR "Failed to find mxDataGenerator")
-    endif()
-endif()
-
 #set(CMAKE_FIND_DEBUG_MODE ON)
-find_package(Catch2 REQUIRED)
+find_package(Catch2)
 if(catch2_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
         FetchContent_Declare(
@@ -54,7 +40,7 @@ if(catch2_FOUND)
     endif()
 endif()
 
-find_package(GTest REQUIRED)
+find_package(GTest)
 if(gtest_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
         FetchContent_Declare(

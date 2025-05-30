@@ -44,14 +44,14 @@ option(ROCROLLER_EMBED_ARCH_DEF "Embed msgpack architecture data in library." ON
 option(ROCROLLER_BUILD_SHARED_LIBS "Build rocRoller as a shared library." ON)
 option(ROCROLLER_ENABLE_FETCH "Enable fetch content for dependencies if find_package fails." OFF)
 
-find_package(fmt)
+find_package(fmt 11.1.3)
 if(NOT fmt_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
         set(FMT_SYSTEM_HEADERS ON)
         FetchContent_Declare(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-            GIT_TAG master
+            GIT_TAG 11.1.3
         )
         FetchContent_MakeAvailable(fmt)
     else()
@@ -84,6 +84,20 @@ if(ROCROLLER_ENABLE_FETCH)
     FetchContent_MakeAvailable(libdivide)
     else()
         message(FATAL_ERROR "Failed to find libdivide")
+    endif()
+endif()
+
+find_package(mxDataGenerator)
+if(NOT mxDataGenerator_FOUND)
+    if(ROCROLLER_ENABLE_FETCH)
+        FetchContent_Declare(
+            mxDataGenerator
+            GIT_REPOSITORY "https://github.com/ROCm/mxDataGenerator.git"
+            GIT_TAG 6f334f6a3c6ddf45a9330743030970b948e90514
+        )
+        FetchContent_MakeAvailable(mxDataGenerator)
+    else()
+        message(FATAL_ERROR "Failed to find mxDataGenerator")
     endif()
 endif()
 
@@ -131,11 +145,12 @@ endif()
 add_library(roc::rocroller ALIAS rocroller)
 
 if(ROCROLLER_ENABLE_YAML_CPP)
-    find_package(yaml-cpp)
+    find_package(yaml-cpp 0.8.0)
     if(NOT yaml-cpp_FOUND)
         if(ROCROLLER_ENABLE_FETCH)
             set(YAML_CPP_BUILD_TOOLS OFF)
             set(YAML_BUILD_SHARED_LIBS OFF)
+            set(YAML_CPP_INSTALL ON)
             FetchContent_Declare(
                 yaml_cpp
                 GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
