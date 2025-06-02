@@ -146,24 +146,23 @@ namespace rocRoller
                 //
                 if(iot::outputting(io))
                 {
-                    KernelGraph::KernelGraphPtr graph = nullptr;
                     // TODO: only do this for appropriate logging levels
-                    if(kern.m_kernelGraph)
+                    if(Settings::getInstance()->get(Settings::SerializeKernelGraph))
                     {
-                        graph = kern.m_kernelGraph;
+                        iot::mapOptional(io, ".kernel_graph", kern.m_kernelGraph);
                     }
-                    iot::mapRequired(io, ".kernel_graph", graph);
 
-                    if(graph)
+                    if(kern.m_kernelGraph
+                       && Settings::getInstance()->get(Settings::SerializeKernelGraphDOT))
                     {
                         // Include both DOT and new serialization for now.
-                        auto dot = graph->toDOT();
+                        auto dot = kern.m_kernelGraph->toDOT();
                         iot::mapOptional(io, ".kernel_graph_dot", dot);
                     }
                 }
                 else
                 {
-                    iot::mapRequired(io, ".kernel_graph", kern.m_kernelGraph);
+                    iot::mapOptional(io, ".kernel_graph", kern.m_kernelGraph);
 
                     AssertFatal(workgroupSize.size() == 3);
                     kern.m_workgroupSize = {workgroupSize[0], workgroupSize[1], workgroupSize[2]};
