@@ -311,9 +311,8 @@ namespace GEMMDriverTest
             }
             else if(gemm.scaleAMode == Operations::ScaleMode::SingleScale)
             {
-                // Using Raw32 now so that ArgumentLoader doesn't bail for sub-dword arguments
                 tagTensorScaleA
-                    = command->addOperation(rocRoller::Operations::Scalar(DataType::UInt32));
+                    = command->addOperation(rocRoller::Operations::Scalar(DataType::E8M0));
                 tagLoadScaleA
                     = command->addOperation(rocRoller::Operations::T_Load_Scalar(*tagTensorScaleA));
                 tagBlockScaleA = mulInputA = command->addOperation(
@@ -336,9 +335,8 @@ namespace GEMMDriverTest
             }
             else if(gemm.scaleBMode == Operations::ScaleMode::SingleScale)
             {
-                // Using Raw32 now so that ArgumentLoader doesn't bail for sub-dword arguments
                 tagTensorScaleB
-                    = command->addOperation(rocRoller::Operations::Scalar(DataType::UInt32));
+                    = command->addOperation(rocRoller::Operations::Scalar(DataType::E8M0));
                 tagLoadScaleB
                     = command->addOperation(rocRoller::Operations::T_Load_Scalar(*tagTensorScaleB));
                 tagBlockScaleB = mulInputB = command->addOperation(
