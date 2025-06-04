@@ -1670,9 +1670,10 @@ namespace GEMMDriverTest
         uint const numMFMAsPerWave      = problem.macK / waveK;
         uint const numMFMAs             = numDWavetilesPerWave * numMFMAsPerWave;
 
-        uint const elementsPerWavetile = waveM * waveK / wfs;
-        uint const elementBits         = DataTypeInfo::Get(typeAB).elementBits;
-        uint const elementsPerTrLoad   = bitsPerTransposeLoad(elementBits) / elementBits;
+        auto const& arch                = m_context->targetArchitecture();
+        uint const  elementsPerWavetile = waveM * waveK / wfs;
+        uint const  elementBits         = DataTypeInfo::Get(typeAB).elementBits;
+        uint const  elementsPerTrLoad   = bitsPerTransposeLoad(arch, elementBits) / elementBits;
 
         uint const bitsPerWavetileLoad = elementsPerWavetile * elementBits;
 
@@ -2024,12 +2025,13 @@ namespace GEMMDriverTest
         uint const numMFMAsPerWave      = problem.macK / waveK;
         uint const numMFMAs             = numDWavetilesPerWave * numMFMAsPerWave;
 
-        uint const elementsPerWavetile = waveM * waveK / wfs;
-        uint const elementsPerTrLoad   = bitsPerTransposeLoad(elementBits) / elementBits;
+        auto const& arch                = m_context->targetArchitecture();
+        uint const  elementsPerWavetile = waveM * waveK / wfs;
+        uint const  elementsPerTrLoad   = bitsPerTransposeLoad(arch, elementBits) / elementBits;
 
         uint const bitsPerABMemOp = (elementBits == 6 ? 96 : 128);
         uint const trLoadsPerWave
-            = elementsPerWavetile * elementBits / bitsPerTransposeLoad(elementBits);
+            = elementsPerWavetile * elementBits / bitsPerTransposeLoad(arch, elementBits);
         uint const dsLoadsPerWave = elementsPerWavetile * elementBits / bitsPerABMemOp;
 
         uint const bitsLoadedForAB
@@ -2666,12 +2668,13 @@ namespace GEMMDriverTest
         uint const numMFMAsPerWave      = problem.macK / waveK;
         uint const numMFMAs             = numDWavetilesPerWave * numMFMAsPerWave;
 
-        uint const elementsPerWavetile = waveM * waveK / wfs;
-        uint const elementsPerTrLoad   = bitsPerTransposeLoad(elementBits) / elementBits;
+        auto const& arch                = m_context->targetArchitecture();
+        uint const  elementsPerWavetile = waveM * waveK / wfs;
+        uint const  elementsPerTrLoad   = bitsPerTransposeLoad(arch, elementBits) / elementBits;
 
         uint const bitsPerABMemOp = (elementBits == 6 ? 96 : 128);
         uint const trLoadsPerWave
-            = elementsPerWavetile * elementBits / bitsPerTransposeLoad(elementBits);
+            = elementsPerWavetile * elementBits / bitsPerTransposeLoad(arch, elementBits);
         uint const dsLoadsPerWave = elementsPerWavetile * elementBits / bitsPerABMemOp;
 
         uint const bitsLoadedForAB
