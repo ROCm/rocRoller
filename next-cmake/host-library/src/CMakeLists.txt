@@ -97,6 +97,7 @@ target_link_libraries(rocroller-no-rtti
     PRIVATE
         hip::host
         spdlog::spdlog_header_only
+        fmt::fmt-header-only
         lldELF
 )
 
