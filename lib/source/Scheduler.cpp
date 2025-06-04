@@ -65,14 +65,14 @@ namespace rocRoller
             {
             case Dependency::None:
                 return "None";
-            case Dependency::SCC:
-                return "SCC";
-            case Dependency::VCC:
-                return "VCC";
             case Dependency::Branch:
                 return "Branch";
             case Dependency::M0:
                 return "M0";
+            case Dependency::VCC:
+                return "VCC";
+            case Dependency::SCC:
+                return "SCC";
             default:
                 break;
             }
@@ -85,143 +85,160 @@ namespace rocRoller
             return stream << toString(dep);
         }
 
+        std::string toString(LockOperation lockOp)
+        {
+            switch(lockOp)
+            {
+            case LockOperation::None:
+                return "None";
+            case LockOperation::Lock:
+                return "Lock";
+            case LockOperation::Unlock:
+                return "Unlock";
+            default:
+                break;
+            }
+
+            Throw<FatalError>("Invalid LockOperation: ", ShowValue(static_cast<int>(lockOp)));
+        }
+
+        std::ostream& operator<<(std::ostream& stream, LockOperation lockOp)
+        {
+            return stream << toString(lockOp);
+        }
+
         LockState::LockState(ContextPtr ctx)
             : m_ctx(ctx)
         {
         }
 
+        // why streamID -1?
         LockState::LockState(ContextPtr ctx, Dependency dependency)
             : m_ctx(ctx)
         {
             lock(dependency, -1);
         }
 
+        // Can you lock Dependency::None? No
+        // We may want to get rid of None.
         void LockState::lock(Dependency dep, int streamId)
         {
-            AssertFatal(dep != Dependency::Count);
+            AssertFatal(dep != Dependency::Count && dep != Dependency::None);
 
-            if(isExclusive(dep))
+            auto topDep = getTopDependency(streamId);
+            AssertFatal(topDep <= dep,
+                        "Out of order dependency lock can't be acquired.",
+                        ShowValue(topDep),
+                        ShowValue(dep));
+
+            // Can a stream acquire the same lock (single resource, just the top) multiple times? yes
+            // VCC -> SCC -> SCC -> SCC
+            if(m_stream.contains(dep))
             {
-                for(auto const& [myDep, myStreamId] : m_lockStack)
-                    AssertFatal(myStreamId == streamId,
-                                ShowValue(myStreamId),
-                                ShowValue(myDep),
-                                ShowValue(streamId));
+                AssertFatal(
+                    topDep == dep && m_stream[dep] == streamId,
+                    "Only the same stream can acquire the top dependency lock multiple times.",
+                    ShowValue(dep),
+                    ShowValue(m_stream[dep]),
+                    ShowValue(streamId));
             }
 
-            m_lockStack.push_back({dep, streamId});
+            m_stack[streamId].push(dep);
+            m_stream[dep] = streamId;
             m_locks.insert(dep);
-            if(isExclusive(dep))
-                m_exclusive = true;
-            m_streamIds[dep] = streamId;
+
+            if(isNonPreemptible(dep))
+                m_nonPreemptibleStream = streamId;
         }
 
         void LockState::unlock(Dependency dep, int streamId)
         {
-            AssertFatal(m_lockStack.size() > 0);
+            AssertFatal(streamId >= 0);
+            AssertFatal(m_stack.contains(streamId));
+            AssertFatal(m_stack[streamId].size() > 0);
+            AssertFatal(dep != Dependency::Count);
 
+            // LIFO
             {
-                auto [backDep, backId] = m_lockStack.back();
-
+                auto topDep = getTopDependency(streamId);
                 if(dep != Dependency::None)
-                {
-                    AssertFatal(backDep == dep);
-                }
+                    AssertFatal(topDep == dep, "locks can only be released in the LIFO order");
                 else
-                {
-                    dep = backDep;
-                }
-
-                if(streamId >= 0 && backId >= 0)
-                    AssertFatal(backId == streamId);
+                    dep = topDep;
             }
 
             {
-                auto iter = m_streamIds.find(dep);
-                AssertFatal(iter != m_streamIds.end()
-                                && (streamId < 0 || iter->second < 0 || iter->second == streamId),
+                auto iter = m_stream.find(dep);
+                AssertFatal(iter != m_stream.end() && iter->second == streamId,
                             ShowValue(dep),
                             ShowValue(streamId));
             }
 
-            m_lockStack.pop_back();
+            // pop the stack top
+            m_stack[streamId].pop();
 
-            bool foundDep = false;
-            m_exclusive   = false;
-            for(auto iter = m_lockStack.rbegin(); iter != m_lockStack.rend(); ++iter)
-            {
-                auto [myDep, myId] = *iter;
-                if(!foundDep && myDep == dep)
-                {
-                    foundDep         = true;
-                    m_streamIds[dep] = myId;
-                }
-
-                if(isExclusive(myDep))
-                    m_exclusive = true;
-
-                if(foundDep && m_exclusive)
-                    break;
-            }
-
+            // erase one instance of dep from the multiset.
+            // if that's the last instance, then erase its streamID mapping.
             {
                 auto iter = m_locks.find(dep);
                 AssertFatal(iter != m_locks.end());
                 m_locks.erase(iter);
+
+                if(!m_locks.contains(dep))
+                    m_stream.erase(dep);
             }
 
-            // if(isExclusive(dep))
-            // {
-            //     m_exclusive = false;
-            //     for(int i = 0; i < static_cast<int>(Dependency::Count); i++)
-            //     {
-            //         auto thisDep = static_cast<Dependency>(i);
+            // update m_nonPreemptibleStream state if needed
+            m_nonPreemptibleStream = -1;
+            auto tempDep           = getTopDependency(streamId);
+            while(tempDep != Dependency::None && !(m_locks.count(tempDep) > 0))
+            {
+                if(isNonPreemptible(tempDep))
+                {
+                    m_nonPreemptibleStream = streamId;
+                    break;
+                }
 
-            //         if(isExclusive(thisDep) && m_locks.contains(thisDep))
-            //         {
-            //             m_exclusive = true;
-            //             break;
-            //         }
-            //     }
-            // }
+                auto depVal = static_cast<int>(tempDep);
+                depVal--;
+                tempDep = static_cast<Dependency>(depVal);
+            }
         }
 
         bool LockState::isLockedFrom(Instruction const& instr, int streamId) const
         {
-            if(m_lockStack.empty())
+            if(m_stack.empty())
                 return false;
 
-            if(m_exclusive)
+            if(isLocked())
             {
-                if(std::get<1>(m_lockStack.back()) == streamId)
+                if(m_nonPreemptibleStream == streamId)
                     return false;
                 return true;
             }
 
             auto lockOp = instr.getLockValue();
+            // if the given instr is not a lock instruction.
             if(lockOp != LockOperation::Lock)
                 return false;
 
-            auto dep = instr.getDependency();
-
-            if(isExclusive(dep))
-            {
-                for(auto const& [myDep, myStreamId] : m_lockStack)
-                    if(myStreamId != streamId)
-                        return true;
-            }
-
+            auto dep    = instr.getDependency();
+            auto topDep = getTopDependency(streamId);
+            // check if the order of the dependencies satisfies
+            AssertFatal(topDep <= dep,
+                        "Out of order dependency lock can't be acquired.",
+                        ShowValue(topDep),
+                        ShowValue(dep));
+            // check if the dependency is already locked
             if(m_locks.contains(dep))
-            {
-                return m_streamIds.at(dep) != streamId;
-            }
+                return m_stream.at(dep) != streamId;
 
             return false;
         }
 
         void LockState::add(Instruction const& instruction, int streamId)
         {
-            lockCheck(instruction);
+            //lockCheck(instruction);
 
             auto lockOp = instruction.getLockValue();
 
@@ -245,12 +262,12 @@ namespace rocRoller
 
         bool LockState::isLocked() const
         {
-            return m_exclusive;
+            return m_nonPreemptibleStream >= 0;
         }
 
-        constexpr bool isExclusive(Dependency dep)
+        constexpr bool isNonPreemptible(Dependency dep)
         {
-            return dep != Dependency::M0;
+            return dep != Dependency::M0 && dep != Dependency::VCC;
         }
 
         // Will grow into a function that accepts args and checks the lock is in a valid state against those args
@@ -281,17 +298,20 @@ namespace rocRoller
                             " reads a special register, it should only be used within a lock."));
         }
 
-        Dependency LockState::getTopDependency() const
+        Dependency LockState::getTopDependency(int streamId) const
         {
-            if(!m_lockStack.empty())
-                return std::get<0>(m_lockStack.back());
+            if(m_stack.contains(streamId) && !(m_stack.at(streamId).empty()))
+                return m_stack.at(streamId).top();
 
             return Dependency::None;
         }
 
-        int LockState::getLockDepth() const
+        int LockState::getLockDepth(int streamId) const
         {
-            return m_lockStack.size();
+            if(m_stack.contains(streamId))
+                return m_stack.at(streamId).size();
+
+            return 0;
         }
 
         Generator<Instruction> Scheduler::yieldFromStream(Generator<Instruction>::iterator& iter,
@@ -300,7 +320,8 @@ namespace rocRoller
             do
             {
                 AssertFatal(iter != std::default_sentinel_t{},
-                            "End of instruction stream reached without unlocking");
+                            "End of instruction stream reached without unlocking",
+                            ShowValue(streamId));
                 m_lockstate.add(*iter, streamId);
                 co_yield *iter;
                 ++iter;

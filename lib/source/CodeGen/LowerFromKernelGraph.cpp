@@ -173,6 +173,7 @@ namespace rocRoller
 
                     // Generate code for all the nodes we found.
 
+                    // vector of instruction streams
                     std::vector<Generator<Instruction>> generators;
                     for(auto tag : nodes)
                     {
@@ -180,11 +181,6 @@ namespace rocRoller
                         generators.push_back(call(tag, op, coords));
                     }
 
-                    if(generators.size() == 1)
-                    {
-                        co_yield std::move(generators[0]);
-                    }
-                    else
                     {
                         co_yield Instruction::Comment(
                             concatenate("BEGIN Scheduler for operations ", nodes));
@@ -192,14 +188,15 @@ namespace rocRoller
                         auto cost = Settings::getInstance()->get(Settings::SchedulerCost);
                         auto scheduler
                             = Component::GetNew<Scheduling::Scheduler>(proc, cost, m_context);
+                        auto generator = (*scheduler)(generators);
 
-                        if(!scheduler->supportsAddingStreams())
+                        if(generators.size() == 1 || !scheduler->supportsAddingStreams())
                         {
-                            co_yield (*scheduler)(generators);
+                            for(auto gen : generator)
+                                co_yield gen;
                         }
                         else
                         {
-                            auto generator         = (*scheduler)(generators);
                             auto numCompletedNodes = m_completedControlNodes.size();
 
                             for(auto iter = generator.begin(); iter != generator.end(); ++iter)
@@ -1241,7 +1238,14 @@ namespace rocRoller
 
             auto visitor = CodeGeneratorVisitor(graphPtr, kernel);
 
-            co_yield visitor.generate();
+            for(auto what : visitor.generate())
+            {
+                //if(!(what.getOpCode().empty()))
+                //    std::cout << what.getOpCode() << std::endl;
+                if(what.getLockValue() != Scheduling::LockOperation::None)
+                    std::cout << what.getLockValue() << " " << what.getDependency() << std::endl;
+                co_yield what;
+            }
         }
     }
 }

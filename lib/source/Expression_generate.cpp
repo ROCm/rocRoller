@@ -190,13 +190,13 @@ namespace rocRoller
              * value has been consumed.
              */
             Generator<Instruction> prepareSourceOperands(std::vector<Register::ValuePtr>& results,
-                                                         bool&                      schedulerLocked,
+                                                         int&                       schedulerLocked,
                                                          std::vector<ExpressionPtr> exprs)
             {
                 std::vector<char>       done(exprs.size(), false);
                 std::vector<ResultType> resultTypes(exprs.size());
                 results         = std::vector<Register::ValuePtr>(exprs.size(), nullptr);
-                schedulerLocked = false;
+                schedulerLocked = 0;
 
                 auto sprUses = [] {
                     std::unordered_map<Register::Type, size_t> m;
@@ -279,7 +279,7 @@ namespace rocRoller
                         }
 
                         sprStores--;
-                        schedulerLocked = true;
+                        schedulerLocked++;
 
                         switch(regType)
                         {
@@ -308,7 +308,7 @@ namespace rocRoller
                 {
                     auto sccExprIdx = maybeSccExprIdx.value();
                     sprStores--;
-                    schedulerLocked = true;
+                    schedulerLocked++;
                     co_yield Instruction::Lock(Scheduling::Dependency::SCC,
                                                "Expression temporary in special register (SCC)");
                     co_yield call(results[sccExprIdx], exprs[sccExprIdx]);
@@ -519,7 +519,7 @@ namespace rocRoller
             operator()(Register::ValuePtr& dest, T const& expr)
             {
                 co_yield Instruction::Comment(toString(expr));
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.rhs};
 
@@ -535,8 +535,11 @@ namespace rocRoller
 
                 co_yield generateArithmeticBinary(dest, expr, results[0], results[1], resType);
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             /*
@@ -556,7 +559,7 @@ namespace rocRoller
                         T,
                         SRConvert<DataType::FP8>> || std::is_same_v<T, SRConvert<DataType::BF8>>);
 
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.rhs};
 
@@ -576,8 +579,11 @@ namespace rocRoller
                         dest->element({i}), results[0]->element({i}), results[1]->element({0}));
                 }
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             template <typename T>
@@ -586,7 +592,7 @@ namespace rocRoller
             operator()(Register::ValuePtr& dest, T const& expr)
             {
                 co_yield Instruction::Comment(toString(expr));
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.rhs};
 
@@ -603,8 +609,11 @@ namespace rocRoller
                 co_yield generateComparisonOrLogicalBinary(
                     dest, expr, results[0], results[1], resType);
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             template <CTernary Operation>
@@ -612,7 +621,7 @@ namespace rocRoller
                 !CTernaryMixed<Operation> && CKernelExecuteTime<Operation>) Generator<Instruction>
             operator()(Register::ValuePtr& dest, Operation const& expr)
             {
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.r1hs, expr.r2hs};
 
@@ -658,15 +667,18 @@ namespace rocRoller
                     co_yield generateOp<Operation>(dest->element({k}), lhsVal, r1hsVal, r2hsVal);
                 }
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             template <CTernaryMixed Operation>
             requires CKernelExecuteTime<Operation> Generator<Instruction>
             operator()(Register::ValuePtr& dest, Operation const& expr)
             {
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.r1hs, expr.r2hs};
 
@@ -697,13 +709,16 @@ namespace rocRoller
                 //If dest, results have multiple elements, handled inside generateOp
                 co_yield generateOp<Operation>(dest, results[0], results[1], results[2]);
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             Generator<Instruction> operator()(Register::ValuePtr& dest, Conditional const& expr)
             {
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.lhs, expr.r1hs, expr.r2hs};
 
@@ -736,15 +751,18 @@ namespace rocRoller
                         dest->element({k}), cond->element({k}), lhsVal, rhsVal, expr);
                 }
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             template <CUnary Operation>
             requires CKernelExecuteTime<Operation> Generator<Instruction>
             operator()(Register::ValuePtr& dest, Operation const& expr)
             {
-                bool                            schedulerLocked = false;
+                int                             schedulerLocked = 0;
                 std::vector<Register::ValuePtr> results;
                 std::vector<ExpressionPtr>      subExprs{expr.arg};
 
@@ -845,8 +863,11 @@ namespace rocRoller
                     }
                 }
 
-                if(schedulerLocked)
+                while(schedulerLocked > 0)
+                {
+                    schedulerLocked--;
                     co_yield Instruction::Unlock("Expression temporary in special register");
+                }
             }
 
             Generator<Instruction> operator()(Register::ValuePtr& dest, MatrixMultiply expr)

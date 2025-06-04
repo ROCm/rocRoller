@@ -45,29 +45,29 @@ namespace rocRollerTest
         auto unlock_inst  = Instruction::Unlock("Unlock Instruction");
         auto comment_inst = Instruction::Comment("Comment Instruction");
 
-        auto lock_m0_inst = Instruction::Lock(Scheduling::Dependency::M0, "Lock M0");
+        auto lock_m0_inst   = Instruction::Lock(Scheduling::Dependency::M0, "Lock M0");
         auto unlock_m0_inst = Instruction::Unlock(Scheduling::Dependency::M0, "Lock M0");
 
         {
             auto none_lock = Scheduling::LockState(m_context);
             EXPECT_EQ(none_lock.isLocked(), false);
-            EXPECT_EQ(none_lock.getLockDepth(), 0);
+            EXPECT_EQ(none_lock.getLockDepth(0), 0);
 
-            EXPECT_EQ(none_lock.getTopDependency(), Scheduling::Dependency::None);
+            EXPECT_EQ(none_lock.getTopDependency(0), Scheduling::Dependency::None);
 
             none_lock.add(lock_inst, 0);
 
             EXPECT_THROW(none_lock.add(unlock_m0_inst, 0), FatalError);
 
             EXPECT_EQ(none_lock.isLocked(), true);
-            EXPECT_EQ(none_lock.getLockDepth(), 1);
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             none_lock.add(unlock_inst, 0);
             EXPECT_EQ(none_lock.isLocked(), false);
-            EXPECT_EQ(none_lock.getLockDepth(), 0);
+            EXPECT_EQ(none_lock.getLockDepth(0), 0);
 
             none_lock.add(lock_m0_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 1);
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             EXPECT_EQ(none_lock.isLocked(), false);
 
@@ -78,7 +78,7 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
 
             none_lock.add(lock_m0_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 2);
+            EXPECT_EQ(none_lock.getLockDepth(0), 2);
 
             EXPECT_EQ(none_lock.isLocked(), false);
 
@@ -89,7 +89,7 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
 
             none_lock.add(unlock_m0_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 1);
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             EXPECT_EQ(none_lock.isLocked(), false);
 
@@ -103,7 +103,7 @@ namespace rocRollerTest
 
             EXPECT_THROW(none_lock.add(lock_inst, 1), FatalError);
             none_lock.add(lock_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 2);
+            EXPECT_EQ(none_lock.getLockDepth(0), 2);
 
             EXPECT_EQ(none_lock.isLocked(), true);
 
@@ -116,7 +116,7 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
 
             none_lock.add(unlock_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 1);
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             EXPECT_EQ(none_lock.isLocked(), false);
 
@@ -129,7 +129,7 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
 
             none_lock.add(unlock_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(), 0);
+            EXPECT_EQ(none_lock.getLockDepth(0), 0);
 
             EXPECT_EQ(none_lock.isLocked(), false);
 
@@ -143,20 +143,20 @@ namespace rocRollerTest
         {
             auto scc_lock = Scheduling::LockState(m_context, Scheduling::Dependency::SCC);
             EXPECT_EQ(scc_lock.isLocked(), true);
-            EXPECT_EQ(scc_lock.getLockDepth(), 1);
-            EXPECT_EQ(scc_lock.getTopDependency(), Scheduling::Dependency::SCC);
+            EXPECT_EQ(scc_lock.getLockDepth(0), 1);
+            EXPECT_EQ(scc_lock.getTopDependency(0), Scheduling::Dependency::SCC);
             scc_lock.add(unlock_inst, 0);
             EXPECT_EQ(scc_lock.isLocked(), false);
-            EXPECT_EQ(scc_lock.getTopDependency(), Scheduling::Dependency::None);
-            EXPECT_EQ(scc_lock.getLockDepth(), 0);
+            EXPECT_EQ(scc_lock.getTopDependency(0), Scheduling::Dependency::None);
+            EXPECT_EQ(scc_lock.getLockDepth(0), 0);
             EXPECT_THROW(scc_lock.add(unlock_inst, 0), FatalError);
         }
 
         {
             auto vcc_lock = Scheduling::LockState(m_context, Scheduling::Dependency::VCC);
             EXPECT_EQ(vcc_lock.isLocked(), true);
-            EXPECT_EQ(vcc_lock.getLockDepth(), 1);
-            EXPECT_EQ(vcc_lock.getTopDependency(), Scheduling::Dependency::VCC);
+            EXPECT_EQ(vcc_lock.getLockDepth(0), 1);
+            EXPECT_EQ(vcc_lock.getTopDependency(0), Scheduling::Dependency::VCC);
             vcc_lock.add(comment_inst, 0);
             EXPECT_EQ(vcc_lock.isLocked(), true);
             vcc_lock.add(unlock_inst, 0);
@@ -166,8 +166,7 @@ namespace rocRollerTest
             EXPECT_NO_THROW(vcc_lock.isValid(false));
         }
 
-        EXPECT_THROW(
-            { auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Count); },
-            FatalError);
+        EXPECT_THROW({ auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Count); },
+                     FatalError);
     }
 }

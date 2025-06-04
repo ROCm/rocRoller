@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -40,21 +41,21 @@ namespace rocRoller
 {
     namespace Scheduling
     {
-        constexpr bool isExclusive(Dependency dep);
+        constexpr bool isNonPreemptible(Dependency dep);
 
         /**
          * Locking Rules
-         * 
+         *
          * A scheduler has a number of streams which each will yield a sequence of instructions.
          * The job of the scheduler is to pick (i.e. schedule) the instruction from the beginning of one of the streams, and then repeat until there are no more streams with any instructions left.
-         * 
+         *
          * - If a scheduler schedules an exclusive lock, it must continue to
          * select instructions from that same stream until that lock has been
          * unlocked.
          *   - That stream might include further lock/unlock instructions which
          * must occur in a last-in, first-out order, those should be treated
          * as a stack to track when the original lock has been unlocked.
-         * 
+         *
          * - If a stream yields any kind of lock, it cannot yield a lower-ranked
          *   lock until it releases the higher-ranked lock.
          * - If a scheduler schedules a non-exclusive lock, it cannot schedule
@@ -70,7 +71,7 @@ namespace rocRoller
          *          7. Stream 0 locks SCC.  Pull from Stream 0 until SCC is unlocked.
          *          8. Stream 0 unlocks VCC.
          *          9. Stream 0 unlocks M0.
-         * 
+         *
          * - If a scheduler schedules a non-exclusive lock, it cannot schedule a
          *   lower-ranked exclusive lock from any stream until that lock is
          *   released.
@@ -80,7 +81,7 @@ namespace rocRoller
          *            releases M0.
          *          - If stream 2 locks VCC, stream 1 can lock SCC.  We will
          *            then have to pull from stream 1 until SCC is released.
-         * 
+         *
          */
         class LockState
         {
@@ -103,17 +104,17 @@ namespace rocRoller
              */
             void lockCheck(Instruction const& instr);
 
-            Dependency getTopDependency() const;
-            int        getLockDepth() const;
+            Dependency getTopDependency(int streamId) const;
+            int        getLockDepth(int streamId) const;
 
         private:
             void lock(Dependency dep, int streamId);
             void unlock(Dependency dep, int streamId);
 
-            std::deque<std::tuple<Dependency, int>> m_lockStack;
-            std::unordered_multiset<Dependency> m_locks;
-            std::map<Dependency, int> m_streamIds;
-            bool m_exclusive = false;
+            std::map<int, std::stack<Dependency>> m_stack;
+            std::map<Dependency, int>             m_stream;
+            std::unordered_multiset<Dependency>   m_locks;
+            int                                   m_nonPreemptibleStream = -1;
 
             std::weak_ptr<rocRoller::Context> m_ctx;
         };
@@ -168,7 +169,8 @@ namespace rocRoller
              * - At least one instruction
              * - If that first instruction locks the stream, yields until the stream is unlocked.
              */
-            Generator<Instruction> yieldFromStream(Generator<Instruction>::iterator& iter, int streamId);
+            Generator<Instruction> yieldFromStream(Generator<Instruction>::iterator& iter,
+                                                   int                               streamId);
 
             /**
              * @brief Handles new nodes being added to the instruction streams being scheduled.
@@ -184,6 +186,7 @@ namespace rocRoller
 
         std::ostream& operator<<(std::ostream&, SchedulerProcedure proc);
         std::ostream& operator<<(std::ostream&, Dependency dep);
+        std::ostream& operator<<(std::ostream& stream, LockOperation lockOp);
     }
 }
 

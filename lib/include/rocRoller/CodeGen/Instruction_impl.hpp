@@ -353,7 +353,8 @@ namespace rocRoller
             && m_label.empty()
             && m_waitCount == WaitCount()
             && m_opcode.empty()
-            && m_dependency == Scheduling::Dependency::None;
+            && m_dependency == Scheduling::Dependency::None
+        && m_lockOp == Scheduling::LockOperation::None;
         // clang-format on
     }
 
