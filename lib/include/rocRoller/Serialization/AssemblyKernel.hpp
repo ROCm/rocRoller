@@ -130,10 +130,11 @@ namespace rocRoller
                 iot::mapRequired(io, ".agpr_count", agpr_count);
                 iot::mapRequired(io, ".max_flat_workgroup_size", max_flat_workgroup_size);
                 iot::mapRequired(io, ".workgroup_size", workgroupSize);
-
-                //
-                // Serialized and de-serialized
-                //
+                if(not iot::outputting(io))
+                {
+                    AssertFatal(workgroupSize.size() == 3);
+                    kern.m_workgroupSize = {workgroupSize[0], workgroupSize[1], workgroupSize[2]};
+                }
                 iot::mapRequired(io, ".kernel_dimensions", kern.m_kernelDimensions);
                 iot::mapRequired(io, ".wavefront_size", kern.m_wavefrontSize);
                 iot::mapRequired(io, ".workitem_count", kern.m_workitemCount);
@@ -146,7 +147,6 @@ namespace rocRoller
                 //
                 if(iot::outputting(io))
                 {
-                    // TODO: only do this for appropriate logging levels
                     if(Settings::getInstance()->get(Settings::SerializeKernelGraph))
                     {
                         iot::mapOptional(io, ".kernel_graph", kern.m_kernelGraph);
@@ -155,7 +155,6 @@ namespace rocRoller
                     if(kern.m_kernelGraph
                        && Settings::getInstance()->get(Settings::SerializeKernelGraphDOT))
                     {
-                        // Include both DOT and new serialization for now.
                         auto dot = kern.m_kernelGraph->toDOT();
                         iot::mapOptional(io, ".kernel_graph_dot", dot);
                     }
@@ -163,9 +162,6 @@ namespace rocRoller
                 else
                 {
                     iot::mapOptional(io, ".kernel_graph", kern.m_kernelGraph);
-
-                    AssertFatal(workgroupSize.size() == 3);
-                    kern.m_workgroupSize = {workgroupSize[0], workgroupSize[1], workgroupSize[2]};
                 }
 
                 iot::mapRequired(io, ".command", kern.m_command);
