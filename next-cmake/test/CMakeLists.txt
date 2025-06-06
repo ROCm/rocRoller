@@ -25,9 +25,8 @@
 
 include(CTest)
 
-#set(CMAKE_FIND_DEBUG_MODE ON)
 find_package(Catch2)
-if(catch2_FOUND)
+if(NOT Catch2_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
         FetchContent_Declare(
             Catch2
@@ -41,7 +40,7 @@ if(catch2_FOUND)
 endif()
 
 find_package(GTest)
-if(gtest_FOUND)
+if(NOT GTest_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
         FetchContent_Declare(
             googletest
@@ -53,15 +52,29 @@ if(gtest_FOUND)
     endif()
 endif()
 
+find_package(mxDataGenerator)
+if(NOT mxDataGenerator_FOUND)
+    if(ROCROLLER_ENABLE_FETCH)
+        FetchContent_Declare(
+            mxDataGenerator
+            GIT_REPOSITORY "https://github.com/ROCm/mxDataGenerator.git"
+            GIT_TAG b99e329c644d771be3ca026f4df5bb635714bd40
+        )
+        FetchContent_MakeAvailable(mxDataGenerator)
+    else()
+        message(FATAL_ERROR "Failed to find mxDataGenerator")
+    endif()
+endif()
+
 add_executable(rocroller-tests)
 add_executable(rocroller-tests-catch)
 
 find_package(BLAS REQUIRED)
+find_package(OpenMP REQUIRED)
 
 if(ROCROLLER_ENABLE_YAML_CPP)
     target_compile_definitions(rocroller-tests PUBLIC ROCROLLER_TESTS_USE_YAML_CPP)
 endif()
-
 
 add_subdirectory(common)
 add_subdirectory(catch)
