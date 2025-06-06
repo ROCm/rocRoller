@@ -71,7 +71,6 @@ target_sources(rocroller-tests
         "${_CMAKE_CURRENT_SOURCE_DIR}/SupportedInstructionObserverTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/TileTransposeAdd.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/TimerTest.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/TransposeLoadsTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/UtilsTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/VariantTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/VectorAddBenchmark.cpp"

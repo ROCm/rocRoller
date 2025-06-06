@@ -36,6 +36,7 @@ target_sources(rocroller
         "${_CMAKE_CURRENT_SOURCE_DIR}/AddPrefetch.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/AddPRNG.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/AddStreamK.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/AddTransposeLoadCT.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/AliasDataFlowTags_detail.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/AliasDataFlowTags.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/All.hpp"

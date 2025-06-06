@@ -69,6 +69,7 @@ target_sources(rocroller-tests-catch
         "${_CMAKE_CURRENT_SOURCE_DIR}/SubDwordExpressionTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/TernaryExpressionTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/TestContextTest.cpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/TransposeLoadsTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/UnrollLoopsTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/UtilsTest.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/WMMAHazardObserverTest.cpp"
