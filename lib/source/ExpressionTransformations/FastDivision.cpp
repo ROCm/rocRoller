@@ -173,8 +173,12 @@ namespace rocRoller
             if(!isSigned)
             {
                 auto q = multiplyHigh(numerator, magicExpr);
+                setComment(q, "Magic q (unsigned)");
+
                 auto t = (arithmeticShiftR(numerator - q, one)) + q;
+                setComment(t, "Magic t (unsigned)");
                 result = arithmeticShiftR(t, numShiftsExpr);
+                setComment(result, "Magic result (unsigned)");
             }
             else
             {
@@ -195,17 +199,36 @@ namespace rocRoller
 
                 auto numBytes = denominatorType.getElementSize();
 
-                auto q           = multiplyHigh(numerator, magicExpr) + numerator;
-                auto signOfQ     = arithmeticShiftR(q, literal(numBytes * 8 - 1, denominatorType));
+                // We are doing signed division; and in particular the
+                // magic-multiple might be negative.  Make sure the
+                // numerator is signed so that the arithmetic
+                // generators for the expressions below (q etc) use
+                // signed instructions.
+                if(not DataTypeInfo::Get(numeratorType).isSigned)
+                {
+                    auto signedNumeratorType
+                        = getIntegerType(true, DataTypeInfo::Get(numeratorType).elementBytes);
+                    numerator = std::make_shared<Expression>(
+                        Convert{{.arg{numerator}}, signedNumeratorType});
+                }
+
+                auto q = multiplyHigh(numerator, magicExpr) + numerator;
+                setComment(q, "Magic q (signed)");
+                auto signOfQ = arithmeticShiftR(q, literal(numBytes * 8 - 1, denominatorType));
+                setComment(signOfQ, "Magic signOfQ");
                 auto magicIsPow2 = conditional(magicExpr == literal(0, denominatorType),
                                                literal(-1, denominatorType),
                                                literal(0, denominatorType));
+                setComment(magicIsPow2, "Magic isPow2");
 
                 auto handleSignOfLHS = q + (signOfQ & ((one << numShiftsExpr) + magicIsPow2));
+                setComment(handleSignOfLHS, "Magic handleSignOfLHS");
 
                 auto shiftedQ = arithmeticShiftR(handleSignOfLHS, numShiftsExpr);
+                setComment(shiftedQ, "Magic shiftedQ");
 
                 result = (shiftedQ ^ signExpr) - signExpr;
+                setComment(result, "Magic result (signed)");
             }
 
             result = launchTimeSubExpressions(result, context);
