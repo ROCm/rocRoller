@@ -199,7 +199,7 @@ namespace rocRoller
                     if(solutionParams.workgroupMapping.first != -1)
                     {
                         m_tagWGM = command->allocateTag();
-                        command->allocateArgument(DataType::UInt32,
+                        command->allocateArgument(DataType::Int32,
                                                   m_tagWGM,
                                                   ArgumentType::Value,
                                                   DataDirection::ReadOnly,
@@ -428,8 +428,7 @@ namespace rocRoller
 
                     if(solutionParams.workgroupMapping.first != -1)
                     {
-                        auto dim  = solutionParams.workgroupMapping.first;
-                        auto size = solutionParams.workgroupMapping.second;
+                        auto dim = solutionParams.workgroupMapping.first;
 
                         AssertFatal(
                             dim == 0 || dim == 1,
