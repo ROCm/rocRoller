@@ -478,4 +478,16 @@ namespace rocRoller
         }
         return packing;
     }
+
+    bool isScaleType(DataType type)
+    {
+        switch(type)
+        {
+        case DataType::E8M0:
+        case DataType::E8M0x4:
+            return true;
+        default:
+            return false;
+        };
+    }
 };

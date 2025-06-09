@@ -36,6 +36,20 @@ include(CMakeRC)
 include(FetchContent)
 include(CMakeDependentOption)
 
+FetchContent_Declare(
+    ROCmCMakeBuildTools
+    GIT_REPOSITORY https://github.com/ROCm/rocm-cmake.git
+    GIT_TAG rocm-6.3.0
+    SOURCE_SUBDIR "DISABLE ADDING TO BUILD"
+    # Don't consume the build/test targets of ROCmCMakeBuildTools
+)
+FetchContent_MakeAvailable(ROCmCMakeBuildTools)
+list(
+    APPEND CMAKE_MODULE_PATH
+    ${rocmcmakebuildtools_SOURCE_DIR}/share/rocmcmakebuildtools/cmake
+)
+include(ROCMInstallTargets)
+
 option(ROCROLLER_ENABLE_CLIENT "Build the rocRoller client." ON)
 option(ROCROLLER_ENABLE_YAML_CPP "Enable yaml-cpp backend." ON)
 cmake_dependent_option(ROCROLLER_ENABLE_LLVM "Enable llvm yaml backend." ON "NOT ROCROLLER_ENABLE_YAML_CPP" OFF)
@@ -84,20 +98,6 @@ if(ROCROLLER_ENABLE_FETCH)
     FetchContent_MakeAvailable(libdivide)
     else()
         message(FATAL_ERROR "Failed to find libdivide")
-    endif()
-endif()
-
-find_package(mxDataGenerator)
-if(NOT mxDataGenerator_FOUND)
-    if(ROCROLLER_ENABLE_FETCH)
-        FetchContent_Declare(
-            mxDataGenerator
-            GIT_REPOSITORY "https://github.com/ROCm/mxDataGenerator.git"
-            GIT_TAG b1e2ba5461a06d49e3d5df78f3e44c9feb197800
-        )
-        FetchContent_MakeAvailable(mxDataGenerator)
-    else()
-        message(FATAL_ERROR "Failed to find mxDataGenerator")
     endif()
 endif()
 
@@ -150,7 +150,7 @@ if(ROCROLLER_ENABLE_YAML_CPP)
         if(ROCROLLER_ENABLE_FETCH)
             set(YAML_CPP_BUILD_TOOLS OFF)
             set(YAML_BUILD_SHARED_LIBS OFF)
-            set(YAML_CPP_INSTALL ON)
+            option(YAML_CPP_INSTALL "" ON)
             FetchContent_Declare(
                 yaml_cpp
                 GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
@@ -178,12 +178,13 @@ endif()
 llvm_map_components_to_libnames(llvm_libs mc support)
 
 target_link_libraries(rocroller
+    PUBLIC
+       Boost::headers
+       hip::host
     PRIVATE
-        hip::host 
         ${msgpack_libs}
-        Boost::headers
 )
-target_include_directories(rocroller PRIVATE "${LLD_INCLUDE_DIRS}")
+target_include_directories(rocroller PUBLIC "${LLD_INCLUDE_DIRS}")
 
 if(ROCROLLER_ENABLE_LLVM)
     # ROCROLLER_USE_LLVM enables the llvm yaml API
@@ -226,10 +227,19 @@ if(ROCROLLER_ENABLE_CLIENT)
     add_subdirectory(client)
 endif()
 
-install(TARGETS rocroller EXPORT rocroller-targets)
-install(
+rocm_install(
+    TARGETS rocroller
     EXPORT rocroller-targets
-    FILE rocroller-targets.cmake
+    INCLUDE
+        ${ROCROLLER_LIB_DIR}/include
+)
+
+rocm_export_targets(
+    TARGETS roc::rocroller
     NAMESPACE roc::
-    DESTINATION lib/cmake
+    EXPORT rocroller-targets
+    DEPENDS PACKAGE yaml-cpp
+    DEPENDS PACKAGE Boost
+    DEPENDS PACKAGE fmt
+    DEPENDS PACKAGE hip
 )

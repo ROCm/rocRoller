@@ -116,4 +116,6 @@ namespace rocRoller
     bool isUnpackedF4(DataType type);
 
     uint packingFactorForDataType(DataType type);
+
+    bool isScaleType(DataType type);
 }

@@ -125,21 +125,26 @@ namespace FastDivisionTest
 
         auto expr      = a / b_signed;
         auto expr_fast = rocRoller::Expression::fastDivision(expr, m_context);
-        auto expected  = "Subtract(BitwiseXor(ArithmeticShiftR(Add(Add(MultiplyHigh(UNALLOCATED:I, "
-                        "MagicMultiple_0:I)I, UNALLOCATED:I)I, "
-                        "BitwiseAnd(ArithmeticShiftR(Add(MultiplyHigh(UNALLOCATED:I, "
-                        "MagicMultiple_0:I)I, UNALLOCATED:I)I, 31:I)I, Add(ShiftL(1:I, "
-                        "MagicShifts_1:I)I, Conditional(Equal(MagicMultiple_0:I, 0:I)BL, -1:I, "
-                        "0:I)I)I)I)I, MagicShifts_1:I)I, MagicSign_2:I)I, MagicSign_2:I)I";
+        auto expected  = "{Magic result (signed): Subtract(BitwiseXor({Magic shiftedQ: "
+                        "ArithmeticShiftR({Magic handleSignOfLHS: Add({Magic q (signed): "
+                        "Add(MultiplyHigh(UNALLOCATED:I, MagicMultiple_0:I)I, UNALLOCATED:I)I}, "
+                        "BitwiseAnd({Magic signOfQ: ArithmeticShiftR({Magic q (signed): "
+                        "Add(MultiplyHigh(UNALLOCATED:I, MagicMultiple_0:I)I, UNALLOCATED:I)I}, "
+                        "31:I)I}, Add(ShiftL(1:I, MagicShifts_1:I)I, {Magic isPow2: "
+                        "Conditional(Equal(MagicMultiple_0:I, 0:I)BL, -1:I, 0:I)I})I)I)I}, "
+                        "MagicShifts_1:I)I}, MagicSign_2:I)I, MagicSign_2:I)I}";
+
         EXPECT_EQ(Expression::toString(expr_fast), expected);
 
         expr      = a_unsigned / b_unsigned;
         expr_fast = rocRoller::Expression::fastDivision(expr, m_context);
         setComment(expr_fast, "");
-        EXPECT_EQ(Expression::toString(expr_fast),
-                  "ArithmeticShiftR(Add(ArithmeticShiftR(Subtract(UNALLOCATED:U32, "
-                  "MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32)U32, 1:U32)U32, "
-                  "MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32)U32, MagicShifts_4:I)U32");
+        EXPECT_EQ(
+            Expression::toString(expr_fast),
+            "ArithmeticShiftR({Magic t (unsigned): Add(ArithmeticShiftR(Subtract(UNALLOCATED:U32, "
+            "{Magic q (unsigned): MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32})U32, "
+            "1:U32)U32, {Magic q (unsigned): MultiplyHigh(UNALLOCATED:U32, "
+            "MagicMultiple_3:U32)U32})U32}, MagicShifts_4:I)U32");
     }
 
     TEST_F(FastDivisionTest, ModuloByConstantExpressions)
@@ -229,13 +234,15 @@ namespace FastDivisionTest
         auto        expr      = a % b_signed;
         auto        expr_fast = rocRoller::Expression::fastDivision(expr, m_context);
         std::string expected
-            = "Subtract(UNALLOCATED:I, "
-              "Multiply(Subtract(BitwiseXor(ArithmeticShiftR(Add(Add(MultiplyHigh(UNALLOCATED:I, "
-              "MagicMultiple_0:I)I, UNALLOCATED:I)I, "
-              "BitwiseAnd(ArithmeticShiftR(Add(MultiplyHigh(UNALLOCATED:I, MagicMultiple_0:I)I, "
-              "UNALLOCATED:I)I, 31:I)I, Add(ShiftL(1:I, MagicShifts_1:I)I, "
-              "Conditional(Equal(MagicMultiple_0:I, 0:I)BL, -1:I, 0:I)I)I)I)I, MagicShifts_1:I)I, "
-              "MagicSign_2:I)I, MagicSign_2:I)I, CommandArgument(user_Int32_Value_0)I)I)I";
+            = "Subtract(UNALLOCATED:I, Multiply({Magic result (signed): Subtract(BitwiseXor({Magic "
+              "shiftedQ: ArithmeticShiftR({Magic handleSignOfLHS: Add({Magic q (signed): "
+              "Add(MultiplyHigh(UNALLOCATED:I, MagicMultiple_0:I)I, UNALLOCATED:I)I}, "
+              "BitwiseAnd({Magic signOfQ: ArithmeticShiftR({Magic q (signed): "
+              "Add(MultiplyHigh(UNALLOCATED:I, MagicMultiple_0:I)I, UNALLOCATED:I)I}, 31:I)I}, "
+              "Add(ShiftL(1:I, MagicShifts_1:I)I, {Magic isPow2: "
+              "Conditional(Equal(MagicMultiple_0:I, 0:I)BL, -1:I, 0:I)I})I)I)I}, "
+              "MagicShifts_1:I)I}, MagicSign_2:I)I, MagicSign_2:I)I}, "
+              "CommandArgument(user_Int32_Value_0)I)I)I";
         EXPECT_EQ(Expression::toString(expr_fast), expected);
 
         expr      = a_unsigned % b_unsigned;
@@ -244,11 +251,12 @@ namespace FastDivisionTest
         EXPECT_THAT(
             Expression::toString(expr_fast),
             testing::HasSubstr(
-                "Subtract(UNALLOCATED:U32, "
-                "Multiply(ArithmeticShiftR(Add(ArithmeticShiftR(Subtract("
-                "UNALLOCATED:U32, MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32)U32, "
-                "1:U32)U32, MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32)U32, "
-                "MagicShifts_4:I)U32, CommandArgument(user_UInt32_Value_1)U32)U32)U32"));
+                "Subtract(UNALLOCATED:U32, Multiply({Magic result (unsigned): "
+                "ArithmeticShiftR({Magic t (unsigned): "
+                "Add(ArithmeticShiftR(Subtract(UNALLOCATED:U32, {Magic q (unsigned): "
+                "MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32})U32, 1:U32)U32, {Magic q "
+                "(unsigned): MultiplyHigh(UNALLOCATED:U32, MagicMultiple_3:U32)U32})U32}, "
+                "MagicShifts_4:I)U32}, CommandArgument(user_UInt32_Value_1)U32)U32)U32"));
     }
 
     namespace GPUFastDivisionTest

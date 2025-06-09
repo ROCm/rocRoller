@@ -33,7 +33,7 @@ if(NOT CLI11_FOUND)
         FetchContent_Declare(
             CLI11
             GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
-            GIT_TAG ${GIT_TAG}
+            GIT_TAG main
         )
         FetchContent_MakeAvailable(CLI11)
     else()

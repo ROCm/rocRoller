@@ -433,7 +433,7 @@ namespace GEMMDriverTest
             if(gemm.workgroupMapping.first != -1)
             {
                 tagWGM      = command->allocateTag();
-                auto wgmArg = command->allocateArgument(DataType::UInt32,
+                auto wgmArg = command->allocateArgument(DataType::Int32,
                                                         tagWGM,
                                                         ArgumentType::Value,
                                                         DataDirection::ReadOnly,
