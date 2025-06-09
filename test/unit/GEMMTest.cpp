@@ -80,7 +80,7 @@ namespace GEMMDriverTest
     public:
         uint8_t rotatingSingleScaleValue()
         {
-            const std::vector<float> scaleValues{-1.0, -0.5, 1.0, 1.5};
+            const std::vector<float> scaleValues{1.0, 2.0, 4.0, 8.0};
             m_scaleValueIndex = (++m_scaleValueIndex) % scaleValues.size();
             return floatToScale(scaleValues[m_scaleValueIndex]);
         }

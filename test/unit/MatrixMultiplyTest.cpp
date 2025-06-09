@@ -440,27 +440,28 @@ namespace MatrixMultiplyTest
                                           int                 n,
                                           int                 k,
                                           int                 b,
-                                          bool                useLDSB = true,
-                                          std::string         transA  = "N",
-                                          std::string         transB  = "N",
-                                          bool                scaleA  = false,
-                                          bool                scaleB  = false)
+                                          bool                useLDSB        = true,
+                                          std::string         transA         = "N",
+                                          std::string         transB         = "N",
+                                          bool                scaleA         = false,
+                                          bool                scaleB         = false,
+                                          const uint          scaleBlockSize = 32)
         {
             if(typeB == rocRoller::DataType::FP8)
                 matrixMultiplyMacroTile<TA, FP8, float>(
-                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeB == rocRoller::DataType::BF8)
                 matrixMultiplyMacroTile<TA, BF8, float>(
-                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeB == rocRoller::DataType::FP6)
                 matrixMultiplyMacroTile<TA, FP6, float>(
-                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeB == rocRoller::DataType::BF6)
                 matrixMultiplyMacroTile<TA, BF6, float>(
-                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeB == rocRoller::DataType::FP4)
                 matrixMultiplyMacroTile<TA, FP4, float>(
-                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else
                 Throw<FatalError>("Invalid type.");
         }
@@ -471,27 +472,28 @@ namespace MatrixMultiplyTest
                                           int                 n,
                                           int                 k,
                                           int                 b,
-                                          bool                useLDSB = true,
-                                          std::string         transA  = "N",
-                                          std::string         transB  = "N",
-                                          bool                scaleA  = false,
-                                          bool                scaleB  = false)
+                                          bool                useLDSB        = true,
+                                          std::string         transA         = "N",
+                                          std::string         transB         = "N",
+                                          bool                scaleA         = false,
+                                          bool                scaleB         = false,
+                                          const uint          scaleBlockSize = 32)
         {
             if(typeA == rocRoller::DataType::FP8)
                 matrixMultiplyMacroTileMixed<FP8>(
-                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeA == rocRoller::DataType::BF8)
                 matrixMultiplyMacroTileMixed<BF8>(
-                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeA == rocRoller::DataType::FP6)
                 matrixMultiplyMacroTileMixed<FP6>(
-                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeA == rocRoller::DataType::BF6)
                 matrixMultiplyMacroTileMixed<BF6>(
-                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else if(typeA == rocRoller::DataType::FP4)
                 matrixMultiplyMacroTileMixed<FP4>(
-                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB);
+                    typeB, m, n, k, b, useLDSB, transA, transB, scaleA, scaleB, scaleBlockSize);
             else
                 Throw<FatalError>("Invalid type.");
         }
