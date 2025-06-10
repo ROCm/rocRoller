@@ -112,11 +112,10 @@ namespace rocRoller
         {
         }
 
-        // why streamID -1?
         LockState::LockState(ContextPtr ctx, Dependency dependency)
             : m_ctx(ctx)
         {
-            lock(dependency, -1);
+            lock(dependency, 0);
         }
 
         // Can you lock Dependency::None? No
@@ -210,6 +209,14 @@ namespace rocRoller
             if(m_stack.empty())
                 return false;
 
+            auto dep    = instr.getDependency();
+            auto topDep = getTopDependency(streamId);
+            // check if the order of the dependencies satisfies
+            AssertFatal(dep == Dependency::None || topDep <= dep,
+                        "Out of order dependency lock can't be acquired.",
+                        ShowValue(topDep),
+                        ShowValue(dep));
+
             if(isLocked())
             {
                 if(m_nonPreemptibleStream == streamId)
@@ -222,13 +229,6 @@ namespace rocRoller
             if(lockOp != LockOperation::Lock)
                 return false;
 
-            auto dep    = instr.getDependency();
-            auto topDep = getTopDependency(streamId);
-            // check if the order of the dependencies satisfies
-            AssertFatal(topDep <= dep,
-                        "Out of order dependency lock can't be acquired.",
-                        ShowValue(topDep),
-                        ShowValue(dep));
             // check if the dependency is already locked
             if(m_locks.contains(dep))
                 return m_stream.at(dep) != streamId;
@@ -239,6 +239,8 @@ namespace rocRoller
         void LockState::add(Instruction const& instruction, int streamId)
         {
             //lockCheck(instruction);
+            AssertFatal(!isLockedFrom(instruction, streamId),
+                        "cannot add any instruction from this stream at this point");
 
             auto lockOp = instruction.getLockValue();
 

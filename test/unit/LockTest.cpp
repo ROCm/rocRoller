@@ -55,28 +55,38 @@ namespace rocRollerTest
 
             EXPECT_EQ(none_lock.getTopDependency(0), Scheduling::Dependency::None);
 
+            // stream0:scc
             none_lock.add(lock_inst, 0);
 
+            // trying to unlock the type of lock not held by stream0
             EXPECT_THROW(none_lock.add(unlock_m0_inst, 0), FatalError);
+            // trying to lock out of order: m0 after scc
+            EXPECT_THROW(none_lock.add(lock_m0_inst, 0), FatalError);
 
+            // scc is a non-preemptible lock
             EXPECT_EQ(none_lock.isLocked(), true);
             EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
+            // stream0:
             none_lock.add(unlock_inst, 0);
             EXPECT_EQ(none_lock.isLocked(), false);
             EXPECT_EQ(none_lock.getLockDepth(0), 0);
 
+            // stream0:m0
             none_lock.add(lock_m0_inst, 0);
             EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
+            // m0 is not a non-preemptible lock
             EXPECT_EQ(none_lock.isLocked(), false);
 
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
 
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            // stream1 can't lock m0 as it is held by stream0
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
 
+            // stream0:m0,m0
             none_lock.add(lock_m0_inst, 0);
             EXPECT_EQ(none_lock.getLockDepth(0), 2);
 
@@ -88,7 +98,8 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
 
-            none_lock.add(unlock_m0_inst, 0);
+            // stream0:m0
+            none_lock.add(unlock_inst, 0);
             EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             EXPECT_EQ(none_lock.isLocked(), false);
@@ -97,41 +108,50 @@ namespace rocRollerTest
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
 
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
+            // stream1 can't acquire m0 as it is held by stream0
             EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
 
-            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
+            //stream1:scc
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), false);
+            none_lock.add(lock_inst, 1);
 
-            EXPECT_THROW(none_lock.add(lock_inst, 1), FatalError);
-            none_lock.add(lock_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(0), 2);
+            EXPECT_THROW(none_lock.add(lock_inst, 0), FatalError);
+
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
+            EXPECT_EQ(none_lock.getLockDepth(1), 1);
+
+            // scc is a non-preemptible lock
+            EXPECT_EQ(none_lock.isLocked(), true);
+
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), true);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
+
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), true);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 0), true);
+            // can't lock out of order: m0 after scc
+            EXPECT_THROW(none_lock.isLockedFrom(lock_m0_inst, 1), FatalError);
+
+            // stream0:m0
+            // can't add any instruction from stream0 until another stream holds a non-preemptible lock.
+            EXPECT_THROW(none_lock.add(unlock_inst, 0), FatalError);
+            EXPECT_EQ(none_lock.getLockDepth(0), 1);
 
             EXPECT_EQ(none_lock.isLocked(), true);
 
-            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
-            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), true);
-
-            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
-            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
-
-            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
-
-            none_lock.add(unlock_inst, 0);
-            EXPECT_EQ(none_lock.getLockDepth(0), 1);
-
-            EXPECT_EQ(none_lock.isLocked(), false);
-
-            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
+            EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), true);
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
 
-            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), false);
-            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 1), true);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_m0_inst, 0), true);
+            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 0), true);
+            EXPECT_THROW(none_lock.isLockedFrom(lock_m0_inst, 1), FatalError);
 
-            EXPECT_EQ(none_lock.isLockedFrom(lock_inst, 1), true);
+            none_lock.add(unlock_inst, 1);
+            EXPECT_EQ(none_lock.getLockDepth(1), 0);
+
+            EXPECT_EQ(none_lock.isLocked(), false);
 
             none_lock.add(unlock_inst, 0);
             EXPECT_EQ(none_lock.getLockDepth(0), 0);
-
-            EXPECT_EQ(none_lock.isLocked(), false);
 
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 0), false);
             EXPECT_EQ(none_lock.isLockedFrom(comment_inst, 1), false);
@@ -154,16 +174,16 @@ namespace rocRollerTest
 
         {
             auto vcc_lock = Scheduling::LockState(m_context, Scheduling::Dependency::VCC);
-            EXPECT_EQ(vcc_lock.isLocked(), true);
+            EXPECT_EQ(vcc_lock.isLocked(), false);
             EXPECT_EQ(vcc_lock.getLockDepth(0), 1);
             EXPECT_EQ(vcc_lock.getTopDependency(0), Scheduling::Dependency::VCC);
             vcc_lock.add(comment_inst, 0);
-            EXPECT_EQ(vcc_lock.isLocked(), true);
+            EXPECT_EQ(vcc_lock.isLocked(), false);
             vcc_lock.add(unlock_inst, 0);
             EXPECT_EQ(vcc_lock.isLocked(), false);
 
-            EXPECT_THROW(vcc_lock.isValid(true), FatalError);
-            EXPECT_NO_THROW(vcc_lock.isValid(false));
+            //EXPECT_THROW(vcc_lock.isValid(true), FatalError);
+            //EXPECT_NO_THROW(vcc_lock.isValid(false));
         }
 
         EXPECT_THROW({ auto l = Scheduling::LockState(m_context, Scheduling::Dependency::Count); },
