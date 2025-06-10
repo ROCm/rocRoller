@@ -232,17 +232,41 @@ namespace GEMMDriverTest
             TensorDescriptor descD(dataTypeD, {size_t(M), size_t(N)}, "N");
 
             auto seed = 31415u;
-            DGenInput(seed,
-                      hostA,
-                      descA,
-                      hostB,
-                      descB,
-                      hostC,
-                      descC,
-                      hostScaleA,
-                      hostScaleB,
-                      gemm.scaleAMode == Operations::ScaleMode::Separate,
-                      gemm.scaleBMode == Operations::ScaleMode::Separate);
+            if(gemm.scaleAMode == Operations::ScaleMode::Separate
+               || gemm.scaleBMode == Operations::ScaleMode::Separate)
+            {
+                auto const& arch = m_context->targetArchitecture();
+
+                auto scaleBlockSize = gemm.scaleBlockSize;
+                AssertFatal(scaleBlockSize > 0, "scaleBlockSize must be set to scale A or B.");
+                AssertFatal(
+                    arch.isSupportedScaleBlockSize(scaleBlockSize),
+                    fmt::format("Architecture {} does not support block scaling (size: {}).",
+                                arch.target().toString(),
+                                scaleBlockSize));
+                AssertFatal(gemm.k % scaleBlockSize == 0,
+                            fmt::format("K: {} must be a multiple of the scale block size: {}",
+                                        gemm.k,
+                                        scaleBlockSize));
+                DGenInput(seed,
+                          hostA,
+                          descA,
+                          hostB,
+                          descB,
+                          hostC,
+                          descC,
+                          hostScaleA,
+                          hostScaleB,
+                          gemm.scaleAMode == Operations::ScaleMode::Separate,
+                          gemm.scaleBMode == Operations::ScaleMode::Separate,
+                          -1.f,
+                          1.f,
+                          static_cast<uint>(scaleBlockSize));
+            }
+            else
+            {
+                DGenInput(seed, hostA, descA, hostB, descB, hostC, descC);
+            }
 
             if(setIdentity)
             {
