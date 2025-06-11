@@ -574,7 +574,8 @@ namespace rocRollerTest
             co_yield m_context->brancher()->branch(end);
             co_yield Instruction::Label(label);
             co_yield m_context->copier()->copy(v_value, Register::Value::Literal(10));
-            co_yield Instruction::Label(end).unlock();
+            co_yield Instruction::Label(end);
+            co_yield Instruction::Unlock("unlock VCC");
 
             co_yield m_context->mem()->storeGlobal(v_ptr, v_value, 0, 4);
         };
@@ -604,8 +605,10 @@ namespace rocRollerTest
             co_yield Expression::generate(
                 v_res2, v_res2->expression() * v_res2->expression(), m_context);
 
+            co_yield Instruction::Lock(Scheduling::Dependency::VCC);
             co_yield Expression::generate(
                 vcc, v_lhs2->expression() == v_rhs2->expression(), m_context);
+            co_yield Instruction::Unlock("unlock VCC");
         };
 
         sequences.push_back(set_vcc());
