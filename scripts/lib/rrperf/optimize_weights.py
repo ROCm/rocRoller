@@ -58,8 +58,7 @@ import subprocess
 # import tempfile
 import yaml
 
-import rrperf.run
-import rrperf.problems
+import rrperf
 
 from dataclasses import dataclass, field, fields, asdict
 from typing import List, Tuple
@@ -301,7 +300,7 @@ def bench(
         process_result = subprocess.run(
             cmd,
             env=env,
-            cwd=rrperf.run.get_build_dir(),
+            cwd=rrperf.utils.get_build_dir(),
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE,
         )
@@ -618,7 +617,7 @@ def get_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--suite",
         dest="problem",
-        type=rrperf.run.first_problem_from_suite,
+        type=rrperf.utils.first_problem_from_suite,
         help="Benchmark suite to run. NOTE: Only the first problem from the "
         "suite will be used.",
     )
