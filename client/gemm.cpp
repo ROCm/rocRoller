@@ -319,17 +319,38 @@ namespace rocRoller::Client::GEMMClient
         std::vector<uint8_t>     hostScaleA, hostScaleB;
 
         auto seed = 31415u;
-        DGenInput(seed,
-                  hostA,
-                  descA,
-                  hostB,
-                  descB,
-                  hostC,
-                  descC,
-                  hostScaleA,
-                  hostScaleB,
-                  problemParams.scaleA == Operations::ScaleMode::Separate,
-                  problemParams.scaleB == Operations::ScaleMode::Separate);
+        if(problemParams.scaleA == Operations::ScaleMode::Separate
+           || problemParams.scaleB == Operations::ScaleMode::Separate)
+        {
+            auto scaleBlockSize = problemParams.scaleBlockSize;
+            AssertFatal(scaleBlockSize > 0, "scaleBlockSize must be set to scale A or B.");
+            AssertFatal(arch.isSupportedScaleBlockSize(scaleBlockSize),
+                        fmt::format("Architecture {} does not support block scaling (size: {}).",
+                                    arch.target().toString(),
+                                    scaleBlockSize));
+            AssertFatal(problemParams.k % scaleBlockSize == 0,
+                        fmt::format("K: {} must be a multiple of the scale block size: {}",
+                                    problemParams.k,
+                                    scaleBlockSize));
+            DGenInput(seed,
+                      hostA,
+                      descA,
+                      hostB,
+                      descB,
+                      hostC,
+                      descC,
+                      hostScaleA,
+                      hostScaleB,
+                      problemParams.scaleA == Operations::ScaleMode::Separate,
+                      problemParams.scaleB == Operations::ScaleMode::Separate,
+                      -1.f,
+                      1.f,
+                      static_cast<uint>(scaleBlockSize));
+        }
+        else
+        {
+            DGenInput(seed, hostA, descA, hostB, descB, hostC, descC);
+        }
 
         auto deviceA = make_shared_device(hostA);
         auto deviceB = make_shared_device(hostB);
@@ -370,22 +391,12 @@ namespace rocRoller::Client::GEMMClient
 
         if(problemParams.scaleA == Operations::ScaleMode::Separate)
         {
-            auto scaleBlockSize = problemParams.scaleBlockSize;
-            AssertFatal(scaleBlockSize != -1, "scaleBlockSize must be set to scale A.");
-            AssertFatal(arch.isSupportedScaleBlockSize(scaleBlockSize),
-                        fmt::format("Architecture {} does not support block scaling (size: {}).",
-                                    arch.target().toString(),
-                                    scaleBlockSize));
-            AssertFatal(problemParams.k % scaleBlockSize == 0,
-                        fmt::format("K: {} must be a multiple of the scale block size: {}",
-                                    problemParams.k,
-                                    scaleBlockSize));
-            auto dataTypeA = TypeInfo<A>::Var.dataType;
-            auto descAScale
-                = TensorDescriptor(dataTypeA,
-                                   {static_cast<size_t>(problemParams.m),
-                                    static_cast<size_t>(problemParams.k / scaleBlockSize)},
-                                   problemParams.transA == TransposeType::T ? "T" : "N");
+            auto dataTypeA  = TypeInfo<A>::Var.dataType;
+            auto descAScale = TensorDescriptor(
+                dataTypeA,
+                {static_cast<size_t>(problemParams.m),
+                 static_cast<size_t>(problemParams.k / problemParams.scaleBlockSize)},
+                problemParams.transA == TransposeType::T ? "T" : "N");
             auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
             setCommandTensorArg(commandArgs, aScaleTag.value(), descAScale, deviceScaleA.get());
         }
@@ -400,22 +411,12 @@ namespace rocRoller::Client::GEMMClient
 
         if(problemParams.scaleB == Operations::ScaleMode::Separate)
         {
-            auto scaleBlockSize = problemParams.scaleBlockSize;
-            AssertFatal(scaleBlockSize != -1, "scaleBlockSize must be set to scale B.");
-            AssertFatal(arch.isSupportedScaleBlockSize(scaleBlockSize),
-                        fmt::format("Architecture {} does not support block scaling (size: {}).",
-                                    arch.target().toString(),
-                                    scaleBlockSize));
-            AssertFatal(problemParams.k % scaleBlockSize == 0,
-                        fmt::format("K: {} must be a multiple of the scale block size: {}",
-                                    problemParams.k,
-                                    scaleBlockSize));
-            auto dataTypeB = TypeInfo<A>::Var.dataType;
-            auto descBScale
-                = TensorDescriptor(dataTypeB,
-                                   {static_cast<size_t>(problemParams.k / scaleBlockSize),
-                                    static_cast<size_t>(problemParams.n)},
-                                   problemParams.transB == TransposeType::T ? "T" : "N");
+            auto dataTypeB  = TypeInfo<A>::Var.dataType;
+            auto descBScale = TensorDescriptor(
+                dataTypeB,
+                {static_cast<size_t>(problemParams.k / problemParams.scaleBlockSize),
+                 static_cast<size_t>(problemParams.n)},
+                problemParams.transB == TransposeType::T ? "T" : "N");
             auto [aScaleTag, bScaleTag] = gemm->getABScaleTags();
             setCommandTensorArg(commandArgs, bScaleTag.value(), descBScale, deviceScaleB.get());
         }
