@@ -486,17 +486,17 @@ namespace rocRollerTest
             co_yield(Inst("(A) For Loop Begin")
                          .lock(Scheduling::Dependency::Branch, "(A) Scheduler A Lock"));
 
-            EXPECT_EQ(schedulerA->getLockState().getTopDependency(0),
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(1),
                       Scheduling::Dependency::Branch);
 
-            co_yield(Inst("+++ Scheduler A Lock Depth: "
-                          + std::to_string(schedulerA->getLockState().getLockDepth(0))));
+            co_yield(Inst("+++ Scheduler A Stream 1 Lock Depth: "
+                          + std::to_string(schedulerA->getLockState().getLockDepth(1))));
             co_yield((*schedulerB)(b_sequences));
             co_yield(Inst("(A) For Loop End").unlock("(A) Scheduler A Unlock"));
-            co_yield(Inst("+++ Scheduler A Lock Depth: "
-                          + std::to_string(schedulerA->getLockState().getLockDepth(0))));
+            co_yield(Inst("+++ Scheduler A Stream 1 Lock Depth: "
+                          + std::to_string(schedulerA->getLockState().getLockDepth(1))));
 
-            EXPECT_EQ(schedulerA->getLockState().getTopDependency(0), Scheduling::Dependency::None);
+            EXPECT_EQ(schedulerA->getLockState().getTopDependency(1), Scheduling::Dependency::None);
         };
 
         a_sequences.push_back(opA());

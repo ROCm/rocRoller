@@ -95,7 +95,7 @@ namespace rocRoller
 
                     auto const& inst = *iterators[idx];
 
-                    if(m_lockstate.isLockedFrom(inst, idx))
+                    if(!m_lockstate.isSchedulable(inst, idx))
                         return false;
 
                     auto status = m_ctx.lock()->peek(inst);
@@ -140,8 +140,6 @@ namespace rocRoller
                     validIterIndexes.push_back(i);
                 }
             }
-
-            m_lockstate.isValid(false);
         }
     }
 }

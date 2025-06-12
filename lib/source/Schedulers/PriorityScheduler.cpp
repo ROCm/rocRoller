@@ -87,10 +87,9 @@ namespace rocRoller
                     if(iterators[idx] == seqs[idx].end())
                         continue;
 
-
                     auto const& instr = *iterators[idx];
 
-                    if(m_lockstate.isLockedFrom(instr, idx))
+                    if(!m_lockstate.isSchedulable(instr, idx))
                         continue;
 
                     float myCost = (*m_cost)(instr);
@@ -111,8 +110,6 @@ namespace rocRoller
                 }
 
             } while(minCostIdx >= 0);
-
-            m_lockstate.isValid(false);
         }
     }
 }

@@ -80,7 +80,7 @@ namespace rocRoller
                     while(iterators[i] != seqs[i].end())
                     {
                         auto const& instr = *iterators[i];
-                        if(m_lockstate.isLockedFrom(instr, i))
+                        if(!m_lockstate.isSchedulable(instr, i))
                             break;
                         for(auto const& inst : yieldFromStream(iterators[i], i))
                             co_yield inst;

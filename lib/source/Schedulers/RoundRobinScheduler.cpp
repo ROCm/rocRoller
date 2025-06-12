@@ -81,7 +81,7 @@ namespace rocRoller
                 {
                     if(iterators[i] != seqs[i].end())
                     {
-                        if(m_lockstate.isLockedFrom(*iterators[i], i))
+                        if(!m_lockstate.isSchedulable(*iterators[i], i))
                             continue;
 
                         yield_seq = true;
@@ -89,8 +89,6 @@ namespace rocRoller
                     }
                 }
             }
-
-            m_lockstate.isValid(false);
         }
     }
 }

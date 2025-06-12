@@ -169,6 +169,7 @@ namespace rocRollerTest
             // Double the input value.
             co_yield Expression::generate(
                 v_value, v_value->expression() + v_value->expression(), m_context);
+            co_yield Instruction::Lock(Scheduling::Dependency::VCC);
             // Compare against the stop value.
             co_yield Expression::generate(
                 s_condition, v_value->expression() < v_target->expression(), m_context);
@@ -176,6 +177,7 @@ namespace rocRollerTest
             co_yield m_context->brancher()->branchIfNonZero(
                 loop_start, s_condition, "// Conditionally branching to the label register.");
 
+            co_yield Instruction::Unlock("unlock VCC");
             co_yield Instruction::Unlock("Loop end");
 
             co_yield m_context->mem()->storeGlobal(v_ptr, v_value, 0, 4);

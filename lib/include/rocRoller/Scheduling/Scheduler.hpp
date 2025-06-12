@@ -41,7 +41,7 @@ namespace rocRoller
 {
     namespace Scheduling
     {
-        constexpr bool isNonPreemptible(Dependency dep);
+        constexpr bool isNonPreemptibleDependency(Dependency dep);
 
         /**
          * Locking Rules
@@ -90,10 +90,9 @@ namespace rocRoller
             LockState(ContextPtr ctx, Dependency dependency);
 
             void add(Instruction const& instr, int streamId);
-            bool isLocked() const;
-            void isValid(bool locked = false) const;
-
-            bool isLockedFrom(Instruction const& instr, int streamId) const;
+            bool isNonPreemptibleStream(int streamId) const;
+            bool isSchedulable(Instruction const& instr, int streamId) const;
+            bool isLocked(Dependency dependency, int streamId) const;
 
             /**
              * @brief Extra checks to verify lock state integrity.
@@ -101,8 +100,9 @@ namespace rocRoller
              * Note: disabled in Release mode.
              *
              * @param instr The instruction to verify
+         * @param streamId The instruction's stream ID
              */
-            void lockCheck(Instruction const& instr);
+            void lockCheck(Instruction const& instr, int streamId) const;
 
             Dependency getTopDependency(int streamId) const;
             int        getLockDepth(int streamId) const;
@@ -114,7 +114,7 @@ namespace rocRoller
             std::map<int, std::stack<Dependency>> m_stack;
             std::map<Dependency, int>             m_stream;
             std::unordered_multiset<Dependency>   m_locks;
-            int                                   m_nonPreemptibleStream = -1;
+            std::optional<int>                    m_nonPreemptibleStream;
 
             std::weak_ptr<rocRoller::Context> m_ctx;
         };

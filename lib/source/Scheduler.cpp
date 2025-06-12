@@ -107,6 +107,11 @@ namespace rocRoller
             return stream << toString(lockOp);
         }
 
+        constexpr bool isNonPreemptibleDependency(Dependency dep)
+        {
+            return dep != Dependency::M0 && dep != Dependency::VCC;
+        }
+
         LockState::LockState(ContextPtr ctx)
             : m_ctx(ctx)
         {
@@ -118,8 +123,6 @@ namespace rocRoller
             lock(dependency, 0);
         }
 
-        // Can you lock Dependency::None? No
-        // We may want to get rid of None.
         void LockState::lock(Dependency dep, int streamId)
         {
             AssertFatal(dep != Dependency::Count && dep != Dependency::None);
@@ -146,7 +149,7 @@ namespace rocRoller
             m_stream[dep] = streamId;
             m_locks.insert(dep);
 
-            if(isNonPreemptible(dep))
+            if(isNonPreemptibleDependency(dep))
                 m_nonPreemptibleStream = streamId;
         }
 
@@ -188,11 +191,11 @@ namespace rocRoller
             }
 
             // update m_nonPreemptibleStream state if needed
-            m_nonPreemptibleStream = -1;
-            auto tempDep           = getTopDependency(streamId);
+            m_nonPreemptibleStream.reset();
+            auto tempDep = getTopDependency(streamId);
             while(tempDep != Dependency::None && !(m_locks.count(tempDep) > 0))
             {
-                if(isNonPreemptible(tempDep))
+                if(isNonPreemptibleDependency(tempDep))
                 {
                     m_nonPreemptibleStream = streamId;
                     break;
@@ -204,12 +207,11 @@ namespace rocRoller
             }
         }
 
-        bool LockState::isLockedFrom(Instruction const& instr, int streamId) const
+        bool LockState::isSchedulable(Instruction const& instr, int streamId) const
         {
-            if(m_stack.empty())
-                return false;
+            auto dep = instr.getDependency();
+            AssertFatal(dep != Dependency::Count && streamId >= 0);
 
-            auto dep    = instr.getDependency();
             auto topDep = getTopDependency(streamId);
             // check if the order of the dependencies satisfies
             AssertFatal(dep == Dependency::None || topDep <= dep,
@@ -217,29 +219,37 @@ namespace rocRoller
                         ShowValue(topDep),
                         ShowValue(dep));
 
-            if(isLocked())
-            {
-                if(m_nonPreemptibleStream == streamId)
-                    return false;
+            // if the stream itself is non-preemptible,
+            if(m_stack.empty())
                 return true;
-            }
 
-            auto lockOp = instr.getLockValue();
-            // if the given instr is not a lock instruction.
-            if(lockOp != LockOperation::Lock)
+            // it's schedulable
+            if(isNonPreemptibleStream(streamId))
+                return true;
+            // if another stream is non-preemptible,
+            // it's not schedulable.
+            else if(m_nonPreemptibleStream.has_value())
                 return false;
 
-            // check if the dependency is already locked
-            if(m_locks.contains(dep))
-                return m_stream.at(dep) != streamId;
+            auto lockOp = instr.getLockValue();
+            // if the given instr is not a lock instruction,
+            // it's schedulable.
+            if(lockOp != LockOperation::Lock)
+                return true;
 
-            return false;
+            // if the dependency is already locked and is being
+            // scheduled by the same stream again, it's schedulable.
+            if(m_locks.contains(dep))
+                return m_stream.at(dep) == streamId;
+
+            return true;
         }
 
         void LockState::add(Instruction const& instruction, int streamId)
         {
-            //lockCheck(instruction);
-            AssertFatal(!isLockedFrom(instruction, streamId),
+            //lockCheck(instruction, streamId);
+
+            AssertFatal(isSchedulable(instruction, streamId),
                         "cannot add any instruction from this stream at this point");
 
             auto lockOp = instruction.getLockValue();
@@ -262,40 +272,36 @@ namespace rocRoller
             }
         }
 
-        bool LockState::isLocked() const
+        bool LockState::isNonPreemptibleStream(int streamId) const
         {
-            return m_nonPreemptibleStream >= 0;
+            return m_nonPreemptibleStream.has_value() && streamId == m_nonPreemptibleStream.value();
         }
 
-        constexpr bool isNonPreemptible(Dependency dep)
+        bool LockState::isLocked(Dependency dep, int streamId) const
         {
-            return dep != Dependency::M0 && dep != Dependency::VCC;
+            return m_stream.contains(dep) && m_stream.at(dep) == streamId;
         }
 
-        // Will grow into a function that accepts args and checks the lock is in a valid state against those args
-        void LockState::isValid(bool locked) const
-        {
-            AssertFatal(isLocked() == locked, "Lock in invalid state");
-        }
-
-        void LockState::lockCheck(Instruction const& instruction)
+        void LockState::lockCheck(Instruction const& instruction, int streamId) const
         {
             auto               context      = m_ctx.lock();
             const auto&        architecture = context->targetArchitecture();
             GPUInstructionInfo info = architecture.GetInstructionInfo(instruction.getOpCode());
 
             AssertFatal(
-                !info.isBranch() || isLocked(),
+                !info.isBranch() || isLocked(Dependency::Branch, streamId),
                 concatenate(instruction.getOpCode(),
                             " is a branch instruction, it should only be used within a lock."));
 
             AssertFatal(
-                !info.hasImplicitAccess() || isLocked(),
+                !info.hasImplicitAccess() || isLocked(Dependency::M0, streamId)
+                    || isLocked(Dependency::VCC, streamId) || isLocked(Dependency::SCC, streamId),
                 concatenate(instruction.getOpCode(),
                             " implicitly reads a register, it should only be used within a lock."));
 
             AssertFatal(
-                !instruction.readsSpecialRegisters() || isLocked(),
+                !instruction.readsSpecialRegisters() || isLocked(Dependency::M0, streamId)
+                    || isLocked(Dependency::VCC, streamId) || isLocked(Dependency::SCC, streamId),
                 concatenate(instruction.getOpCode(),
                             " reads a special register, it should only be used within a lock."));
         }
@@ -328,7 +334,7 @@ namespace rocRoller
                 co_yield *iter;
                 ++iter;
                 co_yield consumeComments(iter, std::default_sentinel_t{});
-            } while(m_lockstate.isLocked());
+            } while(m_lockstate.isNonPreemptibleStream(streamId));
         }
 
         bool Scheduler::supportsAddingStreams() const

@@ -80,14 +80,14 @@ namespace rocRoller
                 co_yield handleNewNodes(seqs, iterators);
                 numSeqs = seqs.size();
 
-                float  currentCost = 0;
-                bool lockedOut = false;
+                float currentCost = 0;
+                bool  lockedOut   = false;
 
                 if(iterators[idx] != seqs[idx].end())
                 {
                     auto const& inst = *iterators[idx];
 
-                    lockedOut = m_lockstate.isLockedFrom(inst, idx);
+                    lockedOut   = !m_lockstate.isSchedulable(inst, idx);
                     currentCost = (*m_cost)(inst);
                 }
 
@@ -109,8 +109,8 @@ namespace rocRoller
                         if(iterators[idx] != seqs[idx].end())
                         {
                             auto const& inst = *iterators[idx];
-                            lockedOut = m_lockstate.isLockedFrom(inst, idx);
-                            currentCost = (*m_cost)(inst);
+                            lockedOut        = !m_lockstate.isSchedulable(inst, idx);
+                            currentCost      = (*m_cost)(inst);
                             if(!lockedOut && currentCost < minCost)
                             {
                                 minCost    = currentCost;
@@ -131,8 +131,6 @@ namespace rocRoller
                 }
                 co_yield yieldFromStream(iterators[idx], idx);
             }
-
-            m_lockstate.isValid(false);
         }
     }
 }
