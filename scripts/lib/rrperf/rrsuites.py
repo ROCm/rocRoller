@@ -369,14 +369,15 @@ def hgemm_gfx120X():
         prefetch=False,
     )
 
-    type_specifiers = [("half", fp16),
-                       ("bf16", bf16_bf16),
-                       ("float", fp16),
-                       ("float", fp8fp8_fp32),
-                       ("float", fp8bf8_fp32),
-                       ("float", bf8bf8_fp32),
-                       ("float", bf8fp8_fp32),
-                       ]
+    type_specifiers = [
+        ("half", fp16),
+        ("bf16", bf16_bf16),
+        ("float", fp16),
+        ("float", fp8fp8_fp32),
+        ("float", fp8bf8_fp32),
+        ("float", bf8bf8_fp32),
+        ("float", bf8fp8_fp32),
+    ]
 
     for sched in ["Priority", "Cooperative", "Sequential"]:
         for a, b in product("NT", repeat=2):
@@ -1368,7 +1369,8 @@ def fp4_target():
         scaleBlockSize=32,
         numOuter=1,
         numWarmUp=1000,
-        numInner=1000)
+        numInner=1000,
+    )
 
 
 def fp4_target_d2lds_mi32x32x64_pf2x1():
@@ -1410,7 +1412,8 @@ def fp4_target_d2lds_mi32x32x64_pf2x1():
         scaleBlockSize=32,
         numOuter=1,
         numWarmUp=1000,
-        numInner=1000)
+        numInner=1000,
+    )
 
 
 def fp4_target_d2lds_mi32x32x64_pf4x1():
@@ -1455,7 +1458,8 @@ def fp4_target_d2lds_mi32x32x64_pf4x1():
         scaleBlockSize=32,
         numOuter=1,
         numWarmUp=1000,
-        numInner=1000)
+        numInner=1000,
+    )
 
 
 def fp4_target_d2lds_mi16x16x128_pf4x1():
@@ -1500,7 +1504,8 @@ def fp4_target_d2lds_mi16x16x128_pf4x1():
         scaleBlockSize=32,
         numOuter=1,
         numWarmUp=1000,
-        numInner=1000)
+        numInner=1000,
+    )
 
 
 def fp4_no_scale_target_d2lds_mi16x16x128_pf4x1():
@@ -1542,7 +1547,8 @@ def fp4_no_scale_target_d2lds_mi16x16x128_pf4x1():
         type_acc="float",
         numOuter=1,
         numWarmUp=1000,
-        numInner=1000)
+        numInner=1000,
+    )
 
 
 def fp4_kernels():
@@ -1551,6 +1557,10 @@ def fp4_kernels():
     yield from fp4_target_d2lds_mi32x32x64_pf4x1()
     yield from fp4_target_d2lds_mi16x16x128_pf4x1()
     yield from fp4_no_scale_target_d2lds_mi16x16x128_pf4x1()
+
+
+def generate_gfx950():
+    yield from fp4_kernels()
 
 
 def all():
