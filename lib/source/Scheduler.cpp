@@ -138,7 +138,7 @@ namespace rocRoller
             if(m_stream.contains(dep))
             {
                 AssertFatal(
-                    topDep == dep && m_stream[dep] == streamId,
+                    topDep == dep && m_stream.at(dep) == streamId,
                     "Only the same stream can acquire the top dependency lock multiple times.",
                     ShowValue(dep),
                     ShowValue(m_stream[dep]),
@@ -191,19 +191,21 @@ namespace rocRoller
             }
 
             // update m_nonPreemptibleStream state if needed
+            // Example: when a stream holds multiple non-preemptible
+            // locks like Branch -> VCC -> SCC.
             m_nonPreemptibleStream.reset();
             auto tempDep = getTopDependency(streamId);
-            while(tempDep != Dependency::None && !(m_locks.count(tempDep) > 0))
+            while(tempDep != Dependency::None)
             {
-                if(isNonPreemptibleDependency(tempDep))
+                if(m_stream.contains(tempDep) && m_stream.at(tempDep) == streamId
+                   && isNonPreemptibleDependency(tempDep))
                 {
                     m_nonPreemptibleStream = streamId;
                     break;
                 }
 
                 auto depVal = static_cast<int>(tempDep);
-                depVal--;
-                tempDep = static_cast<Dependency>(depVal);
+                tempDep     = static_cast<Dependency>(--depVal);
             }
         }
 
@@ -241,6 +243,25 @@ namespace rocRoller
             // scheduled by the same stream again, it's schedulable.
             if(m_locks.contains(dep))
                 return m_stream.at(dep) == streamId;
+
+            // If the given stream tries to acquire a non-preemptible lock
+            // and another stream currently holds a higher-ranked preemptible lock,
+            // the scheduler cannot schedule this lower-ranked non-preemptible
+            // lock from streamId until the higher-ranked preemptible lock is released
+            // by the another stream.
+            if(isNonPreemptibleDependency(dep))
+            {
+                auto depVal  = static_cast<int>(dep);
+                auto tempDep = static_cast<Dependency>(++depVal);
+                while(tempDep != Dependency::Count)
+                {
+                    if(m_locks.contains(tempDep))
+                        return false;
+
+                    depVal  = static_cast<int>(tempDep);
+                    tempDep = static_cast<Dependency>(++depVal);
+                }
+            }
 
             return true;
         }
