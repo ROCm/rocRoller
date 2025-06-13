@@ -74,7 +74,7 @@ add_subdirectory(Utilities)
 add_subdirectory(Operations)
 add_subdirectory(KernelGraph)
 
-add_library(rocroller-no-rtti 
+add_library(rocroller-no-rtti
     OBJECT
         "${_CMAKE_CURRENT_SOURCE_DIR}/Utilities/ReadELF.cpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/Assemblers/InProcessAssembler.cpp"
