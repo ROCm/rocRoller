@@ -260,7 +260,9 @@ streamK: false
 streamKTwoTile: false
 matchMemoryAccess: true
 scale_A: None
+scaleType_A: None
 scale_B: None
+scaleType_B: None
 scaleBlockSize: 0
 loadScaleLDS_A: false
 loadScaleLDS_B: false
@@ -310,7 +312,9 @@ type_C: half
 type_D: half
 type_acc: float
 scale_A: None
+scaleType_A: None
 scale_B: None
+scaleType_B: None
 scaleBlockSize: 0
 loadScaleLDS_A: false
 loadScaleLDS_B: false

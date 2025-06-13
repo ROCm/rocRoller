@@ -90,7 +90,9 @@ struct rocRoller::Serialization::
         iot::mapRequired(io, "type_acc", result.solutionParams.typeAcc);
 
         iot::mapRequired(io, "scale_A", result.solutionParams.scaleA);
+        iot::mapRequired(io, "scaleType_A", result.solutionParams.scaleTypeA);
         iot::mapRequired(io, "scale_B", result.solutionParams.scaleB);
+        iot::mapRequired(io, "scaleType_B", result.solutionParams.scaleTypeB);
         iot::mapRequired(io, "scaleBlockSize", result.solutionParams.scaleBlockSize);
         iot::mapRequired(io, "loadLDSScale_A", result.solutionParams.loadLDSScaleA);
         iot::mapRequired(io, "loadLDSScale_B", result.solutionParams.loadLDSScaleB);
@@ -196,7 +198,9 @@ struct rocRoller::Serialization::MappingTraits<Client::GEMMClient::SolutionParam
         iot::mapRequired(io, "type_acc", params.typeAcc);
 
         iot::mapRequired(io, "scale_A", params.scaleA);
+        iot::mapRequired(io, "scaleType_A", params.scaleTypeA);
         iot::mapRequired(io, "scale_B", params.scaleB);
+        iot::mapRequired(io, "scaleType_B", params.scaleTypeB);
         iot::mapRequired(io, "scaleBlockSize", params.scaleBlockSize);
         iot::mapRequired(io, "loadScaleLDS_A", params.loadLDSScaleA);
         iot::mapRequired(io, "loadScaleLDS_B", params.loadLDSScaleB);
@@ -715,8 +719,10 @@ namespace rocRoller::Client::GEMMClient
         Client::GEMMClient::TransposeType transA = Client::GEMMClient::TransposeType::N;
         Client::GEMMClient::TransposeType transB = Client::GEMMClient::TransposeType::N;
 
-        Operations::ScaleMode scaleA = Operations::ScaleMode::None;
-        Operations::ScaleMode scaleB = Operations::ScaleMode::None;
+        Operations::ScaleMode scaleA     = Operations::ScaleMode::None;
+        DataType              scaleTypeA = DataType::None;
+        Operations::ScaleMode scaleB     = Operations::ScaleMode::None;
+        DataType              scaleTypeB = DataType::None;
 
         int scaleBlockSize = -1;
     };
@@ -1011,7 +1017,9 @@ namespace rocRoller::Client::GEMMClient
         types.transA         = solution.transA;
         types.transB         = solution.transB;
         types.scaleA         = solution.scaleA;
+        types.scaleTypeA     = solution.scaleTypeA;
         types.scaleB         = solution.scaleB;
+        types.scaleTypeB     = solution.scaleTypeB;
         types.scaleBlockSize = solution.scaleBlockSize;
     }
 }
@@ -1150,8 +1158,10 @@ int main(int argc, const char* argv[])
         .workgroupRemapXCC      = false,
         .workgroupRemapXCCValue = -1,
 
-        .scaleA = Operations::ScaleMode::None,
-        .scaleB = Operations::ScaleMode::None,
+        .scaleA     = Operations::ScaleMode::None,
+        .scaleTypeA = DataType::None,
+        .scaleB     = Operations::ScaleMode::None,
+        .scaleTypeB = DataType::None,
 
         .scaleBlockSize = -1,
 
@@ -1283,12 +1293,28 @@ int main(int argc, const char* argv[])
         "Enable MX scaling of A matrix [None | Separate | SingleScale].",
         "Default: None.");
     app.add_option(
+        "--scaleType_A",
+        [&types](auto res) -> bool {
+            types.scaleTypeA = fromString<DataType>(res[0]);
+            return true;
+        },
+        "Type for A matrix scales [None | E8M0].",
+        "Default: None.");
+    app.add_option(
         "--scale_B",
         [&types](auto res) -> bool {
             types.scaleB = fromString<Operations::ScaleMode>(res[0]);
             return true;
         },
         "Enable MX scaling of B matrix [None | Separate | SingleScale].",
+        "Default: None.");
+    app.add_option(
+        "--scaleType_B",
+        [&types](auto res) -> bool {
+            types.scaleTypeB = fromString<DataType>(res[0]);
+            return true;
+        },
+        "Type for B matrix scales [None | E8M0].",
         "Default: None.");
     app.add_option("--scaleBlockSize",
                    types.scaleBlockSize,
@@ -1566,7 +1592,9 @@ int main(int argc, const char* argv[])
     solution.transA         = types.transA;
     solution.transB         = types.transB;
     solution.scaleA         = types.scaleA;
+    solution.scaleTypeA     = types.scaleTypeA;
     solution.scaleB         = types.scaleB;
+    solution.scaleTypeB     = types.scaleTypeB;
     solution.scaleBlockSize = types.scaleBlockSize;
 
     // TODO: Reevaluate the relationship between problem and solution params.
