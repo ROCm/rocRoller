@@ -32,9 +32,6 @@
 
 #include <bit>
 
-#include <llvm/Config/llvm-config.h>
-#include <llvm/Support/DivisionByConstantInfo.h>
-
 #define cast_to_unsigned(N) static_cast<typename std::make_unsigned<T>::type>(N)
 
 namespace rocRoller
@@ -47,34 +44,6 @@ namespace rocRoller
          * Attempt to replace division operations found within an expression with faster
          * operations.
          */
-
-        void magicNumbersUnsigned(unsigned int  divisor,
-                                  u_int64_t&    magicNumber,
-                                  unsigned int& numPreShifts,
-                                  unsigned int& numPostShifts,
-                                  bool&         isAdd)
-        {
-            llvm::UnsignedDivisionByConstantInfo magicu
-                = llvm::UnsignedDivisionByConstantInfo::get(llvm::APInt(32, divisor));
-
-            magicNumber   = magicu.Magic.getZExtValue();
-            numPreShifts  = magicu.PreShift;
-            numPostShifts = magicu.PostShift;
-            isAdd         = magicu.IsAdd;
-        }
-
-        void magicNumbersSigned(int           divisor,
-                                long int&     magicNumber,
-                                unsigned int& numShifts,
-                                bool&         isNegative)
-        {
-            llvm::SignedDivisionByConstantInfo magics
-                = llvm::SignedDivisionByConstantInfo::get(llvm::APInt(32, divisor, true));
-
-            magicNumber = magics.Magic.getSExtValue();
-            numShifts   = magics.ShiftAmount;
-            isNegative  = magicNumber < 0L;
-        }
 
         void enableDivideBy(ExpressionPtr expr, ContextPtr context)
         {
@@ -158,10 +127,14 @@ namespace rocRoller
                 EvaluationTimes evalTimes
                     = evaluationTimes(magicExpr) & evaluationTimes(numShiftsExpr);
 
-                if(!evalTimes[EvaluationTime::KernelExecute])
+                if(!evalTimes[EvaluationTime::KernelExecute]
+                   && !evalTimes[EvaluationTime::Translate])
                 {
-                    Log::debug("Returning nullptr from magicNumberDivision ({})",
-                               toString(evalTimes));
+                    Log::debug("Returning nullptr from magicNumberDivision expr / shift "
+                               "({})\nmagic: {}\n shift: {}",
+                               toString(evalTimes),
+                               toString(magicExpr),
+                               toString(numShiftsExpr));
                     return nullptr;
                 }
             }
@@ -187,9 +160,10 @@ namespace rocRoller
                 {
                     EvaluationTimes evalTimes = evaluationTimes(signExpr);
 
-                    if(!evalTimes[EvaluationTime::KernelExecute])
+                    if(!evalTimes[EvaluationTime::KernelExecute]
+                       && !evalTimes[EvaluationTime::Translate])
                     {
-                        Log::debug("Returning nullptr from magicNumberDivision ({})",
+                        Log::debug("Returning nullptr from magicNumberDivision sign ({})",
                                    toString(evalTimes));
                         return nullptr;
                     }
@@ -231,7 +205,7 @@ namespace rocRoller
                 setComment(result, "Magic result (signed)");
             }
 
-            result = launchTimeSubExpressions(result, context);
+            result = launchTimeSubExpressions(simplify(result), context);
 
             {
                 auto evalTimes = evaluationTimes(result);
@@ -239,74 +213,6 @@ namespace rocRoller
             }
 
             return result;
-        }
-
-        template <typename T>
-        ExpressionPtr magicNumberDivisionByConstant(ExpressionPtr lhs, T rhs)
-        {
-            throw std::runtime_error("Magic Number Dvision not supported for this type");
-        }
-
-        // Magic number division for unsigned integers
-        template <>
-        ExpressionPtr magicNumberDivisionByConstant(ExpressionPtr lhs, unsigned int rhs)
-        {
-            u_int64_t    magicNumber;
-            unsigned int numPreShifts, numPostShifts;
-            bool         isAdd;
-
-            magicNumbersUnsigned(rhs, magicNumber, numPreShifts, numPostShifts, isAdd);
-
-            auto magicNumberExpr = literal(static_cast<unsigned int>(magicNumber));
-            auto lhsPreShifted   = lhs;
-            if(numPreShifts > 0)
-            {
-                ExpressionPtr numPreShiftsExpr = literal(numPreShifts);
-                lhsPreShifted                  = logicalShiftR(lhs, numPreShiftsExpr);
-            }
-
-            auto          magicMultiple     = multiplyHigh(lhsPreShifted, magicNumberExpr);
-            ExpressionPtr numPostShiftsExpr = literal(numPostShifts);
-
-            if(isAdd)
-            {
-                ExpressionPtr one = literal(1u);
-                return logicalShiftR(logicalShiftR(lhs - magicMultiple, one) + magicMultiple,
-                                     numPostShiftsExpr);
-            }
-            else
-            {
-                return logicalShiftR(magicMultiple, numPostShiftsExpr);
-            }
-        }
-
-        // Magic number division for signed integers
-        template <>
-        ExpressionPtr magicNumberDivisionByConstant(ExpressionPtr lhs, int rhs)
-        {
-            int64_t      magicNumber;
-            unsigned int numShifts;
-            bool         isNegative;
-
-            magicNumbersSigned(rhs, magicNumber, numShifts, isNegative);
-
-            auto magicNumberExpr = literal(static_cast<int>(magicNumber));
-            auto magicMultiple   = multiplyHigh(lhs, magicNumberExpr);
-
-            if(rhs > 0 && isNegative)
-            {
-                magicMultiple = magicMultiple + lhs;
-            }
-            else if(rhs < 0 && magicNumber > 0L)
-            {
-                magicMultiple = magicMultiple - lhs;
-            }
-
-            ExpressionPtr numShiftsExpr = literal(numShifts);
-            ExpressionPtr signBitsExpr  = literal<uint32_t>(sizeof(int) * 8 - 1);
-            ExpressionPtr shifted       = (magicMultiple >> numShiftsExpr);
-
-            return shifted + logicalShiftR(shifted, signBitsExpr);
         }
 
         template <typename T>
@@ -399,7 +305,8 @@ namespace rocRoller
                 }
                 else
                 {
-                    return magicNumberDivisionByConstant<T>(m_lhs, rhs);
+                    auto rhsExpr = literal(rhs);
+                    return magicNumberDivision(m_lhs, rhsExpr, m_context);
                 }
             }
 
@@ -417,7 +324,13 @@ namespace rocRoller
                 return visit(*this, rhs);
             }
 
+            DivisionByConstant(ContextPtr ctx)
+                : m_context(ctx)
+            {
+            }
+
         private:
+            ContextPtr    m_context;
             ExpressionPtr m_lhs;
         };
 
@@ -443,8 +356,8 @@ namespace rocRoller
                 }
                 else
                 {
-                    auto div     = magicNumberDivisionByConstant(m_lhs, rhs);
                     auto rhsExpr = literal(rhs);
+                    auto div     = magicNumberDivision(m_lhs, rhsExpr, m_context);
                     return m_lhs - (div * rhsExpr);
                 }
             }
@@ -463,7 +376,13 @@ namespace rocRoller
                 return visit(*this, rhs);
             }
 
+            ModuloByConstant(ContextPtr ctx)
+                : m_context(ctx)
+            {
+            }
+
         private:
+            ContextPtr    m_context;
             ExpressionPtr m_lhs;
         };
 
@@ -558,7 +477,7 @@ namespace rocRoller
                 if(rhsEvalTimes[EvaluationTime::Translate])
                 {
                     auto rhsVal     = evaluate(rhs);
-                    auto divByConst = DivisionByConstant();
+                    auto divByConst = DivisionByConstant(m_context);
                     auto rv         = divByConst.call(lhs, rhsVal);
                     copyComment(rv, expr);
                     return rv;
@@ -592,7 +511,7 @@ namespace rocRoller
                 if(rhsEvalTimes[EvaluationTime::Translate])
                 {
                     auto rhsVal     = evaluate(rhs);
-                    auto modByConst = ModuloByConstant();
+                    auto modByConst = ModuloByConstant(m_context);
                     auto rv         = modByConst.call(lhs, rhsVal);
                     copyComment(rv, expr);
                     return rv;
