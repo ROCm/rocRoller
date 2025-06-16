@@ -41,18 +41,18 @@ namespace rocRoller
             Count
         };
 
-        enum class Dependency: int
+        enum class Dependency : int
         {
             None = 0, //< Temporary. Should only be used for unlocking.
-            Branch,   //< Exclusive: Loops and ConditionalOp
-            M0,       //< Non-exclusive: The M0 special-purpose register
-            VCC,      //< Non-exclusive: The VCC special-purpose register
-            SCC,      //< Exclusive: The SCC special-purpose register, which is
-                      //  implicitly written by many instructions.
+            Branch, //< Exclusive: Loops and ConditionalOp
+            M0, //< Non-exclusive: The M0 special-purpose register
+            VCC, //< Non-exclusive: The VCC special-purpose register
+            SCC, //< Exclusive: The SCC special-purpose register, which is
+            //  implicitly written by many instructions.
             Count
         };
 
-        enum class LockOperation: int
+        enum class LockOperation : int
         {
             None = 0,
             Lock,

@@ -98,7 +98,7 @@ namespace rocRoller
 
         float Cost::operator()(Generator<Instruction>::iterator& iter) const
         {
-            auto const& inst   = *iter;
+            auto const& inst = *iter;
             return (*this)(inst);
         }
     }
