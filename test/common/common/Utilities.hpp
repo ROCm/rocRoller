@@ -43,9 +43,18 @@
 #include <rocRoller/DataTypes/DataTypes.hpp>
 #include <rocRoller/DataTypes/DataTypes_Utils.hpp>
 #include <rocRoller/GPUArchitecture/GPUArchitectureTarget.hpp>
+#include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/Utilities/Logging.hpp>
 #include <rocRoller/Utilities/Random.hpp>
 #include <rocRoller/Utilities/Settings.hpp>
+
+template <typename Transform, typename... Args>
+rocRoller::KernelGraph::KernelGraph transform(rocRoller::KernelGraph::KernelGraph& graph,
+                                              Args... args)
+{
+    auto xform = std::make_shared<Transform>(std::forward<Args>(args)...);
+    return graph.transform(xform);
+}
 
 template <typename T>
 std::shared_ptr<T> make_shared_device(std::size_t n = 1, T init = {})

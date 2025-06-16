@@ -153,6 +153,7 @@ set(
     catch/CustomAssertions.cpp
     catch/TestKernels.cpp
 
+    catch/AddPrefetchTest.cpp
     catch/AliasDataFlowTagsTest.cpp
     catch/AnnotateInstructionsTest.cpp
     catch/BinaryExpressionTest.cpp
