@@ -227,6 +227,7 @@ target_sources(rocroller
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes_Int8.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes_Int8x4.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes_Scale_Utils.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes_UInt8x4.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DataTypes_Utils.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/DataTypes/DistinctType.hpp"
