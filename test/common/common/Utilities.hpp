@@ -400,7 +400,9 @@ namespace rocRoller
                      float                       beta,
                      bool                        transA,
                      bool                        transB,
-                     const uint                  scaleBlockSize);
+                     const uint                  scaleBlockSize = 32,
+                     const DataType              scaleTypeA     = DataType::E8M0,
+                     const DataType              scaleTypeB     = DataType::E8M0);
 
     template <typename TA, typename TB, typename TC, typename TD>
     void ScaledCPUMM(std::vector<TD>&            D,
@@ -416,7 +418,9 @@ namespace rocRoller
                      float                       beta,
                      bool                        transA,
                      bool                        transB,
-                     const uint                  scaleBlockSize)
+                     const uint                  scaleBlockSize = 32,
+                     const DataType              scaleTypeA     = DataType::E8M0,
+                     const DataType              scaleTypeB     = DataType::E8M0)
     {
         if constexpr(std::same_as<TD, float> && std::same_as<TC, float>)
         {
@@ -435,7 +439,9 @@ namespace rocRoller
                         beta,
                         transA,
                         transB,
-                        scaleBlockSize);
+                        scaleBlockSize,
+                        scaleTypeA,
+                        scaleTypeB);
         }
         else if constexpr((std::same_as<TD, __half> && std::same_as<TC, __half>)
                           || (std::same_as<TD, BFloat16> && std::same_as<TC, BFloat16>))
@@ -456,7 +462,9 @@ namespace rocRoller
                         beta,
                         transA,
                         transB,
-                        scaleBlockSize);
+                        scaleBlockSize,
+                        scaleTypeA,
+                        scaleTypeB);
 #pragma omp parallel for
             for(std::size_t i = 0; i != floatD.size(); ++i)
             {
