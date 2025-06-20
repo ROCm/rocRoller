@@ -59,7 +59,7 @@ else()
 endif()
 
 target_include_directories(GPUArchitectureGenerator
-    PRIVATE 
+    PRIVATE
         "${ROCROLLER_LIB_DIR}/../GPUArchitectureGenerator/include"
         "${ROCROLLER_LIB_DIR}/include"
         "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager"
@@ -78,6 +78,11 @@ target_compile_definitions(GPUArchitectureGenerator
        ROCROLLER_USE_HIP
        __HIP_PLATFORM_AMD__
 )
+
+if(ROCROLLER_ENABLE_TIMERS)
+    target_compile_definitions(GPUArchitectureGenerator PRIVATE ROCROLLER_ENABLE_TIMERS)
+    target_compile_options(GPUArchitectureGenerator PRIVATE -pg -fno-omit-frame-pointer)
+endif()
 
 file(GLOB YAML_FILES "${ROCROLLER_LIB_DIR}/../GPUArchitectureGenerator/pregenerated/*.yaml")
 set(YAML_ARGS "")
@@ -109,6 +114,7 @@ if(ROCROLLER_EMBED_ARCH_DEF)
     cmrc_add_resource_library(
         GPUArchitecture_def_library
         ALIAS rocroller::GPUArchitecture_def
+        TYPE OBJECT
         NAMESPACE rocRoller
         WHENCE ${CMAKE_CURRENT_BINARY_DIR}
         PREFIX resources
