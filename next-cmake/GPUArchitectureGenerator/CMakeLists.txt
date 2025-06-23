@@ -31,6 +31,18 @@ if(ROCROLLER_ENABLE_FETCH)
     FetchContent_MakeAvailable(mrisa_xml)
 endif()
 
+add_library(isa-spec-manager OBJECT)
+target_sources(isa-spec-manager
+    PRIVATE
+        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/isa_xml_reader.cpp"
+        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/tinyxml2.cpp"
+        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/amdisa_utility.cpp"
+)
+add_library(rocroller::isa-spec-manager ALIAS isa-spec-manager)
+target_include_directories(isa-spec-manager
+    PUBLIC
+        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager"
+)
 add_executable(GPUArchitectureGenerator
     "${ROCROLLER_GPUARCH_DIR}/source/GPUArchitectureGenerator.cpp"
     "${ROCROLLER_LIB_DIR}/source/GPUArchitecture.cpp"
@@ -45,9 +57,6 @@ add_executable(GPUArchitectureGenerator
     "${ROCROLLER_LIB_DIR}/source/Scheduler.cpp"
     "${ROCROLLER_LIB_DIR}/source/Utilities/Settings.cpp"
     "${ROCROLLER_LIB_DIR}/source/Timer.cpp"
-    "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/isa_xml_reader.cpp"
-    "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/tinyxml2.cpp"
-    "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/amdisa_utility.cpp"
 )
 
 if(ROCROLLER_ENABLE_LLVM)
@@ -62,7 +71,6 @@ target_include_directories(GPUArchitectureGenerator
     PRIVATE
         "${ROCROLLER_LIB_DIR}/../GPUArchitectureGenerator/include"
         "${ROCROLLER_LIB_DIR}/include"
-        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager"
 )
 target_compile_features(GPUArchitectureGenerator PRIVATE cxx_std_20)
 target_link_libraries(GPUArchitectureGenerator
@@ -72,6 +80,7 @@ target_link_libraries(GPUArchitectureGenerator
         spdlog::spdlog_header_only
         hip::host
         fmt::fmt-header-only
+        rocroller::isa-spec-manager
 )
 target_compile_definitions(GPUArchitectureGenerator
     PRIVATE
