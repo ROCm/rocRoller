@@ -1185,6 +1185,7 @@ namespace rocRoller
             }
 
             expr = lowerBitfieldValues(expr);
+
             // Replace kernel args with registers.
             co_yield replaceKernelArgs(context, expr, expr);
 
