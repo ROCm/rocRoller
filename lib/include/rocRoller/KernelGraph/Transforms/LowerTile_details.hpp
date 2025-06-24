@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2022-2025 AMD ROCm(TM) Software
+ * Copyright 2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,18 @@
  *
  *******************************************************************************/
 
-#pragma once
-
-#include <memory>
+#include <rocRoller/CodeGen/Arithmetic/MatrixMultiply_fwd.hpp>
+#include <rocRoller/DataTypes/DataTypes.hpp>
 
 namespace rocRoller
 {
-    namespace InstructionGenerators
+    namespace KernelGraph
     {
-        struct MatrixMultiply;
-        using MatrixMultiplyPtr = std::shared_ptr<MatrixMultiply>;
-
-        struct MatrixMultiplySizes
+        namespace LowerTileDetails
         {
-            int m, n, k, b = 1;
-        };
-
-        std::string toString(MatrixMultiplySizes mi);
+            using namespace rocRoller::InstructionGenerators;
+            bool isTileOfSubDwordTypeWithNonContiguousVGPRBlocks(DataType            type,
+                                                                 MatrixMultiplySizes mi);
+        }
     }
 }
