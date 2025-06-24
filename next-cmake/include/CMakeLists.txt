@@ -233,6 +233,7 @@ target_sources(rocroller
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/LowerLinear.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/LowerTensorContraction.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/LowerTile.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/LowerTile_details.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/NopExtraScopes.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/OrderEpilogueBlocks.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/OrderMemory.hpp"
