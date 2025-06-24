@@ -1273,8 +1273,8 @@ namespace rocRoller
             if(params->enableLongDwordInstructions && (packed || packFactor <= 1)
                && (!direct2LDS || useWiderDirect2LDS))
             {
-                auto maxWidth = std::min(context->kernelOptions().storeGlobalWidth,
-                                         context->kernelOptions().loadLocalWidth);
+                auto maxWidth = std::min(context->kernelOptions()->storeGlobalWidth,
+                                         context->kernelOptions()->loadLocalWidth);
 
                 auto numDwordsPerElement = DataTypeInfo::Get(varType).registerCount;
                 auto macTileM            = macTile.sizes[0];

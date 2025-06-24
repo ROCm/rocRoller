@@ -41,7 +41,7 @@ if(NOT CLI11_FOUND)
     endif()
 endif()
 
-add_executable(rocroller_gemm 
+add_executable(rocroller_gemm
     "${_CMAKE_CURRENT_SOURCE_DIR}/gemm.cpp"
     "${_CMAKE_CURRENT_SOURCE_DIR}/GEMMParameters.cpp"
     "${_CMAKE_CURRENT_SOURCE_DIR}/GraphInspector.cpp"
