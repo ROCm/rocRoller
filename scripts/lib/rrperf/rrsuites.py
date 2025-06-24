@@ -597,8 +597,8 @@ def tensile_benchmarks():
 
 def codegen():
     yield CodeGenRun(instCount=40000, instructions="comments")
-    yield CodeGenRun(instCount=40000, instructions="simple_mfma")
-    yield CodeGenRun(instCount=40000, instructions="complex_mfma_with_coop")
+    yield CodeGenRun(instCount=40000, instructions="simple_mi")
+    yield CodeGenRun(instCount=40000, instructions="complex_mi_with_coop")
 
 
 def f16gemm_16x16x32_params(transA, transB):
@@ -1597,6 +1597,7 @@ def all():
 
 def all_gfx120X():
     yield from hgemm_gfx120X()
+    yield from codegen()
 
 
 def hgemm_guideposts():
