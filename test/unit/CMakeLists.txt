@@ -4,6 +4,27 @@
 # TODO: KernelGraphTest
 # TODO: ConversionInstructions
 
+target_sources(arch-gen-tests
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/GPUArchitectureGeneratorTest.cpp"
+)
+target_include_directories(
+    arch-gen-tests
+        PRIVATE
+            "${PROJECT_SOURCE_DIR}/GPUArchitectureGenerator/include"
+)
+target_link_libraries(
+    arch-gen-tests
+        PRIVATE
+            roc::rocroller-interface
+            rocroller::common-test-utilities
+            rocroller::isa-spec-manager
+            GTest::gtest_main
+            GTest::gmock
+            ${BLAS_LIBRARIES}
+)
+
+
 target_link_libraries(rocroller-tests
     PRIVATE
         rocroller::common-test-utilities
@@ -35,6 +56,7 @@ target_sources(rocroller-tests
         "${CMAKE_CURRENT_SOURCE_DIR}/BufferDescriptorTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CommandTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CommonSubexpressionElimTest.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ComponentTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlGraphTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ConversionInstructions/Convert_F16_F32.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ConversionTest.cpp"
