@@ -47,7 +47,7 @@ if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
 endif()
 
 find_package(BLAS REQUIRED)
-find_package(cblas REQUIRED)
+find_package(cblas)
 find_package(OpenMP REQUIRED)
 
 if(ROCROLLER_ENABLE_YAML_CPP)
@@ -58,6 +58,7 @@ if(ROCROLLER_ENABLE_CATCH)
     add_subdirectory(catch)
 endif()
 add_subdirectory(common)
+add_subdirectory(standalone)
 add_subdirectory(unit)
 
 if(ROCROLLER_ENABLE_TEST_DISCOVERY)
