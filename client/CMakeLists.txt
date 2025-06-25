@@ -1,9 +1,8 @@
-
 ################################################################################
 #
 # MIT License
 #
-# Copyright 2024-2025 AMD ROCm(TM) Software
+# Copyright 2025 AMD ROCm(TM) Software
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +23,11 @@
 #
 ################################################################################
 
+set(_CMAKE_CURRENT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../client")
 
-message("Building client program")
+find_package(BLAS REQUIRED)
 
-# Header only, not visible to library users, system package not required
-rocroller_add_dependency(CLI11 VERSION 2.1.2)
-
-add_executable(
-    rocroller_gemm gemm.cpp GEMMParameters.cpp GraphInspector.cpp visualize.cpp
-)
-
+<<<<<<< HEAD
 target_compile_options(rocroller_gemm PUBLIC ${EXTRA_COMPILE_OPTIONS})
 target_link_options(rocroller_gemm PUBLIC ${EXTRA_LINK_OPTIONS})
 target_link_libraries(
@@ -48,51 +42,47 @@ if(BUILD_SHARED_LIBS)
     target_link_libraries(
         rocroller_gemm PUBLIC ${llvm_yaml_libs}
     )
+=======
+find_package(CLI11)
+if(NOT CLI11_FOUND)
+    if(ROCROLLER_ENABLE_FETCH)
+        FetchContent_Declare(
+            CLI11
+            GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+            GIT_TAG main
+        )
+        FetchContent_MakeAvailable(CLI11)
+    else()
+        message(FATAL_ERROR "Failed to find CLI11")
+    endif()
+>>>>>>> Move next-cmake files to existing build tree
 endif()
 
-set_target_properties(
-    rocroller_gemm PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/client"
-        OUTPUT_NAME "rocRoller_gemm"
+add_executable(rocroller_gemm
+    "${_CMAKE_CURRENT_SOURCE_DIR}/gemm.cpp"
+    "${_CMAKE_CURRENT_SOURCE_DIR}/GEMMParameters.cpp"
+    "${_CMAKE_CURRENT_SOURCE_DIR}/GraphInspector.cpp"
+    "${_CMAKE_CURRENT_SOURCE_DIR}/visualize.cpp"
 )
-add_custom_command(
-    OUTPUT "${PROJECT_BINARY_DIR}/bin/client/gemm"
-    COMMAND
-        sudo ln -s $<TARGET_FILE:rocroller_gemm>
-            ${PROJECT_BINARY_DIR}/bin/client/gemm
-    MAIN_DEPENDENCY rocroller_gemm
+target_link_libraries(rocroller_gemm
+    PUBLIC
+        roc::rocroller
+        rocroller::common-test-utilities
+        CLI11::CLI11
+        ${BLAS_LIBRARIES}
 )
-
-add_executable(rocroller_codegen_stress codegen_stress_test.cpp)
-
-target_compile_options(rocroller_codegen_stress PUBLIC ${EXTRA_COMPILE_OPTIONS})
-target_link_options(rocroller_codegen_stress PUBLIC ${EXTRA_LINK_OPTIONS})
-target_link_libraries(
-    rocroller_codegen_stress PUBLIC rocroller_interface CLI11::CLI11
-)
-if(BUILD_SHARED_LIBS)
-    target_link_libraries(
-        rocroller_codegen_stress PUBLIC ${llvm_yaml_libs}
-    )
+if(ROCROLLER_BUILD_SHARED_LIBS)
+    target_link_libraries(rocroller_gemm PUBLIC ${llvm_yaml_libs})
 endif()
 
-set_target_properties(
-    rocroller_codegen_stress PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/client"
-        OUTPUT_NAME "rocRoller_codegen_stress"
+add_executable(rocroller_codegen_stress "${_CMAKE_CURRENT_SOURCE_DIR}/codegen_stress_test.cpp")
+target_link_libraries(rocroller_codegen_stress
+    PUBLIC
+        roc::rocroller-interface
+        rocroller::common-test-utilities
+        CLI11::CLI11
+        ${BLAS_LIBRARIES}
 )
-add_custom_command(
-    OUTPUT "${PROJECT_BINARY_DIR}/bin/client/codegen_stress"
-    COMMAND
-        sudo ln -s $<TARGET_FILE:rocroller_codegen_stress>
-            ${PROJECT_BINARY_DIR}/bin/client/codegen_stress
-    MAIN_DEPENDENCY rocroller_codegen_stress
-)
-
-add_custom_target(all_clients)
-add_dependencies(all_clients rocroller_gemm rocroller_codegen_stress)
-
-rocm_install(
-  TARGETS rocroller_gemm rocroller_codegen_stress
-  COMPONENT benchmarks
-)
+if(ROCROLLER_BUILD_SHARED_LIBS)
+    target_link_libraries(rocroller_codegen_stress PUBLIC ${llvm_yaml_libs})
+endif()

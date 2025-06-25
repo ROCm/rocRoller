@@ -24,32 +24,41 @@
 #
 ################################################################################
 
-rocroller_add_dependency(
-  mxDataGenerator HASH ${MXDATAGENERATOR_GIT_TAG}
-)
-rocroller_add_dependency(boost)
+set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_TEST_DIR}/common")
 
-add_library(
-    common_test_utilities
-        OBJECT
-        CommonGraphs.cpp
-        mxDataGen.cpp
-        Utilities.cpp
-        WidenAddrExprTo64bit.cpp
-)
+add_library(common-test-utilities OBJECT)
+add_library(rocroller::common-test-utilities ALIAS common-test-utilities)
 
-target_compile_options(
-    common_test_utilities PUBLIC ${COROUTINES_COMPILE_OPTION}
-                                 ${EXTRA_COMPILE_OPTIONS}
-)
-target_link_options(common_test_utilities PUBLIC ${EXTRA_LINK_OPTIONS})
-target_link_libraries(
-    common_test_utilities
+target_link_libraries(common-test-utilities
     PUBLIC
-    mxDataGenerator
-    openblas
-    rocroller_interface
-    $<BUILD_INTERFACE:Boost::multi_index>
+        roc::rocroller-interface
+        roc::mxDataGenerator
+        hip::host
+        OpenMP::OpenMP_CXX
+        ${CBLAS_LIBRARIES}
 )
 
-target_include_directories(common_test_utilities PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+if(ROCROLLER_ENABLE_TIMERS)
+    target_compile_definitions(common-test-utilities PUBLIC ROCROLLER_ENABLE_TIMERS)
+    target_compile_options(common-test-utilities PUBLIC -pg -fno-omit-frame-pointer)
+endif()
+
+target_include_directories(common-test-utilities
+    PUBLIC
+        $<BUILD_INTERFACE:${_CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+target_sources(common-test-utilities
+    PRIVATE
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/CommonGraphs.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/CommonGraphs_impl.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/F8Values.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/GEMMProblem.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/mxDataGen.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/SourceMatcher.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/TestValues.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/Utilities.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/common/WidenAddrExprTo64bit.hpp"
+)
+
+add_subdirectory(src)
