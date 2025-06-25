@@ -180,8 +180,8 @@ target_sources(rocroller
 
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlEdge.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlEdge_fwd.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlFlowArgumentTracer.hpp
-        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlFlowArgumentTracer_fwd.hpp
+        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlFlowArgumentTracer.hpp"
+        "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlFlowArgumentTracer_fwd.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlFlowRWTracer.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlGraph.hpp"
         "${_CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/ControlGraph/ControlGraph_fwd.hpp"
