@@ -4,6 +4,8 @@
 *:*/*_cmrc*/*
 *:*/_deps/*
 *:/usr/*
+*:/usr/*
+*:*/isa_spec_manager/*
 
 
 # m_coroutine
