@@ -23,8 +23,6 @@
 #
 ################################################################################
 
-include(CTest)
-
 find_package(GTest)
 if(NOT GTest_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
@@ -72,21 +70,21 @@ add_subdirectory(common)
 add_subdirectory(unit)
 
 # Component stand-alone test
-add_executable(component-test "${ROCROLLER_TEST_DIR}/standalone/ComponentTest.cpp")
+add_executable(component-test "${CMAKE_CURRENT_SOURCE_DIR}/standalone/ComponentTest.cpp")
 target_link_libraries(component-test PRIVATE roc::rocroller-interface ${msgpack_libs})
 
 if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
     find_package(Pytest REQUIRED) # requires pip install -r requirements.txt
     pytest_discover_tests(
         GEMMClientTests
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../client"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/client"
         ENVIRONMENT "ROCROLLER_BUILD_DIR=${PROJECT_BINARY_DIR}"
     )
-    add_executable(arch-gen-tests "${ROCROLLER_TEST_DIR}/unit/GPUArchitectureGeneratorTest.cpp")
+    add_executable(arch-gen-tests "${CMAKE_CURRENT_SOURCE_DIR}/unit/GPUArchitectureGeneratorTest.cpp")
     target_include_directories(
         arch-gen-tests
             PRIVATE
-                "${ROCROLLER_GPUARCH_DIR}/include"
+                "${PROJECT_SOURCE_DIR}/GPUArchitectureGenerator/include"
     )
     target_link_libraries(
         arch-gen-tests
@@ -164,7 +162,7 @@ if(ROCROLLER_ENABLE_TEST_DISCOVERY)
     add_test(
         NAME PythonLint
         COMMAND flake8
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../scripts"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts"
     )
     set_tests_properties(
         PythonLint

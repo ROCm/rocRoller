@@ -28,10 +28,10 @@
 #include <rocRoller/CommandSolution.hpp>
 #include <rocRoller/KernelOptions.hpp>
 
-#include "DataParallelGEMMSolution.hpp"
-#include "GEMMParameters.hpp"
-#include "GEMMSolution.hpp"
-#include "visualize.hpp"
+#include "client/DataParallelGEMMSolution.hpp"
+#include "client/GEMMParameters.hpp"
+#include "client/GEMMSolution.hpp"
+#include "client/visualize.hpp"
 
 namespace rocRoller
 {

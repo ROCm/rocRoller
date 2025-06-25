@@ -46,9 +46,9 @@
 #include <common/Utilities.hpp>
 #include <common/mxDataGen.hpp>
 
-#include "include/DataParallelGEMMSolution.hpp"
-#include "include/GEMMParameters.hpp"
-#include "include/StreamKGEMMSolution.hpp"
+#include "client/DataParallelGEMMSolution.hpp"
+#include "client/GEMMParameters.hpp"
+#include "client/StreamKGEMMSolution.hpp"
 
 #include <CLI/CLI.hpp>
 

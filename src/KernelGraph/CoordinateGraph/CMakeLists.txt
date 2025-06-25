@@ -23,11 +23,9 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/KernelGraph/CoordinateGraph")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CoordinateGraph.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Dimension.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Transformer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CoordinateGraph.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Dimension.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Transformer.cpp"
 )

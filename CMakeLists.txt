@@ -26,10 +26,6 @@
 cmake_minimum_required(VERSION 3.21.0)
 project(rocroller VERSION 1.0.0)
 
-set(ROCROLLER_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
-set(ROCROLLER_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../test")
-set(ROCROLLER_GPUARCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../GPUArchitectureGenerator")
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CMakeRC)
@@ -229,12 +225,12 @@ target_link_libraries(rocroller
         ${llvm_libs}
 )
 
-target_include_directories(rocroller PUBLIC $<BUILD_INTERFACE:${ROCROLLER_LIB_DIR}/include>)
+target_include_directories(rocroller PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 target_compile_features(rocroller PUBLIC cxx_std_20)
 
 configure_file(
-    "${ROCROLLER_LIB_DIR}/source/Utilities/Version.cpp.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Utilities/Version.cpp.in"
     "${PROJECT_BINARY_DIR}/rocRoller/src/Version.cpp"
 )
 target_sources(rocroller PRIVATE "${PROJECT_BINARY_DIR}/rocRoller/src/Version.cpp")

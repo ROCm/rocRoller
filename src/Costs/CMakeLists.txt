@@ -23,14 +23,12 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/Costs")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Cost.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LinearWeightedCost.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/MinNopsCost.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/NoneCost.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/UniformCost.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/WaitCntNopCost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Cost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LinearWeightedCost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MinNopsCost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/NoneCost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UniformCost.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/WaitCntNopCost.cpp"
 )

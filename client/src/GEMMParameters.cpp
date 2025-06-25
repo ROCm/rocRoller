@@ -24,7 +24,7 @@
  *
  *******************************************************************************/
 
-#include "./include/GEMMParameters.hpp"
+#include "client/GEMMParameters.hpp"
 
 namespace rocRoller
 {

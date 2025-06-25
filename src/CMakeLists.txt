@@ -23,46 +23,44 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernel.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernelArgument.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernel_serialization.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/AssertOpKinds.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CommandSolution.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Command_serialization.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CommonSubexpressionElim.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Context.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataTypes.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataTypes_BF16_Utils.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataTypes_F6_Utils.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataTypes_F8_Utils.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataTypes_Utils.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Error.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ExecutableKernel.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_evaluate.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_generate.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_referencedKernelArguments.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_resultType.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_serialization.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Expression_toString.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/GPUArchitecture.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/GPUArchitectureLibrary.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/GPUInstructionInfo.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/HIPTimer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/KernelArguments.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/KernelOptions.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LDSAllocator.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Logging.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Random.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Register.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ReplaceKernelArgs.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ScheduledInstructions.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Scheduler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Timer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernel.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernelArgument.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AssemblyKernel_serialization.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AssertOpKinds.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CommandSolution.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Command_serialization.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CommonSubexpressionElim.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Context.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataTypes.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataTypes_BF16_Utils.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataTypes_F6_Utils.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataTypes_F8_Utils.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataTypes_Utils.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Error.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ExecutableKernel.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_evaluate.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_generate.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_referencedKernelArguments.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_resultType.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_serialization.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Expression_toString.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GPUArchitecture.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GPUArchitectureLibrary.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GPUInstructionInfo.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/HIPTimer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/KernelArguments.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/KernelOptions.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LDSAllocator.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Logging.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Register.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ReplaceKernelArgs.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ScheduledInstructions.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Scheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Timer.cpp"
 )
 
 add_subdirectory(Assemblers)
@@ -77,9 +75,9 @@ add_subdirectory(KernelGraph)
 
 add_library(rocroller-no-rtti
     OBJECT
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Utilities/ReadELF.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Assemblers/InProcessAssembler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ExpressionTransformations/FastDivision.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Utilities/ReadELF.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Assemblers/InProcessAssembler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ExpressionTransformations/FastDivision.cpp"
 )
 if(ROCROLLER_ENABLE_LLD)
     target_compile_definitions(rocroller-no-rtti PRIVATE ROCROLLER_ENABLE_LLD)
@@ -95,7 +93,7 @@ target_compile_definitions(rocroller-no-rtti
 target_include_directories(rocroller-no-rtti
     PRIVATE
         "${LLVM_INCLUDE_DIRS}"
-        "${ROCROLLER_LIB_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include" # is this necessary?
 )
 target_link_libraries(rocroller-no-rtti
     PRIVATE
@@ -108,5 +106,5 @@ target_link_libraries(rocroller-no-rtti
 target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:rocroller-no-rtti>)
 
 set_target_properties(
-    rocroller-no-rtti PROPERTIES POSITION_INDEPENDENT_CODE ON
+    rocroller-no-rtti PROPERTIES POSITION_INDEPENDENT_CODE ON # necessary?
 )

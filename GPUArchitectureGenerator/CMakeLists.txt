@@ -34,29 +34,29 @@ endif()
 add_library(isa-spec-manager OBJECT)
 target_sources(isa-spec-manager
     PRIVATE
-        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/isa_xml_reader.cpp"
-        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/tinyxml2.cpp"
-        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager/amdisa_utility.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/isa_spec_manager/isa_xml_reader.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/isa_spec_manager/tinyxml2.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/isa_spec_manager/amdisa_utility.cpp"
 )
 add_library(rocroller::isa-spec-manager ALIAS isa-spec-manager)
 target_include_directories(isa-spec-manager
     PUBLIC
-        "${ROCROLLER_GPUARCH_DIR}/isa_spec_manager"
+        "${CMAKE_CURRENT_SOURCE_DIR}/isa_spec_manager"
 )
 add_executable(GPUArchitectureGenerator
-    "${ROCROLLER_GPUARCH_DIR}/source/GPUArchitectureGenerator.cpp"
-    "${ROCROLLER_LIB_DIR}/source/GPUArchitecture.cpp"
-    "${ROCROLLER_LIB_DIR}/source/GPUArchitectureLibrary.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Assemblers/Assembler.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Costs/Cost.cpp"
-    "${ROCROLLER_LIB_DIR}/source/DataTypes_F6_Utils.cpp"
-    "${ROCROLLER_LIB_DIR}/source/DataTypes_F8_Utils.cpp"
-    "${ROCROLLER_LIB_DIR}/source/DataTypes_BF16_Utils.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Error.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Logging.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Scheduler.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Utilities/Settings.cpp"
-    "${ROCROLLER_LIB_DIR}/source/Timer.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/GPUArchitectureGenerator.cpp"
+    "${PROJECT_SOURCE_DIR}/src/GPUArchitecture.cpp"
+    "${PROJECT_SOURCE_DIR}/src/GPUArchitectureLibrary.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Assemblers/Assembler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Costs/Cost.cpp"
+    "${PROJECT_SOURCE_DIR}/src/DataTypes_F6_Utils.cpp"
+    "${PROJECT_SOURCE_DIR}/src/DataTypes_F8_Utils.cpp"
+    "${PROJECT_SOURCE_DIR}/src/DataTypes_BF16_Utils.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Error.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Logging.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Scheduler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Utilities/Settings.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Timer.cpp"
 )
 
 if(ROCROLLER_ENABLE_LLVM)
@@ -69,8 +69,8 @@ endif()
 
 target_include_directories(GPUArchitectureGenerator
     PRIVATE
-        "${ROCROLLER_LIB_DIR}/../GPUArchitectureGenerator/include"
-        "${ROCROLLER_LIB_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include" # necessary?
 )
 target_compile_features(GPUArchitectureGenerator PRIVATE cxx_std_20)
 target_link_libraries(GPUArchitectureGenerator
@@ -93,14 +93,14 @@ if(ROCROLLER_ENABLE_TIMERS)
     target_compile_options(GPUArchitectureGenerator PRIVATE -pg -fno-omit-frame-pointer)
 endif()
 
-file(GLOB YAML_FILES "${ROCROLLER_LIB_DIR}/../GPUArchitectureGenerator/pregenerated/*.yaml")
+file(GLOB YAML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pregenerated/*.yaml")
 set(YAML_ARGS "")
 foreach(YAML_FILE ${YAML_FILES})
     list(APPEND YAML_ARGS --yaml "${YAML_FILE}")
 endforeach()
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.yaml
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.yaml"
     COMMAND
         $<TARGET_FILE:GPUArchitectureGenerator>
         "${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.yaml"
@@ -125,7 +125,7 @@ if(ROCROLLER_EMBED_ARCH_DEF)
         ALIAS rocroller::GPUArchitecture_def
         TYPE OBJECT
         NAMESPACE rocRoller
-        WHENCE ${CMAKE_CURRENT_BINARY_DIR}
+        WHENCE "${CMAKE_CURRENT_BINARY_DIR}"
         PREFIX resources
         "${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.msgpack"
     )
@@ -138,6 +138,6 @@ add_custom_target(
     GPUArchitecture_def ALL
     DEPENDS
         GPUArchitecture_def_library
-        ${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.yaml
-        ${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.msgpack
+        "${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.yaml"
+        "${CMAKE_CURRENT_BINARY_DIR}/GPUArchitecture_def.msgpack"
 )

@@ -23,20 +23,18 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/CodeGen")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/AddInstruction.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ArgumentLoader.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CrashKernelGenerator.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Instruction.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LoadStoreTileGenerator.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LowerFromKernelGraph.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/MemoryInstructions.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/SubInstruction.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/WaitCount.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AddInstruction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ArgumentLoader.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CrashKernelGenerator.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Instruction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LoadStoreTileGenerator.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LowerFromKernelGraph.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MemoryInstructions.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SubInstruction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/WaitCount.cpp"
 )
 
 add_subdirectory(Arithmetic)

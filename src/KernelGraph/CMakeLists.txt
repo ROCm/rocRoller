@@ -23,22 +23,20 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/KernelGraph")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ControlFlowArgumentTracer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ControlFlowRWTracer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ControlToCoordinateMapper.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/GlobalConstraints.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/KernelGraph.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/KernelGraph_serialization.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LastRWTracer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LowerFromCommand.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/RegisterTagManager.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Reindexer.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ScopeManager.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Utils.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ControlFlowArgumentTracer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ControlFlowRWTracer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ControlToCoordinateMapper.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GlobalConstraints.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/KernelGraph.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/KernelGraph_serialization.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LastRWTracer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LowerFromCommand.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RegisterTagManager.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Reindexer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ScopeManager.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Utils.cpp"
 )
 
 add_subdirectory(Transformations)

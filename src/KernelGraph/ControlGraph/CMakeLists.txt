@@ -23,10 +23,8 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/KernelGraph/ControlGraph")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ControlGraph.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Operation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ControlGraph.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Operation.cpp"
 )

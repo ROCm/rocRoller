@@ -23,15 +23,13 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/Operations")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/BlockScale.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CommandArgument.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Command.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Operation.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/RandomNumberGenerator.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/TensorScalar.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/T_LoadStore.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/BlockScale.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CommandArgument.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Command.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Operation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RandomNumberGenerator.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/TensorScalar.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/T_LoadStore.cpp"
 )

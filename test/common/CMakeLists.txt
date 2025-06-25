@@ -24,8 +24,6 @@
 #
 ################################################################################
 
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_TEST_DIR}/common")
-
 add_library(common-test-utilities OBJECT)
 add_library(rocroller::common-test-utilities ALIAS common-test-utilities)
 
@@ -45,20 +43,20 @@ endif()
 
 target_include_directories(common-test-utilities
     PUBLIC
-        $<BUILD_INTERFACE:${_CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_sources(common-test-utilities
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/CommonGraphs.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/CommonGraphs_impl.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/F8Values.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/GEMMProblem.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/mxDataGen.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/SourceMatcher.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/TestValues.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/Utilities.hpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/common/WidenAddrExprTo64bit.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/CommonGraphs.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/CommonGraphs_impl.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/F8Values.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/GEMMProblem.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/mxDataGen.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/SourceMatcher.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/TestValues.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/Utilities.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/common/WidenAddrExprTo64bit.hpp"
 )
 
 add_subdirectory(src)

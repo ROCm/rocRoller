@@ -23,8 +23,6 @@
 #
 ################################################################################
 
-set(_CMAKE_CURRENT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../client")
-
 find_package(BLAS REQUIRED)
 
 <<<<<<< HEAD
@@ -58,31 +56,44 @@ if(NOT CLI11_FOUND)
 >>>>>>> Move next-cmake files to existing build tree
 endif()
 
-add_executable(rocroller_gemm
-    "${_CMAKE_CURRENT_SOURCE_DIR}/gemm.cpp"
-    "${_CMAKE_CURRENT_SOURCE_DIR}/GEMMParameters.cpp"
-    "${_CMAKE_CURRENT_SOURCE_DIR}/GraphInspector.cpp"
-    "${_CMAKE_CURRENT_SOURCE_DIR}/visualize.cpp"
+add_executable(rocroller-gemm
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gemm.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/GEMMParameters.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/GraphInspector.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/visualize.cpp"
 )
-target_link_libraries(rocroller_gemm
-    PUBLIC
-        roc::rocroller
+target_sources(rocroller-gemm
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/BenchmarkSolution.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/DataParallelGEMMSolution.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/GEMMParameters.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/GEMMSolution.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/GraphInspector.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/GraphInspector_impl.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/StreamKGEMMSolution.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/client/visualize.hpp"
+)
+target_link_libraries(rocroller-gemm
+    PRIVATE
+        roc::rocroller-interface
         rocroller::common-test-utilities
         CLI11::CLI11
         ${BLAS_LIBRARIES}
 )
-if(ROCROLLER_BUILD_SHARED_LIBS)
-    target_link_libraries(rocroller_gemm PUBLIC ${llvm_yaml_libs})
+target_include_directories(rocroller-gemm PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+if(ROCROLLER_BUILD_SHARED_LIBS) # why?
+    target_link_libraries(rocroller-gemm PUBLIC ${llvm_yaml_libs})
 endif()
 
-add_executable(rocroller_codegen_stress "${_CMAKE_CURRENT_SOURCE_DIR}/codegen_stress_test.cpp")
-target_link_libraries(rocroller_codegen_stress
+add_executable(rocroller-codegen-stress "${CMAKE_CURRENT_SOURCE_DIR}/src/codegen_stress_test.cpp")
+target_link_libraries(rocroller-codegen-stress
     PUBLIC
         roc::rocroller-interface
         rocroller::common-test-utilities
         CLI11::CLI11
         ${BLAS_LIBRARIES}
 )
-if(ROCROLLER_BUILD_SHARED_LIBS)
-    target_link_libraries(rocroller_codegen_stress PUBLIC ${llvm_yaml_libs})
+if(ROCROLLER_BUILD_SHARED_LIBS) # why are we using this logic
+    target_link_libraries(rocroller-codegen-stress PUBLIC ${llvm_yaml_libs})
 endif()

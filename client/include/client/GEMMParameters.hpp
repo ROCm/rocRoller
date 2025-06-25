@@ -34,7 +34,7 @@
 #include <rocRoller/Operations/BlockScale_fwd.hpp>
 #include <rocRoller/Utilities/Utils.hpp>
 
-#include "BenchmarkSolution.hpp"
+#include "client/BenchmarkSolution.hpp"
 
 namespace rocRoller
 {

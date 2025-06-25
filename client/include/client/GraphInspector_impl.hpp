@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "GraphInspector.hpp"
+#include "client/GraphInspector.hpp"
 
 namespace rocRoller
 {

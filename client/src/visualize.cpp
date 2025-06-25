@@ -28,8 +28,8 @@
 
 #include <algorithm>
 
-#include "include/GraphInspector.hpp"
-#include "include/visualize.hpp"
+#include "client/GraphInspector.hpp"
+#include "client/visualize.hpp"
 
 #include <rocRoller/Utilities/Settings.hpp>
 

@@ -23,10 +23,8 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/Assemblers")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Assembler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/SubprocessAssembler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Assembler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SubprocessAssembler.cpp"
 )

@@ -23,13 +23,11 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/Schedulers")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CooperativeScheduler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/PriorityScheduler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/RandomScheduler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/RoundRobinScheduler.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/SequentialScheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CooperativeScheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/PriorityScheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RandomScheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RoundRobinScheduler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SequentialScheduler.cpp"
 )

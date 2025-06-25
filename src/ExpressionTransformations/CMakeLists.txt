@@ -23,23 +23,20 @@
 #
 ################################################################################
 
-
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_LIB_DIR}/source/ExpressionTransformations")
 target_sources(rocroller
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CombineShifts.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/ConvertPropagation.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/DataFlowTagPropagation.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/FastArithmetic.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/FastMultiplication.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/FuseAssociative.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/FuseTernary.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Identity.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LaunchTimeSubExpressions.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LowerBitfieldValues.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LowerExponential.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/LowerPRNG.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/PositionalArgumentPropagation.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/RestoreCommandArguments.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Simplify.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CombineShifts.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DataFlowTagPropagation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FastArithmetic.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FastMultiplication.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FuseAssociative.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FuseTernary.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Identity.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LaunchTimeSubExpressions.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LowerBitfieldValues.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LowerExponential.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/LowerPRNG.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/PositionalArgumentPropagation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RestoreCommandArguments.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Simplify.cpp"
 )

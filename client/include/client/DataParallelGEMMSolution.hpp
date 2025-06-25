@@ -31,9 +31,9 @@
 #include <rocRoller/KernelOptions.hpp>
 #include <rocRoller/TensorDescriptor.hpp>
 
-#include "GEMMParameters.hpp"
-#include "GEMMSolution.hpp"
-#include "visualize.hpp"
+#include "client/GEMMParameters.hpp"
+#include "client/GEMMSolution.hpp"
+#include "client/visualize.hpp"
 
 namespace rocRoller
 {

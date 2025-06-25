@@ -23,12 +23,10 @@
 #
 ################################################################################
 
-set(_CMAKE_CURRENT_SOURCE_DIR "${ROCROLLER_TEST_DIR}/common")
-
 target_sources(common-test-utilities
     PRIVATE
-        "${_CMAKE_CURRENT_SOURCE_DIR}/CommonGraphs.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/mxDataGen.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/Utilities.cpp"
-        "${_CMAKE_CURRENT_SOURCE_DIR}/WidenAddrExprTo64bit.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CommonGraphs.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/mxDataGen.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Utilities.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/WidenAddrExprTo64bit.cpp"
 )
