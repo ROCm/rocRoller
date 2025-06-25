@@ -61,7 +61,9 @@ def runCompileCommand(platform, project, jobName, mxDataGeneratorGitURL, mxDataG
                     ${codeCovFlag} ${timerFlag} ${yamlBackendFlag}\\
                     ${mxDataGeneratorGitURLFlag} ${mxDataGeneratorGitTagFlag}\\
                     -DCMAKE_BUILD_TYPE=Release \\
-                    -DROCROLLER_TESTS_SKIP_SLOW=OFF
+                    -DROCROLLER_ENABLE_FETCH=ON \\
+                    -DROCROLLER_TESTS_SKIP_SLOW=OFF \\
+                    -DCMAKE_PREFIX_PATH="/opt/rocm;/opt/rocm/llvm"
                 ccache --print-stats
                 make -j ${target}
                 ccache --print-stats
