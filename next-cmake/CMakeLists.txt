@@ -56,6 +56,9 @@ cmake_dependent_option(ROCROLLER_ENABLE_LLVM "Enable llvm yaml backend." ON "NOT
 option(ROCROLLER_BUILD_TESTING "Build rocRoller testing." ON)
 option(ROCROLLER_ENABLE_CATCH "Build rocRoller catch unit tests" ON)
 option(ROCROLLER_ENABLE_ARCH_GEN_TEST "Build rocRoller architecture generator test" ON)
+option(ROCROLLER_ENABLE_TEST_DISCOVERY "Use gtest and catch2 test discovery functions." ON)
+option(ROCROLLER_ENABLE_COVERAGE "Build code coverage." OFF)
+cmake_dependent_option(ROCROLLER_TESTS_SKIP_SLOW "Disable slow running tests." ON "ROCROLLER_ENABLE_COVERAGE" OFF)
 option(ROCROLLER_EMBED_ARCH_DEF "Embed msgpack architecture data in library." ON)
 option(ROCROLLER_BUILD_SHARED_LIBS "Build rocRoller as a shared library." ON)
 option(ROCROLLER_ENABLE_FETCH "Enable fetch content for dependencies if find_package fails." OFF)
@@ -156,6 +159,15 @@ else()
 endif()
 add_library(roc::rocroller ALIAS rocroller)
 
+add_library(rocroller-interface INTERFACE)
+add_library(roc::rocroller-interface ALIAS rocroller-interface)
+
+if(ROCROLLER_BUILD_SHARED_LIBS)
+    target_link_libraries(rocroller-interface INTERFACE roc::rocroller)
+else()
+    target_link_libraries(rocroller-interface INTERFACE $<LINK_LIBRARY:WHOLE_ARCHIVE,roc::rocroller>)
+endif()
+
 if(ROCROLLER_ENABLE_TIMERS)
     target_compile_definitions(rocroller PUBLIC ROCROLLER_ENABLE_TIMERS)
     target_compile_options(rocroller PRIVATE -pg -fno-omit-frame-pointer)
@@ -245,7 +257,7 @@ if(ROCROLLER_ENABLE_CLIENT)
 endif()
 
 rocm_install(
-    TARGETS rocroller
+    TARGETS rocroller rocroller-interface
     EXPORT rocroller-targets
     INCLUDE
         "${ROCROLLER_LIB_DIR}/include"
@@ -265,7 +277,7 @@ if(ROCROLLER_BUILD_TESTING OR BUILD_TESTING)
 endif()
 
 rocm_export_targets(
-    TARGETS roc::rocroller
+    TARGETS roc::rocroller roc::rocroller-interface
     NAMESPACE roc::
     EXPORT rocroller-targets
     DEPENDS PACKAGE yaml-cpp

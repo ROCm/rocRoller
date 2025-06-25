@@ -1,5 +1,4 @@
 ################################################################################
-    // void setKernelOptions(rocRoller::KernelOptionValues const& kernelOption);
 #
 # MIT License
 #

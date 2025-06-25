@@ -31,7 +31,7 @@ add_library(rocroller::common-test-utilities ALIAS common-test-utilities)
 
 target_link_libraries(common-test-utilities
     PUBLIC
-        roc::rocroller
+        roc::rocroller-interface
         roc::mxDataGenerator
         hip::host
         OpenMP::OpenMP_CXX
