@@ -60,6 +60,28 @@ option(ROCROLLER_BUILD_SHARED_LIBS "Build rocRoller as a shared library." ON)
 option(ROCROLLER_ENABLE_FETCH "Enable fetch content for dependencies if find_package fails." OFF)
 option(ROCROLLER_ENABLE_LLD "Build rocroller functionality requiring LLD" OFF)
 option(ROCROLLER_ENABLE_TIMERS "Enable rocRoller timer code." OFF)
+option(ROCROLLER_ENABLE_CPPCHECK "Enable cppcheck." OFF)
+
+if(ROCROLLER_ENABLE_CPPCHECK)
+    find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+    if(CMAKE_CXX_CPPCHECK)
+        list(
+            APPEND
+            CMAKE_CXX_CPPCHECK
+            "--enable=warning"
+            "--enable=performance"
+            "--enable=portability"
+            "--enable=style"
+            "--error-exitcode=10"
+            "--force"
+            "--inline-suppr"
+            "--library=googletest"
+            "--suppressions-list=${PROJECT_SOURCE_DIR}/CppCheckSuppressions.txt"
+        )
+    endif()
+else()
+    unset(CMAKE_CXX_CPPCHECK CACHE)
+endif()
 
 find_package(fmt 11.1.3)
 if(NOT fmt_FOUND)
