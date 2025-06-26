@@ -1,0 +1,28 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "opt-rocm",
+      "displayName": "/opt/rocm Config",
+      "description": "Sets compiler and prefix path for /opt/rocm install",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "/opt/rocm/bin/amdclang++",
+        "ROCROLLER_ENABLE_FETCH": "ON",
+        "CMAKE_PREFIX_PATH": "/opt/rocm;/opt/rocm/llvm"
+      }
+    },
+    {
+      "name": "precheckin",
+      "displayName": "Precheckin Config",
+      "description": "Config used in precheckin build",
+      "cacheVariables": {
+        "ROCROLLER_ENABLE_CPPCHECK": "ON",
+        "CMAKE_CXX_COMPILER": "/opt/rocm/bin/amdclang++",
+        "CMAKE_BUILD_TYPE": "Release",
+        "ROCROLLER_ENABLE_FETCH": "ON",
+        "ROCROLLER_TESTS_SKIP_SLOW": "OFF",
+        "CMAKE_PREFIX_PATH": "/opt/rocm;/opt/rocm/llvm"
+      }
+    }
+]
+}

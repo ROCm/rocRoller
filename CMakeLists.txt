@@ -2,7 +2,7 @@
 # SPDX-License-Identifier:  MIT
 
 cmake_minimum_required(VERSION 3.21.0)
-project(rocroller VERSION 1.0.0)
+project(rocroller VERSION 1.0.0 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
