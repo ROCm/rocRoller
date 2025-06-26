@@ -36,9 +36,9 @@ def withSSH(platform, pipeline) {
 def runCompileCommand(platform, project, jobName, mxDataGeneratorGitURL, mxDataGeneratorGitTag, boolean codeCoverage=false, boolean enableTimers=false, String target='', boolean useYamlCpp=true)
 {
     project.paths.construct_build_prefix()
-    String codeCovFlag = codeCoverage ? '-DROCROLLER_ENABLE_COVERAGE=ON -DSKIP_CPPCHECK=ON -DROCROLLER_BUILD_SHARED_LIBS=OFF' : '-DROCROLLER_ENABLE_CPPCHECK=ON'
+    String codeCovFlag = codeCoverage ? '-DROCROLLER_ENABLE_COVERAGE=ON -DROCROLLER_BUILD_SHARED_LIBS=OFF' : '-DROCROLLER_ENABLE_CPPCHECK=ON'
     String timerFlag = enableTimers ? '-DROCROLLER_ENABLE_TIMERS=ON' : ''
-    String yamlBackendFlag = useYamlCpp ? '-DROCROLLER_ENABLE_YAML_CPP=ON' : '-DROCROLLER_ENABLE_YAML_CPP=OFF'
+    String yamlBackendFlag = useYamlCpp ? '' : '-DROCROLLER_ENABLE_YAML_CPP=OFF'
 
     mxDataGeneratorGitURL = mxDataGeneratorGitURL?.trim();
     mxDataGeneratorGitTag = mxDataGeneratorGitTag?.trim();
@@ -60,6 +60,7 @@ def runCompileCommand(platform, project, jobName, mxDataGeneratorGitURL, mxDataG
                 cmake ../ \\
                     ${codeCovFlag} ${timerFlag} ${yamlBackendFlag}\\
                     ${mxDataGeneratorGitURLFlag} ${mxDataGeneratorGitTagFlag}\\
+                    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/amdclang++ \\
                     -DCMAKE_BUILD_TYPE=Release \\
                     -DROCROLLER_ENABLE_FETCH=ON \\
                     -DROCROLLER_TESTS_SKIP_SLOW=OFF \\

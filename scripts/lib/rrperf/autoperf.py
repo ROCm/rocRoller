@@ -71,6 +71,7 @@ def build_rocroller(
             "-DROCROLLER_ENABLE_TIMERS=ON",
             "-DROCROLLER_ENABLE_FETCH=ON",
             "-DCMAKE_PREFI_PATH='/opt/rocm;/opt/rocm/llvm'",
+            "-DCMAKE_CXX_COMPILER=/opt/rocm/bin/amdclang++",
             "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
             "-DROCROLLER_ENABLE_CPPCHECK=OFF",
             "../",
