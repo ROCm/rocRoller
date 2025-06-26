@@ -40,6 +40,7 @@ add_executable(GPUArchitectureGenerator
 if(ROCROLLER_ENABLE_LLVM)
     target_compile_definitions(GPUArchitectureGenerator PRIVATE ROCROLLER_USE_LLVM)
     target_link_libraries(GPUArchitectureGenerator PRIVATE ${llvm_yaml_libs})
+    target_include_directories(GPUArchitectureGenerator PUBLIC "${LLVM_INCLUDE_DIRS}")
 else()
     target_compile_definitions(GPUArchitectureGenerator PRIVATE ROCROLLER_USE_YAML_CPP)
     target_link_libraries(GPUArchitectureGenerator PRIVATE yaml-cpp::yaml-cpp)

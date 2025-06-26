@@ -213,6 +213,7 @@ target_link_libraries(rocroller
 if(ROCROLLER_ENABLE_LLVM)
     # ROCROLLER_USE_LLVM enables the llvm yaml API
     target_compile_definitions(rocroller PUBLIC ROCROLLER_USE_LLVM)
+    target_include_directories(rocroller PUBLIC "${LLVM_INCLUDE_DIRS}")
 endif()
 
 target_link_libraries(rocroller
