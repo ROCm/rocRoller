@@ -3,22 +3,6 @@
 
 find_package(BLAS REQUIRED)
 
-<<<<<<< HEAD
-target_compile_options(rocroller_gemm PUBLIC ${EXTRA_COMPILE_OPTIONS})
-target_link_options(rocroller_gemm PUBLIC ${EXTRA_LINK_OPTIONS})
-target_link_libraries(
-    rocroller_gemm
-    PUBLIC
-    rocroller_interface
-    common_test_utilities
-    CLI11::CLI11
-    msgpackc-cxx
-)
-if(BUILD_SHARED_LIBS)
-    target_link_libraries(
-        rocroller_gemm PUBLIC ${llvm_yaml_libs}
-    )
-=======
 find_package(CLI11)
 if(NOT CLI11_FOUND)
     if(ROCROLLER_ENABLE_FETCH)
@@ -31,7 +15,6 @@ if(NOT CLI11_FOUND)
     else()
         message(FATAL_ERROR "Failed to find CLI11")
     endif()
->>>>>>> Move next-cmake files to existing build tree
 endif()
 
 add_executable(rocroller-gemm
