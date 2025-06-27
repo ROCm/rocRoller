@@ -62,7 +62,6 @@ add_subdirectory(standalone)
 add_subdirectory(unit)
 
 if(ROCROLLER_ENABLE_TEST_DISCOVERY)
-    enable_testing()
     set(TEST_REPORT_DIR "${PROJECT_BINARY_DIR}/test_report")
 
     include(GoogleTest)

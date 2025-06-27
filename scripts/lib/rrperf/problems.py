@@ -248,7 +248,7 @@ class GEMMRun(GEMM):
             "numInner": "num_inner",
         }
 
-        command = "client/rocroller_gemm"
+        command = "client/rocroller-gemm"
 
         def argName(key):
             if key in specialNames:

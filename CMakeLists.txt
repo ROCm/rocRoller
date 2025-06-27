@@ -40,6 +40,10 @@ option(ROCROLLER_ENABLE_LLD "Build rocroller functionality requiring LLD" OFF)
 option(ROCROLLER_ENABLE_TIMERS "Enable rocRoller timer code." OFF)
 option(ROCROLLER_ENABLE_CPPCHECK "Enable cppcheck." OFF)
 
+if(ROCROLLER_ENABLE_TEST_DISCOVERY)
+    enable_testing()
+endif()
+
 if(ROCROLLER_ENABLE_CPPCHECK)
     find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
     if(CMAKE_CXX_CPPCHECK)
