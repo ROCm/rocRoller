@@ -37,11 +37,24 @@ endif()
 add_executable(component-test)
 
 if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
+    if(NOT ROCROLLER_ENABLE_LLD)
+        # There are a few tests that require ReadELF functionality
+        # which is disabled by default and on a deprecation path.
+        # The tests that fail are missing the amdhsa.version key
+        # and as such hit a fatal error that emits the following
+        #     Key   key = amdhsa.version
+        #      not found: {}
+        # If observed, the test will be marked as skipped rather
+        # than failing.
+        set(rocroller_skip_regex "Key   key = amdhsa.version")
+    endif()
     find_package(Pytest REQUIRED) # requires pip install -r requirements.txt
     pytest_discover_tests(
         GEMMClientTests
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/client"
         ENVIRONMENT "ROCROLLER_BUILD_DIR=${PROJECT_BINARY_DIR}"
+        PROPERTIES
+            SKIP_REGULAR_EXPRESSION ${rocroller_skip_regex}
     )
     add_executable(arch-gen-tests)
 endif()
