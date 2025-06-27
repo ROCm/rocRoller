@@ -20,7 +20,7 @@ if(NOT mxDataGenerator_FOUND)
         FetchContent_Declare(
             mxDataGenerator
             GIT_REPOSITORY "https://github.com/ROCm/mxDataGenerator.git"
-            GIT_TAG b99e329c644d771be3ca026f4df5bb635714bd40
+            GIT_TAG 3ac153eec4c1a1e0da7546abc9c0c4f54e180f43
         )
         FetchContent_MakeAvailable(mxDataGenerator)
     else()
