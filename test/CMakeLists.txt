@@ -83,6 +83,8 @@ if(ROCROLLER_ENABLE_TEST_DISCOVERY)
         XML_OUTPUT_DIR ${TEST_REPORT_DIR}
         TEST_FILTER "-*GPU_*"
         DISCOVERY_MODE PRE_TEST
+        PROPERTIES
+            SKIP_REGULAR_EXPRESSION "test/unit/ErrorTest.cpp:"
     )
     gtest_discover_tests(
         rocroller-tests
@@ -90,6 +92,8 @@ if(ROCROLLER_ENABLE_TEST_DISCOVERY)
         TEST_FILTER "*GPU_*"
         PROPERTIES "LABELS" "GPU"
         DISCOVERY_MODE PRE_TEST
+        PROPERTIES
+            SKIP_REGULAR_EXPRESSION "test/unit/ErrorTest.cpp:"
     )
     if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
         gtest_discover_tests(
