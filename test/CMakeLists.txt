@@ -46,7 +46,7 @@ if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
         #      not found: {}
         # If observed, the test will be marked as skipped rather
         # than failing.
-        set(rocroller_skip_regex "Key   key = amdhsa.version")
+        set(rocroller_skip_regex "key = amdhsa.version")
     endif()
     find_package(Pytest REQUIRED) # requires pip install -r requirements.txt
     pytest_discover_tests(
