@@ -143,6 +143,7 @@ set(rocroller_src
     source/Costs/WaitCntNopCost.cpp
 
     source/ExpressionTransformations/CombineShifts.cpp
+    source/ExpressionTransformations/ConvertPropagation.cpp
     source/ExpressionTransformations/DataFlowTagPropagation.cpp
     source/ExpressionTransformations/FastArithmetic.cpp
     source/ExpressionTransformations/FastDivision.cpp

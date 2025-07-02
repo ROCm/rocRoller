@@ -1252,10 +1252,9 @@ namespace ExpressionTest
             CHECK(rSgprBool32 == resultType(op(sgprBool32, sgprBool32)));
         }
 
-        SECTION("Arithmetic ternary")
+        SECTION("MultiplyAdd")
         {
-            auto op = GENERATE_COPY(
-                Expression::multiplyAdd, Expression::addShiftL, Expression::shiftLAdd);
+            auto op = Expression::multiplyAdd;
 
             CAPTURE(op(vgprFloat, vgprFloat, vgprFloat));
 
@@ -1275,6 +1274,92 @@ namespace ExpressionTest
             CHECK(rSgprHalf == resultType(op(sgprHalf, sgprHalf, sgprHalf)));
             CHECK(rSgprHalfx2 == resultType(op(sgprHalfx2, sgprHalfx2, sgprHalfx2)));
             CHECK(rSgprBool32 == resultType(op(sgprBool32, sgprBool32, sgprBool32)));
+        }
+
+        SECTION("AddShiftL")
+        {
+            auto op = Expression::addShiftL;
+
+            CAPTURE(op(vgprFloat, vgprFloat, vgprFloat));
+
+            CHECK(rVgprFloat == resultType(op(vgprFloat, vgprFloat, vgprFloat)));
+            CHECK(rVgprDouble == resultType(op(vgprDouble, vgprDouble, vgprDouble)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprInt32)));
+            CHECK(rVgprInt64 == resultType(op(vgprInt64, vgprInt64, vgprInt64)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprUInt32)));
+            CHECK(rVgprHalf == resultType(op(vgprHalf, vgprHalf, vgprHalf)));
+            CHECK(rVgprHalfx2 == resultType(op(vgprHalfx2, vgprHalfx2, vgprHalfx2)));
+            CHECK(rVgprBool32 == resultType(op(vgprBool32, vgprBool32, vgprBool32)));
+            CHECK(rSgprFloat == resultType(op(sgprFloat, sgprFloat, sgprFloat)));
+            CHECK(rSgprDouble == resultType(op(sgprDouble, sgprDouble, sgprDouble)));
+            CHECK(rSgprInt32 == resultType(op(sgprInt32, sgprInt32, sgprInt32)));
+            CHECK(rSgprInt64 == resultType(op(sgprInt64, sgprInt64, sgprInt64)));
+            CHECK(rSgprUInt32 == resultType(op(sgprUInt32, sgprUInt32, sgprUInt32)));
+            CHECK(rSgprHalf == resultType(op(sgprHalf, sgprHalf, sgprHalf)));
+            CHECK(rSgprHalfx2 == resultType(op(sgprHalfx2, sgprHalfx2, sgprHalfx2)));
+            CHECK(rSgprBool32 == resultType(op(sgprBool32, sgprBool32, sgprBool32)));
+
+            // Shift not considered in promotion
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprUInt32)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprInt32)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprUInt64)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprInt64)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprUInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprUInt64)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprInt64)));
+
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt32)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprInt32)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt32)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprInt32)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprInt64)));
+        }
+
+        SECTION("ShiftLAdd")
+        {
+            auto op = Expression::shiftLAdd;
+
+            CAPTURE(op(vgprFloat, vgprFloat, vgprFloat));
+
+            CHECK(rVgprFloat == resultType(op(vgprFloat, vgprFloat, vgprFloat)));
+            CHECK(rVgprDouble == resultType(op(vgprDouble, vgprDouble, vgprDouble)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprInt32)));
+            CHECK(rVgprInt64 == resultType(op(vgprInt64, vgprInt64, vgprInt64)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprUInt32)));
+            CHECK(rVgprHalf == resultType(op(vgprHalf, vgprHalf, vgprHalf)));
+            CHECK(rVgprHalfx2 == resultType(op(vgprHalfx2, vgprHalfx2, vgprHalfx2)));
+            CHECK(rVgprBool32 == resultType(op(vgprBool32, vgprBool32, vgprBool32)));
+            CHECK(rSgprFloat == resultType(op(sgprFloat, sgprFloat, sgprFloat)));
+            CHECK(rSgprDouble == resultType(op(sgprDouble, sgprDouble, sgprDouble)));
+            CHECK(rSgprInt32 == resultType(op(sgprInt32, sgprInt32, sgprInt32)));
+            CHECK(rSgprInt64 == resultType(op(sgprInt64, sgprInt64, sgprInt64)));
+            CHECK(rSgprUInt32 == resultType(op(sgprUInt32, sgprUInt32, sgprUInt32)));
+            CHECK(rSgprHalf == resultType(op(sgprHalf, sgprHalf, sgprHalf)));
+            CHECK(rSgprHalfx2 == resultType(op(sgprHalfx2, sgprHalfx2, sgprHalfx2)));
+            CHECK(rSgprBool32 == resultType(op(sgprBool32, sgprBool32, sgprBool32)));
+
+            // Shift not considered in promotion
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprUInt32, vgprInt32)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt32, vgprInt32)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprUInt64, vgprInt32)));
+            CHECK(rVgprInt32 == resultType(op(vgprInt32, vgprInt64, vgprInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt32, vgprUInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprInt32, vgprUInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprUInt64, vgprUInt32)));
+            CHECK(rVgprUInt32 == resultType(op(vgprUInt32, vgprInt64, vgprUInt32)));
+
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt32, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprInt32, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprInt64, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt32, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprInt32, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprUInt64, vgprUInt64)));
+            CHECK(rVgprUInt64 == resultType(op(vgprUInt64, vgprInt64, vgprUInt64)));
         }
 
         SECTION("Conditional")
