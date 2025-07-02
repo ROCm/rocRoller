@@ -34,6 +34,7 @@
 #include <rocRoller/CodeGen/BranchGenerator.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
 #include <rocRoller/CodeGen/CrashKernelGenerator.hpp>
+#include <rocRoller/CodeGen/GenerateNodes.hpp>
 #include <rocRoller/CodeGen/LoadStoreTileGenerator.hpp>
 #include <rocRoller/Context.hpp>
 #include <rocRoller/Expression.hpp>
@@ -155,7 +156,56 @@ namespace rocRoller
             /**
              * Generate code for the specified nodes and their standard (Sequence) dependencies.
              */
-            Generator<Instruction> generate(std::set<int> candidates, Transformer coords)
+            Generator<Instruction> generate_limited(std::set<int> candidates, Transformer coords)
+            {
+                rocRoller::Log::getLogger()->debug(
+                    concatenate("KernelGraph::CodeGenerator::generate: ", candidates));
+
+                auto message = concatenate("generate(", candidates, ")");
+                co_yield Instruction::Comment(message);
+
+                candidates = m_graph->control.followEdges<Sequence>(candidates);
+
+                auto proc      = Settings::getInstance()->get(Settings::Scheduler);
+                auto cost      = Settings::getInstance()->get(Settings::SchedulerCost);
+                auto scheduler = Component::GetNew<Scheduling::Scheduler>(proc, cost, m_context);
+
+                auto generateNode = [&](int tag) -> Generator<Instruction> {
+                    auto op = m_graph->control.getNode(tag);
+                    co_yield call(tag, op, coords);
+                };
+
+                auto nodeIsReady = [this](int tag) { return hasGeneratedInputs(tag); };
+
+                auto nodeCategory = [this](int tag) -> size_t {
+                    auto op = m_graph->control.getNode(tag);
+                    return op.index();
+                };
+
+                auto categoryLimit = [](size_t category) {
+                    if(category == variantIndex<Operation, Deallocate>())
+                        return 500;
+                    // 5 doesn't save anything over the current one
+                    // 2 saves 1 VGPR
+                    // 1 saves 4 VGPRs
+                    return 1;
+                };
+
+                auto comparePriorities = [](int a, int b) { return a > b; };
+
+                co_yield generateNodes<int, size_t>(scheduler,
+                                                    candidates,
+                                                    m_completedControlNodes,
+                                                    generateNode,
+                                                    nodeIsReady,
+                                                    nodeCategory,
+                                                    categoryLimit,
+                                                    comparePriorities);
+
+                co_yield Instruction::Comment("end: " + message);
+            }
+
+            Generator<Instruction> generate_unlimited(std::set<int> candidates, Transformer coords)
             {
                 rocRoller::Log::getLogger()->debug(
                     concatenate("KernelGraph::CodeGenerator::generate: ", candidates));
@@ -244,6 +294,11 @@ namespace rocRoller
                 }
 
                 co_yield Instruction::Comment("end: " + message);
+            }
+
+            Generator<Instruction> generate(std::set<int> candidates, Transformer coords)
+            {
+                co_yield generate_unlimited(std::move(candidates), std::move(coords));
             }
 
             /**

@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <queue>
 
 #include <rocRoller/AssemblyKernelArgument.hpp>
 #include <rocRoller/CommonSubexpressionElim.hpp>
@@ -39,7 +40,9 @@
 #include <rocRoller/CodeGen/Arithmetic/MultiplyAdd.hpp>
 #include <rocRoller/CodeGen/Arithmetic/ScaledMatrixMultiply.hpp>
 #include <rocRoller/CodeGen/CopyGenerator.hpp>
+#include <rocRoller/CodeGen/GenerateNodes.hpp>
 #include <rocRoller/KernelGraph/RegisterTagManager.hpp>
+#include <rocRoller/KernelOptions_detail.hpp>
 #include <rocRoller/Operations/CommandArgument.hpp>
 #include <rocRoller/Scheduling/Scheduler.hpp>
 #include <rocRoller/Utilities/RTTI.hpp>
@@ -1113,48 +1116,239 @@ namespace rocRoller
                                                 CodeGeneratorVisitor& visitor,
                                                 ContextPtr            context)
         {
+            if(Log::getLogger()->should_log(LogLevel::Trace))
+            {
+                co_yield Instruction::Comment(toDOT(tree));
+                co_yield Instruction::Comment(statistics(tree));
+            }
+
             tree.back().reg = dest;
 
-            std::set<int> metDeps;
-            while(metDeps.size() < tree.size())
+            auto proc      = Settings::getInstance()->get(Settings::Scheduler);
+            auto cost      = Settings::getInstance()->get(Settings::SchedulerCost);
+            auto scheduler = Component::GetNew<Scheduling::Scheduler>(proc, cost, context);
+
+            auto nodes = iota<int>(0, tree.size()).to<std::set>();
+
+            std::set<int> completedNodes;
+
+            auto generateNode = [&](int idx) -> Generator<Instruction> {
+                auto& node = tree.at(idx);
+
+                if(node.reg == nullptr || node.reg->regType() != Register::Type::Literal)
+                    co_yield visitor.call(node.reg, node.expr);
+
+                node.expr = nullptr;
+
+                // Don't clear the last register as that is the destination for the expression.
+                if(idx + 1 != tree.size())
+                    node.reg = nullptr;
+            };
+
+            auto nodeIsReady = [&](int idx) -> bool {
+                return std::ranges::includes(completedNodes, tree.at(idx).deps);
+            };
+
+            auto nodeCategory = [&](int idx) -> Register::Type { return tree.at(idx).regType(); };
+
+            auto categoryLimit = [](Register::Type category) -> size_t {
+                if(category == Register::Type::Literal)
+                    return 500;
+                return 2;
+            };
+
+            auto comparePriorities = [&](int a, int b) {
+                auto const& nodeA = tree.at(a);
+                auto const& nodeB = tree.at(b);
+
+                return std::make_tuple(nodeA.distanceFromRoot, nodeA.deps.size(), -a)
+                       < std::make_tuple(nodeB.distanceFromRoot, nodeB.deps.size(), -b);
+            };
+
+            co_yield generateNodes<int, Register::Type>(scheduler,
+                                                        nodes,
+                                                        completedNodes,
+                                                        generateNode,
+                                                        nodeIsReady,
+                                                        nodeCategory,
+                                                        categoryLimit,
+                                                        comparePriorities);
+
+            AssertFatal(completedNodes.size() == tree.size(),
+                        ShowValue(completedNodes.size()),
+                        ShowValue(tree.size()));
+
+            dest = tree.back().reg;
+        }
+
+        Generator<Instruction> generateFromTree2(Register::ValuePtr&   dest,
+                                                 ExpressionTree&       tree,
+                                                 CodeGeneratorVisitor& visitor,
+                                                 ContextPtr            context)
+        {
+            if(Log::getLogger()->should_log(LogLevel::Trace))
             {
-                std::set<int> tmpMetDeps;
-
-                auto proc      = Settings::getInstance()->get(Settings::Scheduler);
-                auto cost      = Settings::getInstance()->get(Settings::SchedulerCost);
-                auto scheduler = Component::GetNew<Scheduling::Scheduler>(proc, cost, context);
-                std::vector<Generator<Instruction>> schedulable;
-                for(int i = 0; i < tree.size(); i++)
-                {
-                    if(!metDeps.contains(i)
-                       && std::includes(metDeps.begin(),
-                                        metDeps.end(),
-                                        tree.at(i).deps.begin(),
-                                        tree.at(i).deps.end()))
-                    {
-                        if(!(tree.at(i).reg
-                             && tree.at(i).reg->regType() == Register::Type::Literal))
-                        {
-                            schedulable.push_back(visitor.call(tree.at(i).reg, tree.at(i).expr));
-                        }
-                        tmpMetDeps.insert(i);
-                    }
-                }
-
-                co_yield (*scheduler)(schedulable);
-
-                for(int i = 0; i < tree.size() - 1; i++)
-                {
-                    if(tmpMetDeps.contains(i))
-                    {
-                        tree.at(i).expr = nullptr;
-                        tree.at(i).reg  = nullptr;
-                    }
-                }
-
-                AssertFatal(!tmpMetDeps.empty(), ShowValue(tree.size()), ShowValue(metDeps.size()));
-                metDeps.insert(tmpMetDeps.begin(), tmpMetDeps.end());
+                co_yield Instruction::Comment(toDOT(tree));
+                co_yield Instruction::Comment(statistics(tree));
             }
+
+            tree.back().reg = dest;
+
+            const int maxGenerating = context->kernelOptions()->maxConcurrentSubExpressions;
+
+            std::set<int> notReady, done;
+
+            std::map<Register::Type, std::set<int>> generating;
+
+            std::map<Register::Type, int> limits = {
+                {Register::Type::Literal, 500},
+                {Register::Type::Scalar, 2},
+                {Register::Type::Vector, 2},
+                {Register::Type::Accumulator, 2},
+                {Register::Type::LocalData, 2},
+                {Register::Type::Label, 2},
+                {Register::Type::NullLiteral, 2},
+                {Register::Type::SCC, 2},
+                {Register::Type::M0, 2},
+                {Register::Type::VCC, 2},
+                {Register::Type::VCC_LO, 2},
+                {Register::Type::VCC_HI, 2},
+                {Register::Type::EXEC, 2},
+                {Register::Type::EXEC_LO, 2},
+                {Register::Type::EXEC_HI, 2},
+                {Register::Type::TTMP7, 2},
+                {Register::Type::TTMP9, 2},
+            };
+
+            auto comparePrio = [&](int a, int b) {
+                auto const& nodeA = tree.at(a);
+                auto const& nodeB = tree.at(b);
+
+                return std::make_tuple(nodeA.distanceFromRoot, nodeA.deps.size(), -a)
+                       < std::make_tuple(nodeB.distanceFromRoot, nodeB.deps.size(), -b);
+            };
+
+            using pq = std::priority_queue<int, std::vector<int>, decltype(comparePrio)>;
+            std::map<Register::Type, pq> ready;
+
+            for(int i = 0; i < static_cast<int>(Register::Type::Count); i++)
+            {
+                auto regType = static_cast<Register::Type>(i);
+                ready.emplace(regType, pq{comparePrio});
+            }
+
+            // Initializing with an empty range lets the template arguments be automatically deduced.
+            // std::priority_queue ready(done.end(), done.end(), comparePrio);
+
+            auto fillReady = [&]() {
+                for(auto iter = notReady.begin(); iter != notReady.end();)
+                {
+                    auto        idx  = *iter;
+                    auto const& node = tree.at(idx);
+
+                    if(std::ranges::includes(done, node.deps))
+                    {
+                        ready.at(node.regType()).push(idx);
+                        iter = notReady.erase(iter);
+                    }
+                    else
+                    {
+                        ++iter;
+                    }
+                }
+            };
+
+            for(int i = 0; i < tree.size(); i++)
+                notReady.insert(i);
+
+            auto generate = [&](int idx) -> Generator<Instruction> {
+                auto& node = tree.at(idx);
+
+                if(node.reg == nullptr || node.reg->regType() != Register::Type::Literal)
+                    co_yield visitor.call(node.reg, node.expr);
+
+                done.insert(idx);
+                generating[node.regType()].erase(idx);
+
+                node.expr = nullptr;
+
+                // Don't clear the last register as that is the destination for the expression.
+                if(idx + 1 != tree.size())
+                    node.reg = nullptr;
+            };
+
+            auto proc      = Settings::getInstance()->get(Settings::Scheduler);
+            auto cost      = Settings::getInstance()->get(Settings::SchedulerCost);
+            auto scheduler = Component::GetNew<Scheduling::Scheduler>(proc, cost, context);
+
+            while(done.size() < tree.size())
+            {
+                std::vector<Generator<Instruction>> schedulable;
+
+                auto fillSchedulable = [&]() {
+#if 1
+                    for(auto& [regType, readyQueue] : ready)
+                    {
+                        while(!readyQueue.empty() && generating[regType].size() < limits[regType])
+                        {
+                            auto idx = readyQueue.top();
+                            readyQueue.pop();
+
+                            generating[regType].insert(idx);
+
+                            schedulable.push_back(generate(idx));
+                        }
+                    }
+
+#else
+                    while(!ready.empty()
+                          && (generating.size() < maxGenerating
+                              || tree.at(ready.top()).reg->regType() == Register::Type::Literal))
+                    {
+                        auto idx = ready.top();
+                        ready.pop();
+
+                        generating.insert(idx);
+
+                        schedulable.push_back(generate(idx));
+                    }
+#endif
+                };
+
+                fillReady();
+                fillSchedulable();
+
+                if(!scheduler->supportsAddingStreams())
+                {
+                    co_yield (*scheduler)(schedulable);
+                }
+                else
+                {
+                    auto generator    = (*scheduler)(schedulable);
+                    auto prevDoneSize = done.size();
+
+                    for(auto iter = generator.begin(); iter != generator.end(); ++iter)
+                    {
+                        co_yield *iter;
+
+                        if(prevDoneSize != done.size())
+                        {
+                            fillReady();
+
+                            prevDoneSize = done.size();
+                        }
+
+                        fillSchedulable();
+                    }
+                }
+            }
+
+            AssertFatal(done.size() == tree.size(), ShowValue(done.size()), ShowValue(tree.size()));
+            // AssertFatal(ready.empty() && notReady.empty(),// && generating.empty(),
+            //             ShowValue(notReady));
+            //             // ShowValue(generating));
+            // for(auto const& )
+
             dest = tree.back().reg;
         }
 

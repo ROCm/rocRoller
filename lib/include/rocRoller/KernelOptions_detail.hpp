@@ -86,6 +86,16 @@ namespace rocRoller
         int minLaunchTimeExpressionComplexity = 10;
 
         /**
+         * The maximum number of concurrent subexpressions given at once to the scheduler when
+         * generating code for an expression using CSE. A higher number may reveal more ILP
+         * opportunities to the scheduler but may also result in higher register usage.
+         *
+         * If you are running out of registers (particularly SGPRs), reducing this number
+         * might help.
+         */
+        int maxConcurrentSubExpressions = 3;
+
+        /**
          * By default, we no longer allow full integer division or modulo in
          * kernels.  If this is needed for testing or some other reason, it can
          * be enabled via this option.
@@ -94,8 +104,10 @@ namespace rocRoller
 
         AssertOpKind assertOpKind = AssertOpKind::NoOp;
 
-        std::string          toString() const;
-        friend std::ostream& operator<<(std::ostream&, const KernelOptionValues&);
+        std::string toString() const;
     };
+
+    std::ostream& operator<<(std::ostream& stream, KernelOptionValues const& values);
+    std::string   toString(KernelOptionValues const& values);
 
 }

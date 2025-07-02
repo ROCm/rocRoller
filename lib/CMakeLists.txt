@@ -221,6 +221,7 @@ set(rocroller_src
     source/Observers/DGEMM16x16x4Write.cpp
     source/Observers/DGEMM4x4x4Write.cpp
     source/Observers/DLWrite.cpp
+    source/Observers/FileWritingObserver.cpp
     source/Observers/MEMObserver.cpp
     source/Observers/MFMAObserver.cpp
     source/Observers/OPSEL94x.cpp
@@ -236,8 +237,8 @@ set(rocroller_src
     source/Observers/VCMPXWrite94x.cpp
     source/Observers/WMMAObserver.cpp
     source/Observers/WMMAReadSrcD.cpp
-    source/Observers/WMMAWriteSrcD.cpp
     source/Observers/WMMAWrite.cpp
+    source/Observers/WMMAWriteSrcD.cpp
     source/Observers/WaitcntObserver.cpp
     source/Observers/XDLReadSrcC908.cpp
     source/Observers/XDLReadSrcC90a.cpp
