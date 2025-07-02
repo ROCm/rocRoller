@@ -105,7 +105,7 @@ namespace rocRoller
         return *m_values;
     }
 
-    std::string KernelOptionValues::toString() const
+    std::string KernelOptions::toString() const
     {
         return m_values->toString();
     }
