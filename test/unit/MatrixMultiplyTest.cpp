@@ -40,7 +40,6 @@
 #include <rocRoller/ExpressionTransformations.hpp>
 #include <rocRoller/KernelGraph/KernelGraph.hpp>
 #include <rocRoller/Operations/T_Execute.hpp>
-#include <rocRoller/Scheduling/Observers/FileWritingObserver.hpp>
 #include <rocRoller/TensorDescriptor.hpp>
 #include <rocRoller/Utilities/Error.hpp>
 #include <rocRoller/Utilities/Timer.hpp>

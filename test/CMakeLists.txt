@@ -198,6 +198,7 @@ set(
     catch/SettingsTest.cpp
     catch/SubDwordExpressionTest.cpp
     catch/TernaryExpressionTest.cpp
+    catch/TestContext.cpp
     catch/TestContextTest.cpp
     catch/TransposeLoadsTest.cpp
     catch/UnrollLoopsTest.cpp
