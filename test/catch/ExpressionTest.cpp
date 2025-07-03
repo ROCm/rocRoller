@@ -227,13 +227,11 @@ namespace ExpressionTest
 
             // expr4
             v_bfe_i32 v4, v0, 3, 7
-            v_mov_b32 v5, 255
-            v_and_b32 v4, v5, v4
+            v_and_b32 v4, 255, v4
 
             // expr5
             v_bfe_i32 v5, v0, 4, 7
-            v_mov_b32 v6, 255
-            v_and_b32 v5, v6, v5
+            v_and_b32 v5, 255, v5
 
             // expr6
             v_bfe_i32 v6, v0, 5, 17
@@ -824,16 +822,14 @@ namespace ExpressionTest
 
             // X is v[36:37]:2xH and Y is v[38:41]:H (and Z is same as Y)
             // Then Y <- X + Y will be: Add(v[36:37]:2xH, v[38:41]:H)
-            v_mov_b32 v42, 65535
-            v_and_b32 v44, v42, v36
-            v_lshrrev_b32 v45, 16, v36
-            v_add_f16 v38, v44, v38
-            v_add_f16 v39, v45, v39
-            v_mov_b32 v43, 65535
-            v_and_b32 v44, v43, v37
-            v_lshrrev_b32 v45, 16, v37
-            v_add_f16 v40, v44, v40
-            v_add_f16 v41, v45, v41
+            v_and_b32 v42, 65535, v36
+            v_lshrrev_b32 v43, 16, v36
+            v_add_f16 v38, v42, v38
+            v_add_f16 v39, v43, v39
+            v_and_b32 v42, 65535, v37
+            v_lshrrev_b32 v43, 16, v37
+            v_add_f16 v40, v42, v40
+            v_add_f16 v41, v43, v41
         )";
 
         CHECK(NormalizedSource(context.output()) == NormalizedSource(result));
@@ -2270,7 +2266,7 @@ namespace ExpressionTest
         context.get()->schedule(Expression::generate(destReg, expr1 ^ expr2, context.get()));
 
         auto result = R"(
-            v_add_i32 v1, -5, v0
+            v_add_i32 v1, v0, -5
             v_and_b32 v1, -5, v0
             v_or_b32 v1, -5, v0
             v_xor_b32 v1, -5, v0
