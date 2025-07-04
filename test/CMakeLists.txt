@@ -155,6 +155,7 @@ set(
     catch/TestContext.cpp
     catch/TestKernels.cpp
 
+    catch/AddDeallocateTest.cpp
     catch/AddPrefetchTest.cpp
     catch/AliasDataFlowTagsTest.cpp
     catch/AnnotateInstructionsTest.cpp
