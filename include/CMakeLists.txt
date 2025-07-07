@@ -202,6 +202,7 @@ target_sources(rocroller
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddComputeIndex.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddConvert.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddDeallocate.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddDeallocate_detail.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddDirect2LDS.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddF6LDSPadding.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/rocRoller/KernelGraph/Transforms/AddLDS.hpp"

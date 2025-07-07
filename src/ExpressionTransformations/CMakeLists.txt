@@ -4,6 +4,7 @@
 target_sources(rocroller
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/CombineShifts.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ConvertPropagation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DataFlowTagPropagation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/FastArithmetic.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/FastMultiplication.cpp"

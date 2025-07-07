@@ -27,6 +27,7 @@ target_sources(rocroller-tests-catch
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/CustomAssertions.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/TestKernels.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AddDeallocateTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/AddPrefetchTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/AliasDataFlowTagsTest.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/AnnotateInstructionsTest.cpp"
