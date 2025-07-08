@@ -46,7 +46,11 @@ if(ROCROLLER_ENABLE_ARCH_GEN_TEST)
         #      not found: {}
         # If observed, the test will be marked as skipped rather
         # than failing.
-        set(rocroller_skip_regex "key = amdhsa.version")
+        if(ROCROLLER_ENABLE_LLVM)
+            set(rocroller_skip_regex "FatalError\\(hsa_version.size\\(\\) == 2\\)")
+        else()
+            set(rocroller_skip_regex "key = amdhsa.version")
+        endif()
     endif()
     find_package(Pytest REQUIRED) # requires pip install -r requirements.txt
     pytest_discover_tests(
@@ -64,7 +68,9 @@ find_package(cblas)
 find_package(OpenMP REQUIRED)
 
 if(ROCROLLER_ENABLE_YAML_CPP)
-    target_compile_definitions(rocroller-tests PUBLIC ROCROLLER_TESTS_USE_YAML_CPP)
+    target_compile_definitions(rocroller-tests PRIVATE ROCROLLER_TESTS_USE_YAML_CPP)
+else()
+    target_compile_definitions(rocroller-tests PRIVATE ROCROLLER_USE_LLVM)
 endif()
 
 if(ROCROLLER_ENABLE_CATCH)
