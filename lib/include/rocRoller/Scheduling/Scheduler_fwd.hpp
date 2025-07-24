@@ -26,9 +26,7 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-
 namespace rocRoller
 {
     namespace Scheduling
@@ -56,8 +54,6 @@ namespace rocRoller
 
         class Scheduler;
         class LockState;
-
-        using SchedulerPtr = std::shared_ptr<Scheduler>;
 
         std::string toString(SchedulerProcedure const&);
         std::string toString(Dependency const&);

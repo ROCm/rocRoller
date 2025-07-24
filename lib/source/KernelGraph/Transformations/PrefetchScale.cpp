@@ -39,6 +39,26 @@ namespace rocRoller
         namespace Expression = rocRoller::Expression;
         using namespace Expression;
 
+        class topoComp
+        {
+        public:
+            topoComp() = delete;
+            topoComp(KernelGraphPtr graph)
+                : m_graph(graph)
+            {
+                AssertFatal(graph, "no graph found!");
+            };
+
+            bool operator()(int a, int b)
+            {
+                return m_graph->control.compareNodes(rocRoller::UpdateCache, a, b)
+                       == NodeOrdering::LeftFirst;
+            }
+
+        private:
+            KernelGraphPtr m_graph;
+        };
+
         void insertPreLoopLoads(KernelGraph&            graph,
                                 std::vector<int> const& preLoopLoad,
                                 int                     firstLoad)
@@ -63,9 +83,8 @@ namespace rocRoller
                                  .to<std::vector>();
             AssertFatal(!loopLoads.empty());
 
-            std::sort(loopLoads.begin(),
-                      loopLoads.end(),
-                      TopologicalCompare(std::make_shared<KernelGraph>(graph)));
+            std::sort(
+                loopLoads.begin(), loopLoads.end(), topoComp(std::make_shared<KernelGraph>(graph)));
 
             auto postNOP = graph.control.addElement(NOP());
             auto prev    = postNOP;
@@ -118,7 +137,7 @@ namespace rocRoller
                 auto exchangeTags = copy.second;
                 std::sort(exchangeTags.begin(),
                           exchangeTags.end(),
-                          TopologicalCompare(std::make_shared<KernelGraph>(graph)));
+                          topoComp(std::make_shared<KernelGraph>(graph)));
                 insertBefore(graph, exchangeTags[0], copy.first, copy.first);
             }
         }
@@ -140,9 +159,7 @@ namespace rocRoller
 
             // sort the loads
             // this brings the first load in the sequence to the front
-            std::sort(loads.begin(),
-                      loads.end(),
-                      TopologicalCompare(std::make_shared<KernelGraph>(graph)));
+            std::sort(loads.begin(), loads.end(), topoComp(std::make_shared<KernelGraph>(graph)));
 
             for(auto loadTag : loads)
             {

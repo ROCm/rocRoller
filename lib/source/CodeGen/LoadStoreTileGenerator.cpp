@@ -352,19 +352,6 @@ namespace rocRoller
             return result;
         }
 
-        DataType getOffsetTypeFromComputeIndex(const KernelGraph& graph, int offsetTag)
-        {
-            for(auto const& conn : graph.mapper.getCoordinateConnections(offsetTag))
-            {
-                if(auto computeIndex = graph.control.get<ComputeIndex>(conn.control);
-                   computeIndex.has_value())
-                {
-                    return computeIndex->offsetType;
-                }
-            }
-            Throw<FatalError>("No ComputeIndex found for Offset tag.", ShowValue(offsetTag));
-        }
-
         Generator<Instruction> LoadStoreTileGenerator::getOffset(LoadStoreTileInfo& info,
                                                                  Transformer        coords,
                                                                  int                tag,
@@ -407,17 +394,10 @@ namespace rocRoller
                 }
                 else
                 {
-                    info.rowOffsetReg = m_context->registerTagManager()->getRegister(
-                        offsetTag,
-                        Register::Type::Vector,
-                        getOffsetTypeFromComputeIndex(*m_graph, offsetTag),
-                        1);
+                    info.rowOffsetReg = m_context->registerTagManager()->getRegister(baseTag);
                     info.rowOffsetReg->setName(concatenate("offset", offsetTag));
                     m_context->getScopeManager()->addRegister(offsetTag);
-
-                    // Copy base to new offset register
-                    auto baseReg = m_context->registerTagManager()->getRegister(baseTag);
-                    co_yield m_context->copier()->copy(info.rowOffsetReg, baseReg);
+                    m_context->registerTagManager()->addRegister(offsetTag, info.rowOffsetReg);
                 }
 
                 rowOffsetExpr = getOffsetExpr(offsetTag, coords);
@@ -449,8 +429,7 @@ namespace rocRoller
             {
                 auto unrolledRowOffsetExpr = info.rowOffsetReg->expression() + rowOffsetExpr;
                 auto tmp = info.rowOffsetReg->placeholder(Register::Type::Vector, {});
-                co_yield generate(
-                    tmp, convert(info.rowOffsetReg->variableType(), unrolledRowOffsetExpr));
+                co_yield generate(tmp, unrolledRowOffsetExpr);
                 info.rowOffsetReg = tmp;
             }
             else if(preserveOffset)
@@ -610,9 +589,7 @@ namespace rocRoller
                 co_yield Instruction::Comment(
                     fmt::format("  Offset({}): paddingBytes: {}", offset, toString(paddingBytes)));
 
-                co_yield generate(
-                    offsetReg,
-                    convert(offsetReg->variableType(), toBytes(indexExpr) + paddingBytes));
+                co_yield generate(offsetReg, toBytes(indexExpr) + paddingBytes);
                 offsetReg->setReadOnly();
             }
             else
@@ -1084,13 +1061,13 @@ namespace rocRoller
                         }
 
                         co_yield moveTileDirect2LDS<Dir>(
-                            info, bytesPerMove, (i == 0 && r == 0), info.rowOffsetReg);
+                            info, bytesPerMove, (i == 0 && r == 0), info.rowOffsetReg->subset({0}));
                     }
                     else
                     {
                         co_yield m_context->mem()->moveData<Dir>(
                             info.kind,
-                            info.rowOffsetReg,
+                            info.rowOffsetReg->subset({0}),
                             info.data->element(Generated(iota(start, stop))),
                             Register::Value::Literal(offsetValue + r * bytesPerMove),
                             bytesPerMove,
@@ -1105,7 +1082,7 @@ namespace rocRoller
                 {
                     co_yield generate(info.rowOffsetReg,
                                       info.rowOffsetReg->expression()
-                                          + info.rowStrideReg->subset({0})->expression());
+                                          + info.rowStrideReg->expression());
                 }
             }
         }
@@ -1150,7 +1127,7 @@ namespace rocRoller
                     {
                         co_yield generate(colOffsetReg,
                                           colOffsetReg->expression()
-                                              + info.colStrideReg->subset({0})->expression());
+                                              + info.colStrideReg->expression());
                     }
                 }
 
@@ -1158,7 +1135,7 @@ namespace rocRoller
                 {
                     co_yield generate(info.rowOffsetReg,
                                       info.rowOffsetReg->expression()
-                                          + info.rowStrideReg->subset({0})->expression());
+                                          + info.rowStrideReg->expression());
                 }
             }
         }

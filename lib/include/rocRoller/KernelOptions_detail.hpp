@@ -83,31 +83,7 @@ namespace rocRoller
          * Increasing this value could decrease SGPR pressure; decreasing it could speed up a
          * kernel if there are enough available SGPRs.
          */
-        int minLaunchTimeExpressionComplexity = 20;
-
-        /**
-         * The maximum number of concurrent subexpressions given at once to the scheduler when
-         * generating code for an expression using CSE. A higher number may reveal more ILP
-         * opportunities to the scheduler but may also result in higher register usage.
-         *
-         * This is counted per result type of subexpression. So 2 means 2 SGPR subexpressions
-         * AND 2 VGPR subexpressions at once.
-         *
-         * If you are running out of registers (particularly SGPRs), reducing this number
-         * might help.
-         */
-        int maxConcurrentSubExpressions = 2;
-
-        /**
-         * The maximum number of concurrent control operations given at once to the scheduler
-         * when generating code in LowerFromKernelGraph.
-         *
-         * This is counted per node type.
-         *
-         * If this is empty, it will revert to the original algorithm where nodes are not
-         * separated into categories.
-         */
-        std::optional<int> maxConcurrentControlOps;
+        int minLaunchTimeExpressionComplexity = 10;
 
         /**
          * By default, we no longer allow full integer division or modulo in
@@ -118,10 +94,8 @@ namespace rocRoller
 
         AssertOpKind assertOpKind = AssertOpKind::NoOp;
 
-        std::string toString() const;
+        std::string          toString() const;
+        friend std::ostream& operator<<(std::ostream&, const KernelOptionValues&);
     };
-
-    std::ostream& operator<<(std::ostream& stream, KernelOptionValues const& values);
-    std::string   toString(KernelOptionValues const& values);
 
 }

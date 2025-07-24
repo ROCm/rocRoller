@@ -298,13 +298,12 @@ namespace rocRoller::KernelGraph
      * generating `op`.
      */
     DataType getOffsetDataType(int op, KernelGraph const& graph, bool direct2LDS)
+
     {
         DataType rv = DataType::UInt64;
-        auto     s  = graph.control.get<StoreTiled>(op);
-        auto     l  = graph.control.get<LoadTiled>(op);
         auto     ll = graph.control.get<LoadLDSTile>(op);
         auto     sl = graph.control.get<StoreLDSTile>(op);
-        if(s || l || ll || sl || direct2LDS)
+        if(ll || sl || direct2LDS)
         {
             rv = DataType::UInt32;
         }
@@ -360,10 +359,8 @@ namespace rocRoller::KernelGraph
 
             int base = (info.base == -1) ? -1 : offsetOfCoord.at(info.base);
 
-            // For future: choose type based on buffer or non-buffer
             auto offsetDataType = getOffsetDataType(op, graph, isDirect2LDS);
             auto strideDataType = DataType::UInt64;
-
             if(info.isUnroll)
             {
                 offsetDataType = DataType::Int64;
@@ -393,17 +390,16 @@ namespace rocRoller::KernelGraph
             if(info.needsUpdate)
             {
                 auto offsetExpr = std::make_shared<Expression::Expression>(
-                    Expression::DataFlowTag{offset, Register::Type::Vector, offsetDataType});
+                    Expression::DataFlowTag{offset, Register::Type::Vector, DataType::UInt64});
                 auto strideExpr = std::make_shared<Expression::Expression>(
                     Expression::DataFlowTag{stride, Register::Type::Scalar, DataType::UInt64});
 
                 if(step == nullptr)
-                    update = graph.control.addElement(Assign{
-                        Register::Type::Vector, convert(offsetDataType, offsetExpr + strideExpr)});
+                    update = graph.control.addElement(
+                        Assign{Register::Type::Vector, offsetExpr + strideExpr});
                 else
                     update = graph.control.addElement(
-                        Assign{Register::Type::Vector,
-                               convert(offsetDataType, offsetExpr + step * strideExpr)});
+                        Assign{Register::Type::Vector, offsetExpr + step * strideExpr});
                 graph.mapper.connect(update, offset, NaryArgument::DEST);
             }
         }

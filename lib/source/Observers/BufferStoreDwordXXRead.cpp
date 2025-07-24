@@ -38,8 +38,8 @@ namespace rocRoller
 
         bool BufferStoreDwordXXRead::trigger(Instruction const& inst) const
         {
-            if(inst.getOpCode().starts_with("buffer_store_dwordx3")
-               || inst.getOpCode().starts_with("buffer_store_dwordx4"))
+            if(inst.getOpCode().rfind("buffer_store_dwordx3", 0) == 0
+               || inst.getOpCode().rfind("buffer_store_dwordx4", 0) == 0)
             {
                 AssertFatal(inst.getSrcs().size() != 4,
                             "Unexpected arguments",

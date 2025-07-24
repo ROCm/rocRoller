@@ -184,20 +184,18 @@ def summary_statistics(perf_runs):
     common = PerformanceRun.get_comparable_tokens(ref, runs)
     # compute comparison statistics
     stats = defaultdict(dict)
-
     for token in common:
         A = ref.results[token]
-        ka = np.asarray(A.kernelExecute).ravel()
-
-        ka_median = statistics.median(ka) if ka.size > 0 else 0
-        ka_mean = statistics.mean(ka) if ka.size > 0 else 0
+        ka = np.asarray(A.kernelExecute)
+        ka_median = statistics.median(ka) if len(ka) > 0 else 0
+        ka_mean = statistics.mean(ka) if len(ka) > 0 else 0
 
         for run in runs:
             B = run.results[token]
-            kb = np.asarray(B.kernelExecute).ravel()
+            kb = np.asarray(B.kernelExecute)
 
-            kb_median = statistics.median(kb) if kb.size > 0 else 0
-            kb_mean = statistics.mean(kb) if kb.size > 0 else 0
+            kb_median = statistics.median(kb) if len(kb) > 0 else 0
+            kb_mean = statistics.mean(kb) if len(kb) > 0 else 0
 
             try:
                 _, p, _, _ = scipy.stats.median_test(ka, kb)
@@ -210,6 +208,7 @@ def summary_statistics(perf_runs):
                 results=[A, B],
                 problem=A.problem_token(priority_problems()),
             )
+
     return stats
 
 
@@ -224,10 +223,10 @@ def summary_as_df(summary, ResultType):
             row = A.compact()
             row.update(
                 {
-                    "meanA(ns)": comparison.mean[0],
-                    "meanB(ns)": comparison.mean[1],
-                    "medianA(ns)": comparison.median[0],
-                    "medianB(ns)": comparison.median[1],
+                    "meanA": comparison.mean[0],
+                    "meanB": comparison.mean[1],
+                    "medianA": comparison.median[0],
+                    "medianB": comparison.median[1],
                     "pval": comparison.moods_pval,
                     "reldiff": (
                         100
@@ -236,8 +235,6 @@ def summary_as_df(summary, ResultType):
                         if comparison.median[0] != 0
                         else 0.0
                     ),
-                    "genA(ns)": A.kernelGenerate,
-                    "genB(ns)": B.kernelGenerate,
                 }
             )
             rows.append(row)
@@ -283,14 +280,12 @@ def markdown_summary(md, perf_runs):
         "Problem",
         "Median Diff %",
         "Moods p-val",
-        "Mean A (ns)",
-        "Mean B (ns)",
-        "Median A (ns)",
-        "Median B (ns)",
+        "Mean A",
+        "Mean B",
+        "Median A",
+        "Median B",
         "Run A (ref)",
         "Run B",
-        "Gen A (ns)",
-        "Gen B (ns)",
     ]
 
     result_diff = significant_changes(summary)
@@ -316,15 +311,13 @@ def markdown_summary(md, perf_runs):
                 f"{comparison.median[1]:,.0f}",
                 f"{A.path.parent.stem}",
                 f"{B.path.parent.stem}",
-                f"{A.kernelGenerate:,.0f}",
-                f"{B.kernelGenerate:,.0f}",
             ]
             result_table += " | ".join(row_str) + "\n"
 
     if len(result_diff) > 0:
         print("```diff", file=md)
         print(
-            "@@            Significant (p-val <0.05) Performance Diffs            @@",
+            "@@            Significant (p-val <0.05) Performance Diffs             @@",
             file=md,
         )
         print("=" * 100, file=md)
@@ -332,7 +325,7 @@ def markdown_summary(md, perf_runs):
         print("```\n\n", file=md)
     else:
         print(
-            ":heavy_check_mark: **_No Statistically Significant Performance Diff_** :heavy_check_mark:\n\n",
+            ":heavy_check_mark: **_No Statistically Significant Performance Difference_** :heavy_check_mark:\n\n",
             file=md,
         )
 
@@ -367,16 +360,14 @@ def html_overview_table(html_file, summary, problems):
 
     header = [
         "Problem",
-        "Mean A (ns)",
-        "Mean B (ns)",
-        "Median A (ns)",
-        "Median B (ns)",
+        "Mean A",
+        "Mean B",
+        "Median A",
+        "Median B",
         "Median Diff %",
         "Moods p-val",
         "Run A (ref)",
         "Run B",
-        "Gen A (ns)",
-        "Gen B (ns)",
     ]
 
     print("</td><td> ".join(header), file=html_file)
@@ -396,7 +387,6 @@ def html_overview_table(html_file, summary, problems):
                 if comparison.problem in problems
                 else i
             )
-
             print(
                 f"""
                 <tr>
@@ -409,8 +399,6 @@ def html_overview_table(html_file, summary, problems):
                     <td> {comparison.moods_pval:0.4e} </td>
                     <td> {A.path.parent.stem} </td>
                     <td> {B.path.parent.stem} </td>
-                    <td> {A.kernelGenerate:,.0f} </td>
-                    <td> {B.kernelGenerate:,.0f} </td>
                 </tr>""",
                 file=html_file,
             )
@@ -512,19 +500,18 @@ def html_summary(  # noqa: C901
                     + str(configs.index(run.machine_spec))
                     + "<br>"
                     + run.results[token].solution_token
-                    + "<br>"
                 )
 
                 A = run.results[token]
-                ka = np.asarray(A.kernelExecute).ravel()
-                median = statistics.median(ka) if ka.size > 0 else 0
+                ka = np.asarray(A.kernelExecute)
 
+                median = statistics.median(ka) if len(ka) > 0 else 0
                 if normalizer is None:
                     normalizer = median
                 if normalizer > 0:
                     ka = ka / normalizer
                     median = median / normalizer
-                min = np.min(ka) if ka.size > 0 else 0
+                min = np.min(ka) if len(ka) > 0 else 0
                 runs[token].timestamp.append(run.timestamp)
                 runs[token].commit.append(run.commit)
                 runs[token].median.append(median)
@@ -771,26 +758,22 @@ def compare(
     elif format == "gemmdf":
         summary = summary_statistics(perf_runs)
         df = summary_as_df(summary, GEMMResult)
-        column_mapping = {"m": "macM", "n": "macN", "k": "macK"}
-        df = df.rename(columns=column_mapping)
         cols = [
             "PREC",
             "AB",
             "M",
             "N",
             "K",
-            "macM",
-            "macN",
-            "macK",
+            "m",
+            "n",
+            "k",
             "SCH",
             "LDS",
             "WG",
             "reldiff",
             "pval",
-            "medianA(ns)",
-            "medianB(ns)",
-            "genA(ns)",
-            "genB(ns)",
+            "medianA",
+            "medianB",
         ]
         scols = [
             "PREC",
@@ -798,18 +781,16 @@ def compare(
             "M",
             "N",
             "K",
-            "medianB(ns)",
-            "macM",
-            "macN",
-            "macK",
+            "medianB",
+            "m",
+            "n",
+            "k",
             "SCH",
             "LDS",
             "WG",
             "reldiff",
             "pval",
-            "medianA(ns)",
-            "genA(ns)",
-            "genB(ns)",
+            "medianA",
         ]
 
         print(df[cols].sort_values(scols, axis="index"), file=output)

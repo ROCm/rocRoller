@@ -297,7 +297,6 @@ namespace rocRoller
             Generator<RegisterId> getRegisterIds() const;
 
             std::string getLiteral() const;
-            std::string getConstant() const;
 
             /**
              * Return a literal's actual value.

@@ -48,9 +48,7 @@ def runCI =
     {
         platform, project->
 
-        String mxDataGeneratorGitURL = params?.ROCROLLER_MXDATAGENERATOR_GIT_URL ?: baseParams?.ROCROLLER_MXDATAGENERATOR_GIT_URL
-        String mxDataGeneratorGitTag = params?.ROCROLLER_MXDATAGENERATOR_GIT_TAG ?: baseParams?.ROCROLLER_MXDATAGENERATOR_GIT_TAG
-        runCompileCommand(platform, project, jobName, jobParams, mxDataGeneratorGitURL, mxDataGeneratorGitTag, false)
+        runCompileCommand(platform, project, jobName, false)
     }
 
     buildProject(prj, formatCheck, nodes.dockerArray, null, null, null, staticAnalysis)
@@ -89,18 +87,6 @@ ci: {
             trim: true,
             description: "Specify the specific artifact path for AMDGPU"
         ),
-        string(
-            name: "ROCROLLER_MXDATAGENERATOR_GIT_URL",
-            defaultValue: params?.ROCROLLER_MXDATAGENERATOR_GIT_URL ?: "",
-            trim: true,
-            description: "Specify the specific mxDataGenerator Git URL"
-        ),
-        string(
-            name: "ROCROLLER_MXDATAGENERATOR_GIT_TAG",
-            defaultValue: params?.ROCROLLER_MXDATAGENERATOR_GIT_TAG ?: "",
-            trim: true,
-            description: "Specify the specific mxDataGenerator tag/commit hash"
-        ),
         booleanParam(
             name: "Unique Docker image tag",
             defaultValue: false,
@@ -111,10 +97,7 @@ ci: {
 
     properties(auxiliary.addCommonProperties([pipelineTriggers([cron('0 12 * * 6')])]))
 
-    def jobNameList = [
-        "enterprise":(["ubuntu20":['rocroller-compile']]),
-        "rocm-libraries":(["ubuntu20":['rocroller-compile']])
-    ]
+    def jobNameList = ["enterprise":(["ubuntu20":['rocroller-compile']])]
     jobNameList = auxiliary.appendJobNameList(jobNameList)
 
     jobNameList.each

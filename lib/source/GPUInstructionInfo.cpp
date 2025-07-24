@@ -30,49 +30,44 @@ namespace rocRoller
 {
     bool GPUInstructionInfo::isDLOP(std::string const& opCode)
     {
-        return opCode.starts_with("v_dot");
+        return opCode.rfind("v_dot", 0) == 0;
     }
 
     bool GPUInstructionInfo::isMFMA(std::string const& opCode)
     {
-        return opCode.starts_with("v_mfma");
+        return opCode.rfind("v_mfma", 0) == 0;
     }
 
     bool GPUInstructionInfo::isWMMA(std::string const& opCode)
     {
-        return opCode.starts_with("v_wmma");
+        return opCode.rfind("v_wmma", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVCMPX(std::string const& opCode)
     {
-        return opCode.starts_with("v_cmpx_");
+        return opCode.rfind("v_cmpx_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVCMP(std::string const& opCode)
     {
-        return opCode.starts_with("v_cmp_");
+        return opCode.rfind("v_cmp_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isScalar(std::string const& opCode)
     {
-        return opCode.starts_with("s_");
+        return opCode.rfind("s_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isSMEM(std::string const& opCode)
     {
-        return opCode.starts_with("s_load") || opCode.starts_with("s_store");
-    }
-
-    bool GPUInstructionInfo::isSBarrier(std::string const& opCode)
-    {
-        return opCode.starts_with("s_barrier");
+        return opCode.rfind("s_load", 0) == 0 || opCode.rfind("s_store", 0) == 0;
     }
 
     bool GPUInstructionInfo::isSControl(std::string const& opCode)
     {
         return isScalar(opCode)
                && (opCode.find("branch") != std::string::npos //
-                   || opCode == "s_endpgm" || isSBarrier(opCode));
+                   || opCode == "s_endpgm" || opCode.rfind("s_barrier", 0) == 0);
     }
 
     bool GPUInstructionInfo::isSALU(std::string const& opCode)
@@ -82,7 +77,7 @@ namespace rocRoller
 
     bool GPUInstructionInfo::isVector(std::string const& opCode)
     {
-        return (opCode.starts_with("v_")) || isVMEM(opCode) || isFlat(opCode) || isLDS(opCode);
+        return (opCode.rfind("v_", 0) == 0) || isVMEM(opCode) || isFlat(opCode) || isLDS(opCode);
     }
 
     bool GPUInstructionInfo::isVALU(std::string const& opCode)
@@ -94,33 +89,33 @@ namespace rocRoller
     bool GPUInstructionInfo::isVALUTrans(std::string const& opCode)
     {
         return isVALU(opCode)
-               && (opCode.starts_with("v_exp_f32") || opCode.starts_with("v_log_f32")
-                   || opCode.starts_with("v_rcp_f32") || opCode.starts_with("v_rcp_iflag_f32")
-                   || opCode.starts_with("v_rsq_f32") || opCode.starts_with("v_rcp_f64")
-                   || opCode.starts_with("v_rsq_f64") || opCode.starts_with("v_sqrt_f32")
-                   || opCode.starts_with("v_sqrt_f64") || opCode.starts_with("v_sin_f32")
-                   || opCode.starts_with("v_cos_f32") || opCode.starts_with("v_rcp_f16")
-                   || opCode.starts_with("v_sqrt_f16") || opCode.starts_with("v_rsq_f16")
-                   || opCode.starts_with("v_log_f16") || opCode.starts_with("v_exp_f16")
-                   || opCode.starts_with("v_sin_f16") || opCode.starts_with("v_cos_f16")
-                   || opCode.starts_with("v_exp_legacy_f32")
-                   || opCode.starts_with("v_log_legacy_f32"));
+               && (opCode.rfind("v_exp_f32", 0) == 0 || opCode.rfind("v_log_f32", 0) == 0
+                   || opCode.rfind("v_rcp_f32", 0) == 0 || opCode.rfind("v_rcp_iflag_f32", 0) == 0
+                   || opCode.rfind("v_rsq_f32", 0) == 0 || opCode.rfind("v_rcp_f64", 0) == 0
+                   || opCode.rfind("v_rsq_f64", 0) == 0 || opCode.rfind("v_sqrt_f32", 0) == 0
+                   || opCode.rfind("v_sqrt_f64", 0) == 0 || opCode.rfind("v_sin_f32", 0) == 0
+                   || opCode.rfind("v_cos_f32", 0) == 0 || opCode.rfind("v_rcp_f16", 0) == 0
+                   || opCode.rfind("v_sqrt_f16", 0) == 0 || opCode.rfind("v_rsq_f16", 0) == 0
+                   || opCode.rfind("v_log_f16", 0) == 0 || opCode.rfind("v_exp_f16", 0) == 0
+                   || opCode.rfind("v_sin_f16", 0) == 0 || opCode.rfind("v_cos_f16", 0) == 0
+                   || opCode.rfind("v_exp_legacy_f32", 0) == 0
+                   || opCode.rfind("v_log_legacy_f32", 0) == 0);
     }
 
     bool GPUInstructionInfo::isDGEMM(std::string const& opCode)
     {
-        return opCode.starts_with("v_mfma_f64");
+        return opCode.rfind("v_mfma_f64", 0) == 0;
     }
 
     bool GPUInstructionInfo::isSGEMM(std::string const& opCode)
     {
         auto endPos = opCode.length() - 4;
-        return opCode.starts_with("v_mfma_") && opCode.rfind("f32", endPos) == 0;
+        return opCode.rfind("v_mfma_", 0) == 0 && opCode.rfind("f32", endPos) == 0;
     }
 
     bool GPUInstructionInfo::isVMEM(std::string const& opCode)
     {
-        return opCode.starts_with("buffer_");
+        return opCode.rfind("buffer_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVMEMRead(std::string const& opCode)
@@ -139,12 +134,12 @@ namespace rocRoller
 
     bool GPUInstructionInfo::isFlat(std::string const& opCode)
     {
-        return opCode.starts_with("flat_");
+        return opCode.rfind("flat_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isLDS(std::string const& opCode)
     {
-        return opCode.starts_with("ds_");
+        return opCode.rfind("ds_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isLDSRead(std::string const& opCode)
@@ -163,12 +158,12 @@ namespace rocRoller
 
     bool GPUInstructionInfo::isACCVGPRWrite(std::string const& opCode)
     {
-        return opCode.starts_with("v_accvgpr_write");
+        return opCode.rfind("v_accvgpr_write", 0) == 0;
     }
 
     bool GPUInstructionInfo::isACCVGPRRead(std::string const& opCode)
     {
-        return opCode.starts_with("v_accvgpr_read");
+        return opCode.rfind("v_accvgpr_read", 0) == 0;
     }
 
     bool GPUInstructionInfo::isIntInst(std::string const& opCode)
@@ -183,46 +178,46 @@ namespace rocRoller
 
     bool GPUInstructionInfo::isVAddInst(std::string const& opCode)
     {
-        return opCode.starts_with("v_add");
+        return opCode.rfind("v_add", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVAddCarryInst(std::string const& opCode)
     {
-        return opCode.starts_with("v_addc_");
+        return opCode.rfind("v_addc_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVSubInst(std::string const& opCode)
     {
-        return opCode.starts_with("v_sub");
+        return opCode.rfind("v_sub", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVSubCarryInst(std::string const& opCode)
     {
-        return opCode.starts_with("v_subb_");
+        return opCode.rfind("v_subb_", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVReadlane(std::string const& opCode)
     {
-        return opCode.starts_with("v_readlane") || opCode.starts_with("v_readfirstlane");
+        return opCode.rfind("v_readlane", 0) == 0 || opCode.rfind("v_readfirstlane", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVWritelane(std::string const& opCode)
     {
-        return opCode.starts_with("v_writelane");
+        return opCode.rfind("v_writelane", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVPermlane(std::string const& opCode)
     {
-        return opCode.starts_with("v_permlane");
+        return opCode.rfind("v_permlane", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVDivScale(std::string const& opCode)
     {
-        return opCode.starts_with("v_div_scale");
+        return opCode.rfind("v_div_scale", 0) == 0;
     }
 
     bool GPUInstructionInfo::isVDivFmas(std::string const& opCode)
     {
-        return opCode.starts_with("v_div_fmas_");
+        return opCode.rfind("v_div_fmas_", 0) == 0;
     }
 }

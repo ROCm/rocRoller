@@ -121,8 +121,13 @@ namespace rocRoller
                 return std::vector(downstreamMemoryNodes.begin(), downstreamMemoryNodes.end());
             }();
 
-            auto compare = TopologicalCompare(std::make_shared<KernelGraph>(graph));
-            std::sort(downstreamMemoryNodes.begin(), downstreamMemoryNodes.end(), compare);
+            auto topoCompare = [&](int a, int b) {
+                auto order = graph.control.compareNodes(UpdateCache, a, b);
+                return order == ControlGraph::NodeOrdering::LeftFirst
+                       || order == ControlGraph::NodeOrdering::LeftInBodyOfRight;
+            };
+
+            std::sort(downstreamMemoryNodes.begin(), downstreamMemoryNodes.end(), topoCompare);
 
             Log::debug("Memory: {}", ShowValue(downstreamMemoryNodes));
 
