@@ -1181,7 +1181,7 @@ namespace rocRoller
                         = (waveTileExpr / (Expression::literal(waveTileSize) / vgprIndex.size));
                     AssertFatal(Expression::identical(m_fastArith(vgprIndexExpr),
                                                       m_fastArith(expectedExpr)),
-                                "Exchange: VGPRIndex must be the slowest running dimension");
+                                "Exchange: VGPRIndex must be the slowest running dimension", toString(m_fastArith(vgprIndexExpr)), toString(m_fastArith(expectedExpr)));
                 }
 
                 {
