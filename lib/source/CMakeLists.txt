@@ -58,6 +58,7 @@ add_subdirectory(ExpressionTransformations)
 add_subdirectory(Observers)
 add_subdirectory(Utilities)
 add_subdirectory(Operations)
+add_subdirectory(Graph)
 add_subdirectory(KernelGraph)
 
 add_library(rocroller-no-rtti
@@ -85,7 +86,6 @@ target_link_libraries(rocroller-no-rtti
         hip::host
         $<BUILD_INTERFACE:spdlog::spdlog_header_only>
         fmt::fmt-header-only
-        Boost::headers
 )
 
 target_link_libraries(rocroller PRIVATE $<BUILD_INTERFACE:rocroller-no-rtti>)
