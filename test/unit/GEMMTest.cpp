@@ -580,7 +580,9 @@ namespace GEMMDriverTest
                     {gemm.macM, gemm.macK / gemm.scaleBlockSize},
                     LayoutType::MATRIX_A,
                     {gemm.waveM, gemm.waveN, gemm.waveK / gemm.scaleBlockSize, gemm.waveB},
-                    gemm.loadLDSScaleA ? MemoryType::LDS : MemoryType::WAVE);
+                    gemm.loadLDSScaleA ? MemoryType::LDS : MemoryType::WAVE,
+                    {gemm.waveM, gemm.waveN, gemm.waveK / gemm.scaleBlockSize, gemm.waveB},
+                    {gemm.swizzleM, gemm.swizzleN, gemm.swizzleK, gemm.swizzleB});
                 params->setDimensionInfo(*tagLoadScaleA, macTileAScale);
             }
 
@@ -603,7 +605,9 @@ namespace GEMMDriverTest
                     {gemm.macK / gemm.scaleBlockSize, gemm.macN},
                     LayoutType::MATRIX_B,
                     {gemm.waveM, gemm.waveN, gemm.waveK / gemm.scaleBlockSize, gemm.waveB},
-                    gemm.loadLDSScaleB ? MemoryType::LDS : MemoryType::WAVE);
+                    gemm.loadLDSScaleB ? MemoryType::LDS : MemoryType::WAVE,
+                    {gemm.waveM, gemm.waveN, gemm.waveK / gemm.scaleBlockSize, gemm.waveB},
+                    {gemm.swizzleM, gemm.swizzleN, gemm.swizzleK, gemm.swizzleB});
                 params->setDimensionInfo(*tagLoadScaleB, macTileBScale);
             }
 
@@ -2280,6 +2284,8 @@ namespace GEMMDriverTest
                 if(unrollK == 4 && waveK == 128)
                     continue;
                 gemm.unrollK = unrollK;
+                if(unrollK > 1)
+                    gemm.swizzleK = 4 * unrollK;
                 basicGEMM<FP4, FP4, float>(gemm);
 
                 std::string generatedCode = m_context->instructions()->toString();
@@ -2344,6 +2350,9 @@ namespace GEMMDriverTest
             gemm.scaleTypeB = DataType::E8M0;
 
             gemm.swizzleScale  = true;
+            gemm.swizzleM      = 64;
+            gemm.swizzleN      = 64;
+            gemm.swizzleK      = 8;
             gemm.prefetchScale = true;
 
             gemm.scaleBlockSize = m_context->targetArchitecture().GetCapability(
@@ -2445,6 +2454,9 @@ namespace GEMMDriverTest
         gemm.scaleTypeB = DataType::E8M0;
 
         gemm.swizzleScale  = true;
+        gemm.swizzleM      = 64;
+        gemm.swizzleN      = 64;
+        gemm.swizzleK      = 8;
         gemm.prefetchScale = true;
 
         gemm.workgroupMappingDim   = 0;
@@ -2502,6 +2514,9 @@ namespace GEMMDriverTest
         gemm.scaleTypeB = DataType::E8M0;
 
         gemm.swizzleScale  = true;
+        gemm.swizzleM      = 64;
+        gemm.swizzleN      = 64;
+        gemm.swizzleK      = 8;
         gemm.prefetchScale = true;
 
         gemm.workgroupMappingDim   = 0;
@@ -2572,6 +2587,9 @@ namespace GEMMDriverTest
         gemm.scaleTypeB = DataType::E8M0;
 
         gemm.swizzleScale  = true;
+        gemm.swizzleM      = 64;
+        gemm.swizzleN      = 64;
+        gemm.swizzleK      = 8;
         gemm.prefetchScale = true;
 
         gemm.scaleBlockSize
