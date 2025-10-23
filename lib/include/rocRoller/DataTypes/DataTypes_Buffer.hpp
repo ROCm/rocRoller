@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2024-2025 AMD ROCm(TM) Software
+ * Copyright 2019-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,62 +26,37 @@
 
 #pragma once
 
-#include <memory>
-#include <span>
-#include <variant>
+#include <iostream>
 
-#include <rocRoller/DataTypes/DataTypes.hpp>
+#ifdef ROCROLLER_USE_HIP
+#include <hip/hip_runtime.h>
+#endif
 
 namespace rocRoller
 {
-    class CommandArgument;
-    using CommandArgumentPtr = std::shared_ptr<CommandArgument>;
-
-    using CommandArgumentValue = std::variant<
-        // int16_t,
-        int32_t,
-        int64_t,
-        // uint16_t,
-        uint32_t,
-        uint64_t,
-        float,
-        double,
-        Half,
-        BFloat16,
-        FP8,
-        BF8,
-        FP6,
-        BF6,
-        FP4,
-        bool,
-        Raw32,
-        E8M0,
-        Buffer,
-        // int16_t*,
-        int32_t*,
-        int64_t*,
-        // uint16_t*,
-        uint8_t*,
-        uint32_t*,
-        uint64_t*,
-        float*,
-        double*,
-        Half*,
-        BFloat16*,
-        FP8*,
-        BF8*,
-        FP6*,
-        BF6*,
-        FP4*,
-        E8M0*>;
-
-    template <typename T>
-    concept CCommandArgumentValue = requires(T& val)
+    struct Buffer
     {
-        {CommandArgumentValue(val)};
+        uint32_t desc0 = 0;
+        uint32_t desc1 = 0;
+        uint32_t desc2 = 0;
+        uint32_t desc3 = 0;
     };
 
-    static_assert(!CCommandArgumentValue<bool*>);
+    inline std::ostream& operator<<(std::ostream& os, const Buffer& buf)
+    {
+        os << "Buffer(desc0=0x" << std::hex << buf.desc0 << ", desc1=0x" << buf.desc1
+           << ", desc2=0x" << buf.desc2 << ", desc3=0x" << buf.desc3 << ")";
+        return os;
+    }
 
-    using RuntimeArguments = std::span<uint8_t const>;
-}
+    inline bool operator!(Buffer const& a)
+    {
+        return a.desc0 == 0 && a.desc1 == 0 && a.desc2 == 0 && a.desc3 == 0;
+    }
+
+    inline bool operator==(Buffer const& a, Buffer const& b)
+    {
+        return a.desc0 == b.desc0 && a.desc1 == b.desc1 && a.desc2 == b.desc2 && a.desc3 == b.desc3;
+    }
+
+} // namespace rocRoller
