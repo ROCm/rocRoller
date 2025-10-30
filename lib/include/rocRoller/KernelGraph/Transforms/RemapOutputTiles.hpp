@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright 2025 AMD ROCm(TM) Software
+ * Copyright 2024-2025 AMD ROCm(TM) Software
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,33 @@
  *******************************************************************************/
 
 #pragma once
-#include <rocRoller/KernelGraph/Transforms/ConnectWorkgroups.hpp>
+#include <rocRoller/KernelGraph/Transforms/GraphTransform.hpp>
 
 namespace rocRoller
 {
     namespace KernelGraph
     {
-        namespace ConnectWorkgroupsDetail
+        /**
+         * @brief Perform workgroup mapping by applying
+         * PiecewiseAffineJoin transformation on dangling
+         * MacroTileNumbers
+         *
+         */
+        class RemapOutputTiles : public GraphTransform
         {
-            /**
-             * @brief Connect dangling MacroTileNumber coordinate to
-             * matching Workgroup coordinates.
-             *
-             */
-            std::map<std::pair<int, rocRoller::Graph::Direction>, int>
-                connectWorkgroups(KernelGraph& kgraph);
-        }
+        public:
+            RemapOutputTiles(std::optional<int>        workgroupMappingDim,
+                             Expression::ExpressionPtr workgroupMappingValue = nullptr);
+
+            KernelGraph apply(KernelGraph const& original) override;
+            std::string name() const override
+            {
+                return "RemapOutputTiles";
+            }
+
+        private:
+            std::optional<int>        m_workgroupMappingDim;
+            Expression::ExpressionPtr m_workgroupMappingValue;
+        };
     }
 }
