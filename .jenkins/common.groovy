@@ -224,17 +224,17 @@ def runPerformanceCommand (platform, project, mxDataGeneratorGitURL, mxDataGener
         sshBlock ->
         def rrperfSuite = platform.jenkinsLabel.contains('gfx12') ? "all_gfx120X" : "all"
 
-        // either a label or a parameter can block comparison to master branch
-        def masterCompare = !(
-            pullRequest.labels.any { it == "ci:no-build-master" || it == "ci:no-build-target" }
-        )
-        if (masterCompare && (params?."Build target branch for comparison" != null))
-        {
-            masterCompare = params."Build target branch for comparison"
-        }
-
         if (env.CHANGE_ID)
         {
+            // either a label or a parameter can block comparison to master branch
+            def masterCompare = !(
+                pullRequest.labels.any { it == "ci:no-build-master" || it == "ci:no-build-target" }
+            )
+            if (masterCompare && (params?."Build target branch for comparison" != null))
+            {
+                masterCompare = params."Build target branch for comparison"
+            }
+
             String masterCompareCommand
             if (masterCompare)
             {
@@ -364,6 +364,13 @@ def runPerformanceCommand (platform, project, mxDataGeneratorGitURL, mxDataGener
         else
         {
             def ARCHIVE_LIMIT = "101"
+
+            // a parameter can block comparison to target branch
+            def masterCompare = false
+            if (params?."Build target branch for comparison" != null)
+            {
+                masterCompare = params."Build target branch for comparison"
+            }
 
             String masterCompareString = masterCompare ? "1" : "0"
 
